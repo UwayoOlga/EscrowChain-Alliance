@@ -1,0 +1,5 @@
+{
+  "name": "BlockRent Escrow",
+  "description": "A blockchain-based rent payment escrow system ensuring secure, transparent transactions between tenants and landlords.",
+  "requestFramePermissions": []
+}
