@@ -9,13 +9,14 @@ import WalletConnect from './components/WalletConnect';
 import { UserRole, WalletState } from './types';
 import { MOCK_PROPERTIES } from './constants';
 import { Bell, Menu, X } from 'lucide-react';
+import LandingPage from './components/LandingPage';
 
 const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState<string>('dashboard');
+  const [currentView, setCurrentView] = useState<string>('landing');
   const [role, setRole] = useState<UserRole>('tenant');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const mainContentRef = useRef<HTMLDivElement>(null);
-  
+
   const [wallet, setWallet] = useState<WalletState>({
     connected: false,
     address: null,
@@ -31,7 +32,8 @@ const App: React.FC = () => {
   }, [currentView]);
 
   const renderView = () => {
-    switch(currentView) {
+    switch (currentView) {
+      case 'landing': return <LandingPage onEnterApp={() => setCurrentView('dashboard')} wallet={wallet} setWallet={setWallet} />;
       case 'dashboard': return <Dashboard role={role} userProperties={MOCK_PROPERTIES} />;
       case 'payment': return <Payment properties={MOCK_PROPERTIES} wallet={wallet} />;
       case 'property': return <PropertyStatus properties={MOCK_PROPERTIES} role={role} />;
@@ -42,7 +44,7 @@ const App: React.FC = () => {
   };
 
   const getPageTitle = () => {
-    switch(currentView) {
+    switch (currentView) {
       case 'dashboard': return 'Overview';
       case 'payment': return 'Rent & Payments';
       case 'property': return 'My Properties';
@@ -52,11 +54,21 @@ const App: React.FC = () => {
     }
   };
 
+  if (currentView === 'landing') {
+    return (
+      <main ref={mainContentRef} className="h-screen overflow-y-auto scroll-smooth">
+        <div key={currentView} className="animate-fade-in-up">
+          {renderView()}
+        </div>
+      </main>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
       {/* Mobile Sidebar Overlay */}
       {mobileMenuOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-30 lg:hidden transition-opacity"
           onClick={() => setMobileMenuOpen(false)}
         />
@@ -64,8 +76,8 @@ const App: React.FC = () => {
 
       {/* Sidebar - Hidden on mobile unless toggled */}
       <div className={`fixed top-0 left-0 lg:static z-40 h-full transform transition-transform duration-300 ease-in-out lg:transform-none ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <Sidebar 
-          currentView={currentView} 
+        <Sidebar
+          currentView={currentView}
           setView={(view) => { setCurrentView(view); setMobileMenuOpen(false); }}
           role={role}
           setRole={setRole}
@@ -77,15 +89,15 @@ const App: React.FC = () => {
         {/* Topbar */}
         <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 lg:px-8 z-20">
           <div className="flex items-center gap-4">
-             <button 
-               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-               className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg focus:outline-none"
-               aria-label="Toggle menu"
-             >
-               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-             </button>
-             <h2 className="text-xl font-bold text-gray-800 hidden sm:block">{getPageTitle()}</h2>
-             <h2 className="text-lg font-bold text-gray-800 sm:hidden">{getPageTitle() === 'Overview' ? 'BlockRent' : getPageTitle()}</h2>
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg focus:outline-none"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+            <h2 className="text-xl font-bold text-gray-800 hidden sm:block">{getPageTitle()}</h2>
+            <h2 className="text-lg font-bold text-gray-800 sm:hidden">{getPageTitle() === 'Overview' ? 'EscrowChain-Alliance' : getPageTitle()}</h2>
           </div>
 
           <div className="flex items-center space-x-2 sm:space-x-4">
@@ -100,11 +112,11 @@ const App: React.FC = () => {
 
         {/* Scrollable Page Content */}
         <main ref={mainContentRef} className="flex-1 overflow-y-auto p-4 lg:p-8 scroll-smooth">
-           <div className="max-w-7xl mx-auto pb-10">
-             <div key={currentView} className="animate-fade-in-up">
-               {renderView()}
-             </div>
-           </div>
+          <div className="max-w-7xl mx-auto pb-10">
+            <div key={currentView} className="animate-fade-in-up">
+              {renderView()}
+            </div>
+          </div>
         </main>
       </div>
     </div>
