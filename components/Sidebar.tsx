@@ -7,9 +7,11 @@ interface SidebarProps {
   setView: (view: string) => void;
   role: UserRole;
   setRole: (role: UserRole) => void;
+  user: any;
+  onLogout: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, role, setRole }) => {
+const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, role, setRole, user, onLogout }) => {
   const menuItems = [
     { id: 'landing', label: 'Home', icon: <Home size={20} /> },
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
@@ -25,12 +27,12 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, role, setRole }
   return (
     <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col h-full overflow-y-auto transition-all duration-300 border-r border-slate-800">
       <div className="p-6 flex items-center space-x-3 text-white border-b border-slate-800 flex-shrink-0">
-        <div className="bg-blue-600 p-2 rounded-lg">
+        <div className="bg-blue-600 p-1.5 rounded-lg">
           <Hexagon size={24} fill="white" className="text-blue-600" />
         </div>
         <div>
-          <h1 className="text-xl font-bold tracking-tight">BlockRent</h1>
-          <p className="text-xs text-slate-400">Escrow Protocol</p>
+          <h1 className="text-sm font-extrabold tracking-tight text-white italic">ESCROWCHAIN<span className="text-blue-600">ALLIANCE</span></h1>
+          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Escrow Protocol</p>
         </div>
       </div>
 
@@ -69,9 +71,22 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, role, setRole }
           </div>
         </div>
 
-        <button className="w-full flex items-center space-x-3 px-4 py-2 text-slate-400 hover:text-white transition-colors">
-          <LogOut size={20} />
-          <span>Sign Out</span>
+        <div className="flex items-center gap-3 px-4 py-3 bg-slate-800/50 rounded-xl mb-4 border border-slate-700/50">
+          <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+            {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-white truncate">{user?.name || 'User'}</p>
+            <p className="text-[10px] text-slate-400 truncate">{user?.email || 'N/A'}</p>
+          </div>
+        </div>
+
+        <button
+          onClick={onLogout}
+          className="w-full flex items-center space-x-3 px-4 py-2 text-slate-400 hover:text-red-400 transition-colors group"
+        >
+          <LogOut size={20} className="group-hover:translate-x-1 transition-transform" />
+          <span className="font-bold">Sign Out</span>
         </button>
       </div>
     </aside>

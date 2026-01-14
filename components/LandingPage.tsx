@@ -1,20 +1,20 @@
 import React from 'react';
 import { Shield, Lock, Zap, ArrowRight, CheckCircle, Globe, Users, BarChart3, Hexagon } from 'lucide-react';
 import WalletConnect from './WalletConnect';
+import propertyImage from './assets/premium_property_kigali.png';
+import heroImage from './assets/LandingPageImageForHeroSection.jpg';
+import disputeImage from './assets/disputesResolutio.webp';
+import AuthModal from './AuthModal';
 import { WalletState } from '../types';
 
-// Import images
-import heroImage from './assets/LandingPageImageForHeroSection.jpg';
-import propertyImage from './assets/House in kigali.jpg';
-import disputeImage from './assets/disputesResolutio.webp';
-
 interface LandingPageProps {
-    onEnterApp: () => void;
+    onLogin: (user: any) => void;
     wallet: WalletState;
     setWallet: (wallet: WalletState) => void;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, wallet, setWallet }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onLogin, wallet, setWallet }) => {
+    const [isAuthModalOpen, setIsAuthModalOpen] = React.useState(false);
     return (
         <div className="min-h-screen bg-white text-slate-900 overflow-x-hidden">
             {/* Navigation */}
@@ -33,10 +33,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, wallet, setWallet
                             <a href="#properties" className="text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors">Properties</a>
                             <WalletConnect wallet={wallet} setWallet={setWallet} />
                             <button
-                                onClick={onEnterApp}
+                                onClick={() => setIsAuthModalOpen(true)}
                                 className="bg-slate-900 text-white px-6 py-2.5 rounded-full font-bold text-sm hover:bg-slate-800 transition-all shadow-lg shadow-slate-200"
                             >
-                                Launch App
+                                Login / Register
                             </button>
                         </div>
                     </div>
@@ -60,7 +60,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, wallet, setWallet
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4">
                                 <button
-                                    onClick={onEnterApp}
+                                    onClick={() => setIsAuthModalOpen(true)}
                                     className="inline-flex items-center justify-center bg-blue-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 group"
                                 >
                                     Get Started Now
@@ -262,6 +262,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp, wallet, setWallet
                     </div>
                 </div>
             </footer>
+
+            <AuthModal
+                isOpen={isAuthModalOpen}
+                onClose={() => setIsAuthModalOpen(false)}
+                onLogin={onLogin}
+            />
         </div>
     );
 };

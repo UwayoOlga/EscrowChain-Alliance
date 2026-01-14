@@ -13,9 +13,20 @@ import LandingPage from './components/LandingPage';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<string>('landing');
+  const [user, setUser] = useState<any>(null);
   const [role, setRole] = useState<UserRole>('tenant');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const mainContentRef = useRef<HTMLDivElement>(null);
+
+  const handleLogin = (userData: any) => {
+    setUser(userData);
+    setCurrentView('dashboard');
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    setCurrentView('landing');
+  };
 
   const [wallet, setWallet] = useState<WalletState>({
     connected: false,
@@ -33,7 +44,7 @@ const App: React.FC = () => {
 
   const renderView = () => {
     switch (currentView) {
-      case 'landing': return <LandingPage onEnterApp={() => setCurrentView('dashboard')} wallet={wallet} setWallet={setWallet} />;
+      case 'landing': return <LandingPage onLogin={handleLogin} wallet={wallet} setWallet={setWallet} />;
       case 'dashboard': return <Dashboard role={role} userProperties={MOCK_PROPERTIES} />;
       case 'payment': return <Payment properties={MOCK_PROPERTIES} wallet={wallet} />;
       case 'property': return <PropertyStatus properties={MOCK_PROPERTIES} role={role} />;
@@ -81,6 +92,8 @@ const App: React.FC = () => {
           setView={(view) => { setCurrentView(view); setMobileMenuOpen(false); }}
           role={role}
           setRole={setRole}
+          user={user}
+          onLogout={handleLogout}
         />
       </div>
 
