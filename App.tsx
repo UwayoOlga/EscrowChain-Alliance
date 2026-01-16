@@ -23,10 +23,34 @@ const App: React.FC = () => {
     setCurrentView('dashboard');
   };
 
-  const handleLogout = () => {
-    setUser(null);
-    setCurrentView('landing');
+  const handleLogout = async () => {
+    try {
+      await fetch('http://localhost:5000/auth/logout', { credentials: 'include' });
+      setUser(null);
+      setCurrentView('landing');
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // Fallback
+      setUser(null);
+      setCurrentView('landing');
+    }
   };
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/auth/status', { credentials: 'include' });
+        const data = await res.json();
+        if (data.authenticated) {
+          setUser(data.user);
+          setCurrentView('dashboard');
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+      }
+    };
+    checkAuth();
+  }, []);
 
   const [wallet, setWallet] = useState<WalletState>({
     connected: false,
