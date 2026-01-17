@@ -6,7 +6,7 @@ import PropertyStatus from './components/PropertyStatus';
 import DisputeResolution from './components/DisputeResolution';
 import AdminDashboard from './components/AdminDashboard';
 import WalletConnect from './components/WalletConnect';
-import { UserRole, WalletState } from './types';
+import { UserRole, WalletState, Property } from './types';
 import { MOCK_PROPERTIES } from './constants';
 import { Bell, Menu, X } from 'lucide-react';
 import LandingPage from './components/LandingPage';
@@ -16,11 +16,25 @@ const App: React.FC = () => {
   const [user, setUser] = useState<any>(null);
   const [role, setRole] = useState<UserRole>('tenant');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [properties, setProperties] = useState<Property[]>([]);
   const mainContentRef = useRef<HTMLDivElement>(null);
+
+  const fetchProperties = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/api/properties');
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setProperties(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch properties:', error);
+    }
+  };
 
   const handleLogin = (userData: any) => {
     setUser(userData);
     setCurrentView('dashboard');
+    fetchProperties();
   };
 
   const handleLogout = async () => {
@@ -28,6 +42,7 @@ const App: React.FC = () => {
       await fetch('http://localhost:5000/auth/logout', { credentials: 'include' });
       setUser(null);
       setCurrentView('landing');
+      setProperties([]);
     } catch (error) {
       console.error('Logout failed:', error);
       // Fallback
@@ -44,6 +59,7 @@ const App: React.FC = () => {
         if (data.authenticated) {
           setUser(data.user);
           setCurrentView('dashboard');
+          fetchProperties();
         }
       } catch (error) {
         console.error('Auth check failed:', error);
@@ -69,12 +85,12 @@ const App: React.FC = () => {
   const renderView = () => {
     switch (currentView) {
       case 'landing': return <LandingPage onLogin={handleLogin} wallet={wallet} setWallet={setWallet} />;
-      case 'dashboard': return <Dashboard role={role} userProperties={MOCK_PROPERTIES} />;
-      case 'payment': return <Payment properties={MOCK_PROPERTIES} wallet={wallet} />;
-      case 'property': return <PropertyStatus properties={MOCK_PROPERTIES} role={role} />;
+      case 'dashboard': return <Dashboard role={role} userProperties={properties} />;
+      case 'payment': return <Payment properties={properties} wallet={wallet} />;
+      case 'property': return <PropertyStatus properties={properties} role={role} />;
       case 'dispute': return <DisputeResolution role={role} />;
       case 'admin': return <AdminDashboard />;
-      default: return <Dashboard role={role} userProperties={MOCK_PROPERTIES} />;
+      default: return <Dashboard role={role} userProperties={properties} />;
     }
   };
 

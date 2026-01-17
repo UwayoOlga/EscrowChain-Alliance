@@ -1,0 +1,14 @@
+name = "escrowchain-alliance/escrow"
+version = "0.0.1"
+licence = "Apache-2.0"
+description = "Aiken escrow contract for EscrowChain Alliance"
+
+[repository]
+user = "escrowchain-alliance"
+project = "escrow"
+platform = "github"
+
+[[dependencies]]
+name = "aiken-lang/stdlib"
+version = "v1.7.0"
+source = "github"

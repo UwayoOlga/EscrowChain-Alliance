@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Mail, Lock, User, ArrowRight, Hexagon, Chrome, Loader2, Key } from 'lucide-react';
+import { signInWithPopup } from 'firebase/auth';
+import { auth, googleProvider } from '../firebase-config';
 
 interface AuthModalProps {
     isOpen: boolean;
@@ -32,6 +34,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin }) => {
         setLoading(true);
         setMessage(null);
 
+        // Traditionally this would use Firebase Email/Password auth too,
+        // but for now we'll stick to the legacy backend logic if user wants.
+        // However, the prompt emphasizes Firebase, so Google is the priority.
         const endpoint = isLogin ? '/auth/login' : '/auth/register';
         const body = isLogin ? { email, password } : { email, password, name };
 
@@ -64,6 +69,37 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin }) => {
         }
     };
 
+    const handleGoogleLogin = async () => {
+        setLoading(true);
+        setMessage(null);
+        try {
+            const result = await signInWithPopup(auth, googleProvider);
+            const idToken = await result.user.getIdToken();
+
+            const res = await fetch('http://localhost:5000/auth/firebase-login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idToken })
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                setMessage({ type: 'success', text: 'Google Login Successful!' });
+                setTimeout(() => {
+                    onLogin(data.user);
+                    onClose();
+                }, 1000);
+            } else {
+                setMessage({ type: 'error', text: data.error || 'Backend verification failed' });
+            }
+        } catch (error: any) {
+            console.error('Google Auth Error:', error);
+            setMessage({ type: 'error', text: error.message || 'Google login failed' });
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleVerifyOTP = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -91,10 +127,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin }) => {
         } finally {
             setLoading(false);
         }
-    };
-
-    const handleSocialLogin = (provider: 'google' | 'apple') => {
-        window.location.href = `http://localhost:5000/auth/${provider}`;
     };
 
     return (
@@ -151,12 +183,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin }) => {
                                     <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100"></div></div>
                                     <div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-4 text-slate-400 font-black tracking-widest">Or continue with</span></div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <button onClick={() => handleSocialLogin('google')} className="flex items-center justify-center gap-2 py-2 pr-4 pl-3 border-2 border-slate-50 hover:border-blue-100 rounded-xl transition-all hover:bg-slate-50 font-bold text-xs text-slate-600">
-                                        <Chrome size={16} className="text-red-500" /> Google
-                                    </button>
-                                    <button onClick={() => handleSocialLogin('apple')} className="flex items-center justify-center gap-2 py-2 pr-4 pl-3 border-2 border-slate-50 hover:border-slate-100 rounded-xl transition-all hover:bg-slate-50 font-bold text-xs text-slate-600">
-                                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20.94c1.88 0 3.03 -1.14 4.14 -1.14 1.1 0 2 1.14 3.88 1.14 1.1 0 2.25 -.65 2.76 -1.27 -1.06 -.62 -1.54 -1.58 -1.54 -2.67 0 -1.45 .89 -2.4 1.88 -3.07 -.8 -1.16 -2.04 -1.94 -3.4 -1.94 -1.16 0 -1.96 .64 -2.85 .64s-1.88 -.64 -2.85 -.64c-1.85 0 -3.4 1.25 -3.4 3.75 0 1.25 .4 2.65 1.1 3.5s1.8 1.66 2.86 1.66z"></path><path d="M15 10.1c0 -2 -.8 -3.4 -1.8 -4.1h-1.4l-.8 .5a4.3 4.3 0 0 1 1.2 3.1c0 .2 .02 .4 .05 .5l.15 .1z"></path></svg> Apple
+                                <div className="grid grid-cols-1 gap-4">
+                                    <button onClick={handleGoogleLogin} disabled={loading} className="flex items-center justify-center gap-2 py-4 px-3 border-2 border-slate-50 hover:border-blue-100 rounded-2xl transition-all hover:bg-slate-50 font-bold text-sm text-slate-600 disabled:opacity-70">
+                                        <Chrome size={20} className="text-red-500" /> Login with Google
                                     </button>
                                 </div>
                             </div>
@@ -185,4 +214,3 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin }) => {
 };
 
 export default AuthModal;
-

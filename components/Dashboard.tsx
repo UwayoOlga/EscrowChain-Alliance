@@ -13,8 +13,8 @@ const COLORS = ['#10B981', '#F59E0B', '#EF4444'];
 
 const Dashboard: React.FC<DashboardProps> = ({ role, userProperties }) => {
   const lockedRent = MOCK_TRANSACTIONS.filter(t => t.status === 'locked').reduce((acc, curr) => acc + curr.amount, 0);
-  const pendingCount = MOCK_PROPERTIES.filter(p => p.conditionStatus !== 'fully_approved').length;
-  
+  const pendingCount = (userProperties || []).filter(p => (p as any).conditionStatus !== 'fully_approved').length;
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -68,9 +68,9 @@ const Dashboard: React.FC<DashboardProps> = ({ role, userProperties }) => {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={CHART_DATA_PAYMENTS}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12}} />
-                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12}} />
-                <Tooltip 
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+                <Tooltip
                   cursor={{ fill: '#f3f4f6' }}
                   contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
                 />
@@ -105,40 +105,40 @@ const Dashboard: React.FC<DashboardProps> = ({ role, userProperties }) => {
           </button>
         </div>
       </div>
-      
+
       {/* Dispute Visualization (Admin/Landlord relevant) */}
       {(role === 'admin' || role === 'landlord') && (
-         <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Dispute Resolution Stats</h3>
-            <div className="flex flex-col sm:flex-row items-center justify-center h-auto sm:h-64">
-                <div className="w-full h-64 sm:w-1/2">
-                  <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                          <Pie
-                              data={CHART_DATA_DISPUTES}
-                              innerRadius={60}
-                              outerRadius={80}
-                              paddingAngle={5}
-                              dataKey="value"
-                          >
-                              {CHART_DATA_DISPUTES.map((entry, index) => (
-                                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                              ))}
-                          </Pie>
-                          <Tooltip />
-                      </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="mt-4 sm:mt-0 sm:ml-8 grid grid-cols-3 sm:grid-cols-1 gap-4 sm:gap-2">
+        <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Dispute Resolution Stats</h3>
+          <div className="flex flex-col sm:flex-row items-center justify-center h-auto sm:h-64">
+            <div className="w-full h-64 sm:w-1/2">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={CHART_DATA_DISPUTES}
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
                     {CHART_DATA_DISPUTES.map((entry, index) => (
-                        <div key={index} className="flex items-center space-x-2">
-                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index] }}></div>
-                            <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">{entry.name}: {entry.value}</span>
-                        </div>
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
-                </div>
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
-         </div>
+            <div className="mt-4 sm:mt-0 sm:ml-8 grid grid-cols-3 sm:grid-cols-1 gap-4 sm:gap-2">
+              {CHART_DATA_DISPUTES.map((entry, index) => (
+                <div key={index} className="flex items-center space-x-2">
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index] }}></div>
+                  <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">{entry.name}: {entry.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
