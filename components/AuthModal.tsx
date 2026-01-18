@@ -3,6 +3,8 @@ import { X, Mail, Lock, User, ArrowRight, Hexagon, Chrome, Loader2, Key } from '
 import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase-config';
 
+import { authService } from '../services/api';
+
 interface AuthModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -76,25 +78,16 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLogin }) => {
             const result = await signInWithPopup(auth, googleProvider);
             const idToken = await result.user.getIdToken();
 
-            const res = await fetch('http://localhost:5000/auth/firebase-login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ idToken })
-            });
+            const data = await authService.firebaseLogin(idToken);
 
-            const data = await res.json();
-            if (res.ok) {
-                setMessage({ type: 'success', text: 'Google Login Successful!' });
-                setTimeout(() => {
-                    onLogin(data.user);
-                    onClose();
-                }, 1000);
-            } else {
-                setMessage({ type: 'error', text: data.error || 'Backend verification failed' });
-            }
+            setMessage({ type: 'success', text: 'Google Login Successful!' });
+            setTimeout(() => {
+                onLogin(data.user);
+                onClose();
+            }, 1000);
         } catch (error: any) {
             console.error('Google Auth Error:', error);
-            setMessage({ type: 'error', text: error.message || 'Google login failed' });
+            setMessage({ type: 'error', text: error.response?.data?.error || error.message || 'Google login failed' });
         } finally {
             setLoading(false);
         }

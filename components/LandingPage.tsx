@@ -171,7 +171,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, wallet, setWallet })
                                     </li>
                                 ))}
                             </ul>
-                            <button className="text-blue-600 font-bold flex items-center hover:underline group">
+                            <button
+                                onClick={() => setIsAuthModalOpen(true)}
+                                className="text-blue-600 font-bold flex items-center hover:underline group"
+                            >
                                 Browse all properties <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
                             </button>
                         </div>

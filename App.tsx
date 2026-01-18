@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { propertyService, authService } from './services/api';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import Payment from './components/Payment';
@@ -21,8 +22,7 @@ const App: React.FC = () => {
 
   const fetchProperties = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/properties');
-      const data = await res.json();
+      const data = await propertyService.getAllProperties();
       if (Array.isArray(data)) {
         setProperties(data);
       }
@@ -39,13 +39,12 @@ const App: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      await fetch('http://localhost:5000/auth/logout', { credentials: 'include' });
+      await authService.logout();
       setUser(null);
       setCurrentView('landing');
       setProperties([]);
     } catch (error) {
       console.error('Logout failed:', error);
-      // Fallback
       setUser(null);
       setCurrentView('landing');
     }
@@ -54,8 +53,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch('http://localhost:5000/auth/status', { credentials: 'include' });
-        const data = await res.json();
+        const data = await authService.getAuthStatus();
         if (data.authenticated) {
           setUser(data.user);
           setCurrentView('dashboard');
@@ -82,15 +80,17 @@ const App: React.FC = () => {
     }
   }, [currentView]);
 
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+
   const renderView = () => {
     switch (currentView) {
       case 'landing': return <LandingPage onLogin={handleLogin} wallet={wallet} setWallet={setWallet} />;
-      case 'dashboard': return <Dashboard role={role} userProperties={properties} />;
+      case 'dashboard': return <Dashboard role={role} userProperties={properties} onViewChange={setCurrentView} />;
       case 'payment': return <Payment properties={properties} wallet={wallet} />;
       case 'property': return <PropertyStatus properties={properties} role={role} />;
       case 'dispute': return <DisputeResolution role={role} />;
       case 'admin': return <AdminDashboard />;
-      default: return <Dashboard role={role} userProperties={properties} />;
+      default: return <Dashboard role={role} userProperties={properties} onViewChange={setCurrentView} />;
     }
   };
 
@@ -154,10 +154,37 @@ const App: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-2 sm:space-x-4">
-            <button className="relative p-2 text-gray-400 hover:text-gray-600 transition-colors">
-              <Bell size={20} />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                className="relative p-2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <Bell size={20} />
+                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+              </button>
+
+              {isNotificationOpen && (
+                <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-top-5">
+                  <div className="p-4 bg-slate-50 border-b border-gray-100 flex justify-between items-center">
+                    <span className="font-bold text-slate-900">Notifications</span>
+                    <button onClick={() => setIsNotificationOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={16} /></button>
+                  </div>
+                  <div className="max-h-96 overflow-y-auto">
+                    {[
+                      { id: 1, text: "Rent payment locked in escrow for 123 Blockchain Blvd.", type: "success" },
+                      { id: 2, text: "New dispute raised for 456 Satoshi St.", type: "dispute" },
+                      { id: 3, text: "Wallet connected successfully.", type: "info" }
+                    ].map(n => (
+                      <div key={n.id} className="p-4 border-b border-gray-50 hover:bg-slate-50 transition-colors cursor-pointer">
+                        <p className="text-sm text-slate-600 leading-snug">{n.text}</p>
+                        <span className="text-[10px] text-slate-400 uppercase font-bold mt-2 inline-block">2 hours ago</span>
+                      </div>
+                    ))}
+                  </div>
+                  <button className="w-full py-3 bg-white text-blue-600 text-sm font-bold hover:bg-slate-50 transition-colors">Mark all as read</button>
+                </div>
+              )}
+            </div>
             <div className="h-6 w-px bg-gray-200 mx-1 sm:mx-2"></div>
             <WalletConnect wallet={wallet} setWallet={setWallet} />
           </div>

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Property, WalletState } from '../types';
-import { CheckCircle, Lock, ArrowRight, AlertTriangle } from 'lucide-react';
+import { CheckCircle, Lock, ArrowRight, AlertTriangle, Loader2 } from 'lucide-react';
+import { useWallet } from '@meshsdk/react';
+import { Transaction } from '@meshsdk/core';
 
 interface PaymentProps {
   properties: Property[];
@@ -8,26 +10,71 @@ interface PaymentProps {
 }
 
 const Payment: React.FC<PaymentProps> = ({ properties, wallet }) => {
+  const { wallet: meshWallet, connected } = useWallet();
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>(properties[0]?.id || '');
   const [amount, setAmount] = useState<string>('');
   const [status, setStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
+  const [txHash, setTxHash] = useState<string>('');
+  const [error, setError] = useState<string>('');
 
   const selectedProperty = properties.find(p => p.id === selectedPropertyId);
 
-  const handlePayment = (e: React.FormEvent) => {
+  const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!wallet.connected) {
-      alert("Please connect your wallet first.");
+    if (!connected || !meshWallet) {
+      setError("Please connect your wallet first.");
       return;
     }
-    
+
     setStatus('processing');
-    
-    // Simulate smart contract interaction
-    setTimeout(() => {
+    setError('');
+
+    try {
+      // Aiken Escrow Datum Structure:
+      // { landlord: VerificationKeyHash, tenant: VerificationKeyHash, rent_amount: Int, deposit_amount: Int }
+
+      const rentAmountAda = parseFloat(amount || (selectedProperty?.rentAmount?.toString() || '0'));
+      const rentAmountLovelace = Math.floor(rentAmountAda * 1000000);
+
+      // For demo, we'll use the current wallet as tenant and a fixed landlord hash
+      // In production, these hashes would be fetched from the backend property details
+      const tenantHash = (await meshWallet.getUsedAddresses())[0]; // Simplified for demo
+      const landlordHash = "682173516515206584c3c3e800d9241b7117f7d188043640b3c6751c";
+
+      const datum = {
+        value: {
+          alternative: 0,
+          fields: [
+            landlordHash,
+            tenantHash,
+            rentAmountLovelace,
+            Math.floor(rentAmountLovelace * 1.5) // Auto-calculate hypothetical deposit
+          ]
+        },
+        inline: true
+      };
+
+      const tx = new Transaction({ initiator: meshWallet });
+      tx.sendLovelace(
+        {
+          address: 'addr_test1wpnlxv6xv9npuevznstaja8c0m67n5p9u4m8f24xv3y53ts9v604u', // Hypothetical Aiken Script Address
+          datum: datum
+        },
+        rentAmountLovelace.toString()
+      );
+
+      const unsignedTx = await tx.build();
+      const signedTx = await meshWallet.signTx(unsignedTx);
+      const hash = await meshWallet.submitTx(signedTx);
+
+      setTxHash(hash);
       setStatus('success');
       setAmount('');
-    }, 2000);
+    } catch (err: any) {
+      console.error("Payment Error:", err);
+      setError(err.request?.data?.message || err.message || "Transaction failed. Please try again.");
+      setStatus('error');
+    }
   };
 
   return (
@@ -46,8 +93,9 @@ const Payment: React.FC<PaymentProps> = ({ properties, wallet }) => {
                   <CheckCircle size={32} />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Payment Locked in Escrow</h3>
-                <p className="text-gray-500 mb-6 px-4">Your rent has been securely deposited. It will be released to the landlord once conditions are met.</p>
-                <button 
+                <p className="text-gray-500 mb-2 px-4">Your rent has been securely deposited.</p>
+                <p className="text-xs text-blue-600 font-mono mb-6 break-all px-10">Tx: {txHash}</p>
+                <button
                   onClick={() => setStatus('idle')}
                   className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto"
                 >
@@ -56,9 +104,16 @@ const Payment: React.FC<PaymentProps> = ({ properties, wallet }) => {
               </div>
             ) : (
               <form onSubmit={handlePayment} className="space-y-6">
+                {error && (
+                  <div className="p-3 bg-red-50 text-red-600 rounded-lg flex items-center gap-2 text-sm font-medium animate-shake">
+                    <AlertTriangle size={18} />
+                    {error}
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Select Property</label>
-                  <select 
+                  <select
                     value={selectedPropertyId}
                     onChange={(e) => setSelectedPropertyId(e.target.value)}
                     className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
@@ -95,13 +150,16 @@ const Payment: React.FC<PaymentProps> = ({ properties, wallet }) => {
 
                 <button
                   type="submit"
-                  disabled={!wallet.connected || status === 'processing'}
+                  disabled={!connected || status === 'processing'}
                   className={`w-full py-3 px-4 rounded-lg font-bold text-white transition-all flex items-center justify-center space-x-2
-                    ${!wallet.connected ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg'}
+                    ${!connected ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg'}
                   `}
                 >
                   {status === 'processing' ? (
-                     <span>Processing Transaction...</span>
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="animate-spin" size={20} />
+                      <span>Confirming on Cardano...</span>
+                    </div>
                   ) : (
                     <>
                       <span>Deposit Rent</span>
@@ -109,8 +167,8 @@ const Payment: React.FC<PaymentProps> = ({ properties, wallet }) => {
                     </>
                   )}
                 </button>
-                
-                {!wallet.connected && (
+
+                {!connected && (
                   <p className="text-center text-sm text-red-500 flex items-center justify-center gap-1">
                     <AlertTriangle size={14} />
                     Connect wallet to proceed
@@ -124,42 +182,42 @@ const Payment: React.FC<PaymentProps> = ({ properties, wallet }) => {
         {/* Info Side Panel */}
         <div className="space-y-6">
           <div className="bg-white p-4 sm:p-6 rounded-xl shadow-sm border border-gray-100">
-             <h3 className="font-semibold text-gray-900 mb-4">Transaction Summary</h3>
-             <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Recipient</span>
-                  <span className="font-medium text-gray-900 truncate max-w-[120px]">{selectedProperty?.landlord || 'Unknown'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Network Fee</span>
-                  <span className="font-medium text-gray-900">0.17 ₳</span>
-                </div>
-                <div className="flex justify-between border-t pt-3 mt-3">
-                  <span className="text-gray-900 font-bold">Total</span>
-                  <span className="text-blue-600 font-bold">
-                    {amount ? (parseFloat(amount) + 0.17).toFixed(2) : '0.00'} ₳
-                  </span>
-                </div>
-             </div>
+            <h3 className="font-semibold text-gray-900 mb-4">Transaction Summary</h3>
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Recipient</span>
+                <span className="font-medium text-gray-900 truncate max-w-[120px]">{selectedProperty?.landlord || 'Unknown'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Network Fee</span>
+                <span className="font-medium text-gray-900">~0.17 ₳</span>
+              </div>
+              <div className="flex justify-between border-t pt-3 mt-3">
+                <span className="text-gray-900 font-bold">Total</span>
+                <span className="text-blue-600 font-bold">
+                  {amount ? (parseFloat(amount) + 0.17).toFixed(2) : '0.00'} ₳
+                </span>
+              </div>
+            </div>
           </div>
 
           <div className="bg-gradient-to-br from-green-600 to-emerald-600 p-6 rounded-xl shadow-md text-white">
             <h3 className="font-bold mb-2">Escrow Guarantee</h3>
             <p className="text-sm text-green-100 mb-4">
-              Your funds are protected by the BlockRent Safety Protocol. 
+              Your funds are protected by the EscrowChain Safety Protocol.
             </p>
             <ul className="text-sm space-y-2">
               <li className="flex items-center space-x-2">
                 <CheckCircle size={16} className="text-green-300 flex-shrink-0" />
-                <span>Smart Contract Locked</span>
+                <span>Aiken Smart Contract</span>
               </li>
               <li className="flex items-center space-x-2">
                 <CheckCircle size={16} className="text-green-300 flex-shrink-0" />
-                <span>Dispute Protection</span>
+                <span>Multi-sig Protection</span>
               </li>
               <li className="flex items-center space-x-2">
                 <CheckCircle size={16} className="text-green-300 flex-shrink-0" />
-                <span>Instant Receipts</span>
+                <span>On-chain Immutability</span>
               </li>
             </ul>
           </div>

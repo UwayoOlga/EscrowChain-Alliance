@@ -7,11 +7,12 @@ import { DollarSign, ShieldCheck, AlertCircle, Clock } from 'lucide-react';
 interface DashboardProps {
   role: UserRole;
   userProperties: Property[];
+  onViewChange: (view: string) => void;
 }
 
 const COLORS = ['#10B981', '#F59E0B', '#EF4444'];
 
-const Dashboard: React.FC<DashboardProps> = ({ role, userProperties }) => {
+const Dashboard: React.FC<DashboardProps> = ({ role, userProperties, onViewChange }) => {
   const lockedRent = MOCK_TRANSACTIONS.filter(t => t.status === 'locked').reduce((acc, curr) => acc + curr.amount, 0);
   const pendingCount = (userProperties || []).filter(p => (p as any).conditionStatus !== 'fully_approved').length;
 
@@ -100,7 +101,10 @@ const Dashboard: React.FC<DashboardProps> = ({ role, userProperties }) => {
               </div>
             ))}
           </div>
-          <button className="w-full mt-4 py-2 text-sm text-blue-600 font-medium hover:bg-blue-50 rounded-lg transition-colors">
+          <button
+            onClick={() => onViewChange('payments')}
+            className="w-full mt-4 py-2 text-sm text-blue-600 font-medium hover:bg-blue-50 rounded-lg transition-colors"
+          >
             View All Transactions
           </button>
         </div>
