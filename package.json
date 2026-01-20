@@ -12,6 +12,7 @@
   "dependencies": {
     "@meshsdk/core": "^1.9.0-beta.96",
     "@meshsdk/react": "^1.9.0-beta.96",
+    "@types/lodash": "^4.17.23",
     "@types/uuid": "^10.0.0",
     "bcryptjs": "^3.0.3",
     "connect-pg-simple": "^10.0.0",
@@ -22,6 +23,7 @@
     "express-session": "^1.18.2",
     "firebase": "^12.8.0",
     "firebase-admin": "^13.6.0",
+    "lodash": "^4.17.21",
     "lucide-react": "^0.556.0",
     "nodemailer": "^7.0.12",
     "passport": "^0.7.0",
@@ -36,8 +38,12 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "autoprefixer": "^10.4.23",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.18",
     "top-level-await": "^1.1.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0",

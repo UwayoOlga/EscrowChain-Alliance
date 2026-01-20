@@ -6,7 +6,8 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import pgSession from 'connect-pg-simple';
-import pool, { query } from './db.js';
+import SQLiteStore from 'connect-sqlite3';
+import pool, { query, dbType, sqliteDb } from './db.js';
 import admin from './firebase-admin.js';
 import propertiesRouter from './properties.js';
 import { v4 as uuidv4 } from 'uuid';
@@ -16,6 +17,7 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const PostgresStore = pgSession(session);
+const SQLite = SQLiteStore(session);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -26,11 +28,14 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+// Conditional Session Store
+const sessionStore = dbType === 'postgres'
+    ? new PostgresStore({ pool: pool, tableName: 'session' })
+    : new SQLite({ db: 'sessions.db', dir: './server' });
+
 app.use(session({
-    store: new PostgresStore({
-        pool: pool,
-        tableName: 'session'
-    }),
+    store: sessionStore,
     secret: process.env.SESSION_SECRET || 'escrowchain-secret',
     resave: false,
     saveUninitialized: false,

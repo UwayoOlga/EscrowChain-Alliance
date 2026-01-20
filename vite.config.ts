@@ -17,7 +17,7 @@ export default defineConfig(({ mode }) => {
       wasm(),
       topLevelAwait(),
       nodePolyfills({
-        include: ['buffer', 'crypto', 'stream', 'util'],
+        include: ['buffer', 'crypto', 'stream', 'util', 'process', 'events'],
         globals: {
           Buffer: true,
           global: true,
@@ -26,8 +26,10 @@ export default defineConfig(({ mode }) => {
       }),
     ],
     define: {
+      global: 'globalThis',
+      'process.version': JSON.stringify('v18.0.0'),
       'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
     },
     resolve: {
       alias: {
@@ -36,6 +38,10 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       target: 'esnext'
+    },
+    optimizeDeps: {
+      include: ['lodash', 'recharts'],
+      exclude: ['@meshsdk/core', '@meshsdk/react'],
     }
   };
 });
