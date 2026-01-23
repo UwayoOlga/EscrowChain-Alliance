@@ -16,7 +16,7 @@ export interface Property {
   rentAmount: number;
   landlord: string;
   status: 'vacant' | 'occupied' | 'maintenance';
-  conditionStatus: 'pending_review' | 'tenant_approved' | 'landlord_approved' | 'fully_approved';
+  conditionStatus?: 'pending_review' | 'tenant_approved' | 'landlord_approved' | 'fully_approved';
 }
 
 export interface Dispute {

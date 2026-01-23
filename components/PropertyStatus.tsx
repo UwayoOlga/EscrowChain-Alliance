@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
 import { Property, UserRole } from '../types';
+import { propertyService } from '../services/api';
 import { Camera, Check, Upload, Home, Hammer, AlertTriangle, XCircle } from 'lucide-react';
 
 interface PropertyStatusProps {
    properties: Property[];
    role: UserRole;
+   refreshProperties?: () => void;
 }
 
-const PropertyStatus: React.FC<PropertyStatusProps> = ({ properties, role }) => {
+const PropertyStatus: React.FC<PropertyStatusProps> = ({ properties, role, refreshProperties }) => {
    const [activeProperty, setActiveProperty] = useState<string>(properties[0]?.id || '');
    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
    const [showSuccess, setShowSuccess] = useState(false);
+   const [isSubmitting, setIsSubmitting] = useState(false);
+   const [newProperty, setNewProperty] = useState({ address: '', rentAmount: '', depositAmount: '' });
    const [checklist, setChecklist] = useState({
       plumbing: true,
       electricity: true,
@@ -20,10 +24,31 @@ const PropertyStatus: React.FC<PropertyStatusProps> = ({ properties, role }) => 
    const currentProp = properties.find(p => p.id === activeProperty);
 
    const getStatusBadge = (status: string) => {
-      switch (status) {
+      switch (status) { // Status from DB is simple 'available', etc. Mapping if needed.
          case 'fully_approved': return <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold border border-green-200 whitespace-nowrap">Ready for Payout</span>;
          case 'pending_review': return <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-bold border border-yellow-200 whitespace-nowrap">Pending Review</span>;
-         default: return <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-bold border border-gray-200 whitespace-nowrap">{status.replace('_', ' ')}</span>;
+         default: return <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-bold border border-gray-200 whitespace-nowrap">{status ? status.replace('_', ' ') : 'Pending Review'}</span>;
+      }
+   };
+
+   const handleCreateProperty = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setIsSubmitting(true);
+      try {
+         await propertyService.createProperty({
+            address: newProperty.address,
+            rentAmount: parseFloat(newProperty.rentAmount),
+            depositAmount: parseFloat(newProperty.depositAmount),
+            images: []
+         });
+         setIsAddModalOpen(false);
+         setNewProperty({ address: '', rentAmount: '', depositAmount: '' });
+         if (refreshProperties) refreshProperties();
+      } catch (error) {
+         console.error("Failed to create property:", error);
+         alert("Failed to create property. Please try again.");
+      } finally {
+         setIsSubmitting(false);
       }
    };
 
@@ -172,23 +197,48 @@ const PropertyStatus: React.FC<PropertyStatusProps> = ({ properties, role }) => 
                      <h3 className="text-2xl font-bold text-slate-900 italic">ADD <span className="text-blue-600">PROPERTY</span></h3>
                      <button onClick={() => setIsAddModalOpen(false)} className="text-slate-400 hover:text-slate-900"><XCircle size={24} /></button>
                   </div>
-                  <form className="space-y-4">
+                  <form className="space-y-4" onSubmit={handleCreateProperty}>
                      <div>
                         <label className="block text-sm font-bold text-slate-700 mb-1 uppercase tracking-wider">Property Address</label>
-                        <input type="text" placeholder="e.g. 123 Blockchain Ave" className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-blue-600 focus:bg-white rounded-xl outline-none transition-all font-semibold" />
+                        <input
+                           type="text"
+                           placeholder="e.g. 123 Blockchain Ave"
+                           className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-blue-600 focus:bg-white rounded-xl outline-none transition-all font-semibold"
+                           value={newProperty.address}
+                           onChange={(e) => setNewProperty({ ...newProperty, address: e.target.value })}
+                           required
+                        />
                      </div>
                      <div className="grid grid-cols-2 gap-4">
                         <div>
                            <label className="block text-sm font-bold text-slate-700 mb-1 uppercase tracking-wider">Rent (₳)</label>
-                           <input type="number" placeholder="1200" className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-blue-600 focus:bg-white rounded-xl outline-none transition-all font-semibold" />
+                           <input
+                              type="number"
+                              placeholder="1200"
+                              className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-blue-600 focus:bg-white rounded-xl outline-none transition-all font-semibold"
+                              value={newProperty.rentAmount}
+                              onChange={(e) => setNewProperty({ ...newProperty, rentAmount: e.target.value })}
+                              required
+                           />
                         </div>
                         <div>
                            <label className="block text-sm font-bold text-slate-700 mb-1 uppercase tracking-wider">Deposit (₳)</label>
-                           <input type="number" placeholder="1800" className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-blue-600 focus:bg-white rounded-xl outline-none transition-all font-semibold" />
+                           <input
+                              type="number"
+                              placeholder="1800"
+                              className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent focus:border-blue-600 focus:bg-white rounded-xl outline-none transition-all font-semibold"
+                              value={newProperty.depositAmount}
+                              onChange={(e) => setNewProperty({ ...newProperty, depositAmount: e.target.value })}
+                              required
+                           />
                         </div>
                      </div>
-                     <button type="submit" className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold text-lg hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 mt-4">
-                        List Property
+                     <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className={`w-full py-4 rounded-2xl font-bold text-lg transition-all shadow-xl shadow-slate-200 mt-4 ${isSubmitting ? 'bg-slate-700 cursor-not-allowed' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
+                     >
+                        {isSubmitting ? 'Listing...' : 'List Property'}
                      </button>
                   </form>
                </div>
@@ -196,6 +246,7 @@ const PropertyStatus: React.FC<PropertyStatusProps> = ({ properties, role }) => 
          )}
       </div>
    );
+
 };
 
 export default PropertyStatus;

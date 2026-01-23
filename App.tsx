@@ -87,7 +87,7 @@ const App: React.FC = () => {
       case 'landing': return <LandingPage onLogin={handleLogin} wallet={wallet} setWallet={setWallet} />;
       case 'dashboard': return <Dashboard role={role} userProperties={properties} onViewChange={setCurrentView} />;
       case 'payment': return <Payment properties={properties} wallet={wallet} />;
-      case 'property': return <PropertyStatus properties={properties} role={role} />;
+      case 'property': return <PropertyStatus properties={properties} role={role} refreshProperties={fetchProperties} />;
       case 'dispute': return <DisputeResolution role={role} />;
       case 'admin': return <AdminDashboard />;
       default: return <Dashboard role={role} userProperties={properties} onViewChange={setCurrentView} />;

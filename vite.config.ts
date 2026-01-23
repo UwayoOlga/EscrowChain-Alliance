@@ -12,6 +12,9 @@ export default defineConfig(({ mode }) => {
       port: 3000,
       host: '0.0.0.0',
     },
+    css: {
+      devSourcemap: false,
+    },
     plugins: [
       react(),
       wasm(),
@@ -39,10 +42,11 @@ export default defineConfig(({ mode }) => {
       }
     },
     build: {
+      sourcemap: false,
       target: 'esnext'
     },
     optimizeDeps: {
-      include: ['lodash', 'recharts'],
+      include: ['lodash', 'recharts', '@cardano-sdk/util', '@cardano-sdk/core', '@cardano-sdk/crypto', 'bech32', 'blake2b', 'blakejs', 'bip39'],
       exclude: ['@meshsdk/core', '@meshsdk/react'],
     }
   };
