@@ -11,6 +11,9 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 3000,
       host: '0.0.0.0',
+      hmr: {
+        clientPort: 3000,
+      },
     },
     css: {
       devSourcemap: false,
@@ -39,7 +42,7 @@ export default defineConfig(({ mode }) => {
         '@': path.resolve(__dirname, '.'),
         react: path.resolve(__dirname, 'node_modules/react'),
         'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
-      }
+      },
     },
     build: {
       sourcemap: false,
@@ -47,7 +50,7 @@ export default defineConfig(({ mode }) => {
     },
     optimizeDeps: {
       include: ['lodash', 'recharts', '@cardano-sdk/util', '@cardano-sdk/core', '@cardano-sdk/crypto', 'bech32', 'blake2b', 'blakejs', 'bip39'],
-      exclude: ['@meshsdk/core', '@meshsdk/react'],
+      exclude: ['@meshsdk/core', '@meshsdk/react', '@harmoniclabs/uplc', '@harmoniclabs/plutus-data'],
     }
   };
 });
