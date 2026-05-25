@@ -1,314 +1,144 @@
-## EscrowChain-Alliance
-### Platform: Rental & Landlord Management with Cardano-powered escrow for trust, transparency, and automation.
----
+# BlockRent Escrow - Decentralized Rental Platform
 
-## PROJECT OVERVIEW
+A full-stack decentralized rental property management platform that combines traditional web technologies with Cardano blockchain for secure escrow payments.
 
-EscrowChain-Alliance is a next‑generation rental and property management platform that merges traditional web application architecture with blockchain-backed escrow. Using the Cardano blockchain and smart contracts written in Aiken, it ensures:
-
-* Secure and transparent escrow of rental payments
-* Automatic distribution of funds: rent, platform commission, tax
-* Immutable receipts and audit trails
-* Maintenance request handling and accountability
-* Remote landlord access and full property lifecycle tracking
-
-The platform connects three main user roles: Tenants, Landlords, and Admins.
-
----
-
-## FEATURES
-
-* Verified property listings with photos, documents, and inspection status
-* Tenant search and apply workflow with lease agreement and e‑signature
-* Payment options: mobile money, card payments, Cardano escrow
-* Smart escrow contract for rent — releases only upon lease conditions or admin approval
-* Automatic splitting: landlord payout, platform commission, tax escrow
-* Maintenance reporting and contractor assignment
-* Admin dashboard for audits, dispute resolution, tax reporting, compliance
-* PDF receipts and downloadable tax/commission reports
-* Role‑based dashboards (tenant, landlord, admin)
-* Seed data support for testing, migration scripts for database setup
-
----
-
-## INSTALLATION & SETUP
-
-1. Clone the repository
-
-   git clone [https://github.com/Gustaveizabayo/EscrowChain-Alliance.git](https://github.com/Gustaveizabayo/EscrowChain-Alliance.git)
-   cd EscrowChain-Alliance
-
-2. Backend setup (PHP)
-
-   cd backend
-   Install dependencies (using Composer or your preferred method)
-   Copy environment config (example `.env`) and configure database credentials, Cardano node/keys path, payment gateways
-
-3. Run database migrations & optional seed data
-
-   Run migrations to create tables
-   Run seed scripts if you want sample data for testing
-
-4. Start backend server
-
-   Use PHP built‑in server or use Apache/Nginx: e.g.,
-   php -S localhost:8000 -t public
-
-5. Frontend
-
-   Open `frontend/index.html` in your browser (or host via static server)
-   Frontend uses Tailwind CSS and plain JS — you can plug React/Vue if desired
-
-6. Blockchain / Cardano integration
-
-   Place Cardano keys in `blockchain/cardano/keys/` (do not commit real secret keys)
-   Use scripts in `blockchain/cardano/scripts/` to build, sign, and submit transactions
-   Configure backend or service to call these scripts when needed (e.g., for escrow deposit, release)
-
----
-
-## CONTRIBUTION GUIDELINES
-
-* Use feature branches for new work; name them clearly (e.g., `feature/escrow-release`)
-* Write tests for significant logic (backend services, smart‑contract interactions)
-* Document in docs/ when adding new endpoints or UI flows
-* Respect security: never commit private keys or secrets; keep `.env`, keys out of version control
-* Follow code style consistently; maintain clear comments and README updates
-
----
-
-
-# Running EscrowChain-Alliance
-
-EscrowChain-Alliance is a full-stack project with PHP backend, plain JS/HTML frontend, and Cardano/Aiken smart contract integration. To run it, you need:
-
-* PHP backend (with extensions like PDO, mbstring, OpenSSL)
-* Composer (PHP dependency manager)
-* Web browser for frontend
-* SQLite/MySQL/PostgreSQL (depending on configuration)
-* Node.js/NPM (optional, if using frontend build tools)
-* Cardano node CLI & Aiken compiler (for smart contracts)
-
----
-
-## 1. Prerequisites (Mac / Windows / Linux)
-
-### PHP & Composer
-
-* PHP 8.x recommended
-* Composer installed globally
-
-Check installation:
+## 🏗️ Project Structure
 
 ```
-php -v
-composer -v
+blockrent-escrow/
+├── frontend/           # React + TypeScript frontend
+├── backend/            # Node.js + Express API
+├── package.json        # Root package.json for managing both
+└── README.md          # This file
 ```
 
-### Database
+## 🚀 Quick Start
 
-* MySQL / PostgreSQL / SQLite
-* Ensure database server is running and accessible
-
-### Cardano CLI & Node
-
-* Install Cardano node according to OS instructions:
-  [https://docs.cardano.org/getting-started/running-cardano-node](https://docs.cardano.org/getting-started/running-cardano-node)
-
-Check installation:
-
-```
-cardano-cli --version
+1. **Install all dependencies:**
+```bash
+npm run install:all
 ```
 
-### Aiken Compiler
-
-* Install Aiken to compile smart contracts:
-  [https://github.com/AikenDev/aiken](https://github.com/AikenDev/aiken)
-
-Check installation:
-
-```
-aiken --version
+2. **Start development servers:**
+```bash
+npm run dev
 ```
 
-### Optional (Frontend Build)
+That's it! No external services or complex setup required.
 
-* Node.js & NPM if using Tailwind build scripts or JS bundlers
-* Browser for testing frontend
+- **Frontend:** http://localhost:5173
+- **Backend:** http://localhost:5000
+- **Database:** SQLite (created automatically)
 
----
+## 🔐 Authentication
 
-## 2. Installation Steps
+Simple email/password authentication:
+- **No Firebase setup needed**
+- **No external database required**
+- **SQLite database created automatically**
+- **Secure password hashing with bcryptjs**
+- **Session-based authentication**
 
-### MacOS
+## 🛠️ Available Scripts
 
-1. Clone the repo:
+- `npm run dev` - Start both frontend and backend in development mode
+- `npm run dev:frontend` - Start only the frontend
+- `npm run dev:backend` - Start only the backend
+- `npm run build` - Build the frontend for production
+- `npm run install:all` - Install dependencies for root, frontend, and backend
 
+## 🏛️ Architecture
+
+### Frontend (React + TypeScript)
+- **Framework:** React 18 with TypeScript
+- **Styling:** Tailwind CSS
+- **Build Tool:** Vite
+- **Blockchain:** Mesh SDK for Cardano wallet integration
+- **Auth:** Firebase Authentication
+
+### Backend (Node.js + Express)
+- **Runtime:** Node.js with Express framework
+- **Database:** SQLite (automatic setup)
+- **Auth:** Simple email/password with bcryptjs
+- **Smart Contracts:** Aiken (Cardano)
+
+### Blockchain (Cardano)
+- **Smart Contracts:** Written in Aiken
+- **Wallets:** Support for Nami, Eternl, Lace, Vespr
+- **Features:** Multi-signature escrow, immutable transaction history
+
+## 🎯 Key Features
+
+- **Secure Rent Payments:** Blockchain-based escrow with multi-signature requirements
+- **Property Management:** List properties, upload condition reports, track status
+- **Multi-Role System:** Different dashboards for tenants, landlords, and admins
+- **Dispute Resolution:** Built-in system for handling rental disputes
+- **Wallet Integration:** Native Cardano wallet support
+- **Responsive Design:** Mobile-friendly interface
+
+## 🔧 Development
+
+### Frontend Development
+```bash
+cd frontend
+npm run dev
 ```
-git clone https://github.com/Gustaveizabayo/EscrowChain-Alliance.git
-cd EscrowChain-Alliance
-```
 
-2. Backend setup:
-
-```
+### Backend Development
+```bash
 cd backend
-composer install
-cp .env.example .env
+npm run dev
 ```
 
-* Edit `.env` with database credentials, Cardano key paths, and API keys.
-
-3. Run database migrations:
-
-```
-php artisan migrate
-php artisan db:seed
+### Smart Contract Development
+```bash
+cd backend/contracts
+aiken build
 ```
 
-4. Start backend server:
+## 📁 Detailed Documentation
 
-```
-php -S localhost:8000 -t public
-```
+- [Frontend README](./frontend/README.md) - React app setup and components
+- [Backend README](./backend/README.md) - API endpoints and database setup
 
-5. Open frontend:
+## 🌐 Environment Setup
 
+### Frontend (.env)
 ```
-open frontend/index.html
-```
-
-6. Cardano / Aiken contracts:
-
-```
-cd blockchain/cardano/scripts
-./build-tx.sh
-./sign-tx.sh
-./submit-tx.sh
+# No environment variables needed
 ```
 
----
-
-### Windows
-
-1. Install **PHP**, **Composer**, **MySQL**, **Cardano node**, **Aiken**, and optionally Node.js.
-
-2. Clone the repo using Git Bash / Command Prompt:
-
+### Backend (.env)
 ```
-git clone https://github.com/Gustaveizabayo/EscrowChain-Alliance.git
-cd EscrowChain-Alliance
+SESSION_SECRET=your_long_random_session_secret
+PORT=5000
+NODE_ENV=development
 ```
 
-3. Backend setup:
+## 🚀 Deployment
 
+### Frontend
+```bash
+cd frontend
+npm run build
+# Deploy the dist/ folder to your hosting service
 ```
+
+### Backend
+```bash
 cd backend
-composer install
-copy .env.example .env
+npm start
+# Deploy to your server or cloud platform
 ```
 
-* Update `.env` file
+## 🤝 Contributing
 
-4. Run database migrations:
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
-```
-php artisan migrate
-php artisan db:seed
-```
+## 📄 License
 
-5. Start backend server (using Git Bash or CMD):
-
-```
-php -S localhost:8000 -t public
-```
-
-6. Open frontend in browser:
-
-```
-start frontend/index.html
-```
-
-7. Cardano / Aiken scripts (Git Bash):
-
-```
-cd blockchain/cardano/scripts
-bash build-tx.sh
-bash sign-tx.sh
-bash submit-tx.sh
-```
-
----
-
-### Linux (Ubuntu/Debian)
-
-1. Install dependencies:
-
-```
-sudo apt update
-sudo apt install php-cli php-mbstring php-xml composer git mysql-client
-```
-
-* Install Cardano node & Aiken compiler per instructions
-
-2. Clone repo:
-
-```
-git clone https://github.com/Gustaveizabayo/EscrowChain-Alliance.git
-cd EscrowChain-Alliance
-```
-
-3. Backend setup:
-
-```
-cd backend
-composer install
-cp .env.example .env
-```
-
-* Configure `.env`
-
-4. Run migrations:
-
-```
-php artisan migrate
-php artisan db:seed
-```
-
-5. Start backend server:
-
-```
-php -S localhost:8000 -t public
-```
-
-6. Open frontend in browser:
-
-```
-xdg-open frontend/index.html
-```
-
-7. Run Cardano/Aiken scripts:
-
-```
-cd blockchain/cardano/scripts
-./build-tx.sh
-./sign-tx.sh
-./submit-tx.sh
-```
-
----
-
-## Notes
-
-* **Database credentials** must match `.env` configuration.
-* **Cardano keys** should be stored safely in `blockchain/cardano/keys/` and **not committed to GitHub**.
-* Smart contracts should be **compiled and deployed** before running payment/escrow flows.
-* You can optionally run frontend on a live server or use Live Server extension in VSCode.
-
-
-
-## LICENSE
-
-Specify your license here MIT License.
-
+This project is private and proprietary.

@@ -5,7 +5,7 @@ import propertyImage from './assets/premium_property_kigali.png';
 import heroImage from './assets/LandingPageImageForHeroSection.jpg';
 import disputeImage from './assets/disputesResolutio.webp';
 import AuthModal from './AuthModal';
-import { WalletState } from '../types';
+import { WalletState } from '../../types';
 
 interface LandingPageProps {
     onLogin: (user: any) => void;

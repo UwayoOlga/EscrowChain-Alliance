@@ -1,7 +1,7 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { UserRole, Transaction, Property } from '../types';
-import { MOCK_TRANSACTIONS, CHART_DATA_PAYMENTS, CHART_DATA_DISPUTES, MOCK_DISPUTES, MOCK_PROPERTIES } from '../constants';
+import { UserRole, Transaction, Property } from '../../types';
+import { MOCK_TRANSACTIONS, CHART_DATA_PAYMENTS, CHART_DATA_DISPUTES, MOCK_DISPUTES, MOCK_PROPERTIES } from '../../constants';
 import { DollarSign, ShieldCheck, AlertCircle, Clock } from 'lucide-react';
 
 interface DashboardProps {

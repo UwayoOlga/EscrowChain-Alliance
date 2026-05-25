@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Dispute, UserRole } from '../types';
-import { MOCK_DISPUTES } from '../constants';
+import { Dispute, UserRole } from '../../types';
+import { MOCK_DISPUTES } from '../../constants';
 import { MessageSquare, FileText, Send, AlertOctagon, Upload } from 'lucide-react';
 
 interface DisputeProps {

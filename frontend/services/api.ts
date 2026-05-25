@@ -27,8 +27,12 @@ export const authService = {
         const response = await api.get('/auth/status');
         return response.data;
     },
-    firebaseLogin: async (idToken: string) => {
-        const response = await api.post('/auth/firebase-login', { idToken });
+    login: async (email: string, password: string) => {
+        const response = await api.post('/auth/login', { email, password });
+        return response.data;
+    },
+    register: async (name: string, email: string, password: string, role: string = 'tenant') => {
+        const response = await api.post('/auth/register', { name, email, password, role });
         return response.data;
     },
     logout: async () => {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Property, UserRole } from '../types';
-import { propertyService } from '../services/api';
+import { Property, UserRole } from '../../types';
+import { propertyService } from '../../services/api';
 import { Camera, Check, Upload, Home, Hammer, AlertTriangle, XCircle } from 'lucide-react';
 
 interface PropertyStatusProps {

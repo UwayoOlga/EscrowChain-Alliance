@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Property, WalletState } from '../types';
+import { Property, WalletState } from '../../types';
 import { CheckCircle, Lock, ArrowRight, AlertTriangle, Loader2 } from 'lucide-react';
 import { useWallet } from '@meshsdk/react';
 import { Transaction } from '@meshsdk/core';

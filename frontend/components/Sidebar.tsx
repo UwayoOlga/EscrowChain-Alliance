@@ -1,6 +1,6 @@
 import React from 'react';
 import { LayoutDashboard, CreditCard, Home, ShieldAlert, Settings, LogOut, Hexagon } from 'lucide-react';
-import { UserRole } from '../types';
+import { UserRole } from '../../types';
 
 interface SidebarProps {
   currentView: string;

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Wallet, XCircle, Loader2 } from 'lucide-react';
 import { useWallet } from '@meshsdk/react';
-import { WalletState } from '../types';
+import { WalletState } from '../../types';
 
 interface WalletConnectProps {
   wallet: WalletState;

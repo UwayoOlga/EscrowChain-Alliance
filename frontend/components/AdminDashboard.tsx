@@ -1,5 +1,5 @@
 import React from 'react';
-import { MOCK_TRANSACTIONS } from '../constants';
+import { MOCK_TRANSACTIONS } from '../../constants';
 import { Users, Activity, FileText } from 'lucide-react';
 
 const AdminDashboard: React.FC = () => {
