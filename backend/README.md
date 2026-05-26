@@ -1,15 +1,13 @@
-# BlockRent Escrow - Backend
+# EscrowChain Alliance - Backend
 
-Node.js + Express backend API for the BlockRent Escrow platform.
+Node.js + Express API for the EscrowChain rental escrow platform.
 
 ## Tech Stack
 
-- **Node.js** - Runtime environment
 - **Express** - Web framework
-- **PostgreSQL/SQLite** - Database (dual support)
-- **Firebase Admin** - Authentication verification
-- **Passport.js** - Authentication middleware
-- **Aiken** - Smart contract language (Cardano)
+- **SQLite / PostgreSQL** - Database (auto-fallback to SQLite)
+- **Passport.js** - Session-based authentication
+- **Aiken** - Smart contracts (Cardano)
 
 ## Getting Started
 
@@ -18,95 +16,79 @@ Node.js + Express backend API for the BlockRent Escrow platform.
 npm install
 ```
 
-2. Copy environment variables:
+2. Copy and configure environment:
 ```bash
 cp .env.example .env
 ```
 
-3. Configure your environment variables in `.env`:
-```
-# Database
-DATABASE_URL=postgresql://username:password@localhost:5432/blockrent_db
-
-# Firebase Admin
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-
-# Email (for OTP)
-EMAIL_USER=your_gmail@gmail.com
-EMAIL_PASS=your_app_password
-
-# Session
-SESSION_SECRET=your_session_secret
-
-# Server
-PORT=5000
-```
-
-4. Start the server:
+3. Start the dev server (auto-restarts on changes):
 ```bash
 npm run dev
 ```
 
-The API will be available at `http://localhost:5000`
-
-## Database Setup
-
-The backend supports both PostgreSQL and SQLite:
-
-- **PostgreSQL** (recommended for production): Set `DATABASE_URL` in your `.env`
-- **SQLite** (development fallback): Automatically created if no PostgreSQL URL is provided
-
-Tables are automatically created on server startup.
+The API runs at `http://localhost:5000`
 
 ## API Endpoints
 
-### Authentication
-- `POST /auth/firebase-login` - Login with Firebase ID token
-- `GET /auth/status` - Get current authentication status
-- `GET /auth/logout` - Logout user
+### Auth (`/auth`)
+| Method | Route | Description |
+|--------|-------|-------------|
+| POST | `/auth/register` | Register a new user |
+| POST | `/auth/login` | Login with email/password |
+| GET | `/auth/status` | Check login status |
+| GET | `/auth/logout` | Logout |
 
-### Properties
-- `GET /api/properties` - Get all properties
-- `POST /api/properties` - Create new property (authenticated)
-- `GET /api/properties/:id` - Get property by ID
+### Users (`/api/users`)
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | `/api/users/me` | Get your profile |
+| PATCH | `/api/users/me` | Update name or wallet address |
 
-## Smart Contracts
+### Properties (`/api/properties`)
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | `/api/properties` | List all properties |
+| POST | `/api/properties` | Create property (auth required) |
+| GET | `/api/properties/:id` | Get single property |
 
-The Aiken smart contracts are located in `contracts/validators/`:
+### Leases (`/api/leases`)
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | `/api/leases` | List your leases |
+| POST | `/api/leases` | Create a lease (landlord only) |
+| GET | `/api/leases/:id` | Get single lease |
+| PATCH | `/api/leases/:id/status` | Update lease status |
 
-- `escrow.ak` - Main escrow contract for rent payments
-
-### Contract Features
-- Multi-signature requirements for fund release
-- Rent collection with both parties' approval
-- Deposit refund protection
-- Lease completion handling
+### Escrow (`/api/escrow`)
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | `/api/escrow/lease/:leaseId` | Get escrow transactions for a lease |
+| POST | `/api/escrow` | Create escrow transaction (CollectRent, RefundDeposit, CompleteLease) |
+| PATCH | `/api/escrow/:id` | Update transaction status/tx_hash |
 
 ## Project Structure
 
 ```
 backend/
 ├── server/
-│   ├── index.js          # Express server setup
-│   ├── auth.js           # Authentication utilities
-│   ├── db.js             # Database abstraction layer
-│   ├── firebase-admin.js # Firebase Admin SDK setup
-│   ├── passport.js       # Passport configuration
-│   ├── properties.js     # Properties API routes
-│   ├── users.db          # SQLite database file
-│   └── sessions.db       # Session storage
+│   ├── index.js        # Server setup + middleware
+│   ├── auth.js         # Auth routes (register, login, logout)
+│   ├── users.js        # User profile + wallet linking
+│   ├── properties.js   # Property CRUD
+│   ├── leases.js       # Lease management
+│   ├── escrow.js       # Escrow transactions
+│   ├── passport.js     # Passport local strategy
+│   └── db.js           # Database layer (SQLite/PostgreSQL)
 ├── contracts/
-│   ├── aiken.toml        # Aiken project configuration
 │   └── validators/
-│       └── escrow.ak     # Escrow smart contract
+│       └── escrow.ak   # Escrow smart contract (Aiken)
+├── .env.example
 └── package.json
 ```
 
-## Development
+## Database
 
-The server automatically restarts when files change. For production deployment, use:
+- **SQLite** is used by default (zero config, great for dev)
+- **PostgreSQL** is used automatically if `DATABASE_URL` is set in `.env`
 
-```bash
-npm start
-```
+Tables are created automatically on startup.

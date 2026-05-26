@@ -1,15 +1,13 @@
 {
-  "name": "blockrent-escrow-backend",
+  "name": "escrowchain-backend",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "start": "node server/index.js",
-    "dev": "node server/index.js"
+    "dev": "nodemon server/index.js"
   },
   "dependencies": {
-    "@types/lodash": "^4.17.23",
-    "@types/uuid": "^10.0.0",
     "bcryptjs": "^3.0.3",
     "connect-pg-simple": "^10.0.0",
     "connect-sqlite3": "^0.9.16",
@@ -17,7 +15,6 @@
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "express-session": "^1.18.2",
-    "lodash": "^4.17.21",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",
     "pg": "^8.17.1",
@@ -25,7 +22,6 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
-    "@types/node": "^22.14.0",
-    "@types/passport-local": "^1.0.38"
+    "nodemon": "^3.1.10"
   }
 }

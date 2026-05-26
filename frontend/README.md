@@ -1,82 +1,16 @@
-# BlockRent Escrow - Frontend
+# React + Vite
 
-React + TypeScript frontend for the BlockRent Escrow platform.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Tech Stack
+Currently, two official plugins are available:
 
-- **React 18** - UI framework
-- **TypeScript** - Type safety
-- **Vite** - Build tool and dev server
-- **Tailwind CSS** - Styling
-- **Mesh SDK** - Cardano wallet integration
-- **Firebase** - Authentication
-- **Recharts** - Data visualization
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-## Getting Started
+## React Compiler
 
-1. Install dependencies:
-```bash
-npm install
-```
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-2. Copy environment variables:
-```bash
-cp .env.example .env
-```
+## Expanding the ESLint configuration
 
-3. Configure your environment variables in `.env`:
-```
-VITE_FIREBASE_API_KEY=your_firebase_api_key
-VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
-```
-
-4. Start the development server:
-```bash
-npm run dev
-```
-
-The frontend will be available at `http://localhost:5173`
-
-## Features
-
-- **Multi-role Dashboard** - Different interfaces for tenants, landlords, and admins
-- **Cardano Wallet Integration** - Support for Nami, Eternl, Lace, and Vespr wallets
-- **Property Management** - List, view, and manage rental properties
-- **Secure Payments** - Rent payments through Cardano smart contracts
-- **Dispute Resolution** - Built-in dispute handling system
-- **Responsive Design** - Mobile-friendly interface
-
-## Project Structure
-
-```
-frontend/
-├── components/          # React components
-│   ├── AdminDashboard.tsx
-│   ├── AuthModal.tsx
-│   ├── Dashboard.tsx
-│   ├── DisputeResolution.tsx
-│   ├── LandingPage.tsx
-│   ├── Payment.tsx
-│   ├── PropertyStatus.tsx
-│   ├── Sidebar.tsx
-│   ├── WalletConnect.tsx
-│   └── assets/         # Images and static assets
-├── services/           # API client services
-├── App.tsx            # Main application component
-├── index.tsx          # React entry point
-├── types.ts           # TypeScript type definitions
-├── constants.ts       # Application constants
-└── firebase-config.js # Firebase configuration
-```
-
-## Building for Production
-
-```bash
-npm run build
-```
-
-The built files will be in the `dist/` directory.
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
