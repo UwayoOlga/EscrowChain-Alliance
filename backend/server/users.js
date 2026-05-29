@@ -41,4 +41,39 @@ router.patch('/me', async (req, res) => {
     }
 });
 
+// Get tenants associated with the current landlord's properties
+router.get('/tenants', async (req, res) => {
+    if (req.user.role !== 'landlord') return res.status(403).json({ error: 'Access denied' });
+
+    try {
+        const result = await query(`
+            SELECT DISTINCT u.id, u.name, u.email, u.wallet_address 
+            FROM users u
+            JOIN leases l ON u.id = l.tenant_id
+            WHERE u.role = $1 AND l.landlord_id = $2
+        `, ['tenant', req.user.id]);
+        res.json(result.rows);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Search for a tenant by email (for creating new leases)
+router.get('/prospects', async (req, res) => {
+    const { email } = req.query;
+    if (req.user.role !== 'landlord') return res.status(403).json({ error: 'Access denied' });
+    if (!email) return res.status(400).json({ error: 'Email query parameter is required' });
+
+    try {
+        const result = await query(`
+            SELECT id, name, email, wallet_address 
+            FROM users 
+            WHERE role = 'tenant' AND email = $1
+        `, [email]);
+        res.json(result.rows);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 export default router;

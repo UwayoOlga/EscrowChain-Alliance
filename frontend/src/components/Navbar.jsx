@@ -6,43 +6,28 @@ export default function Navbar() {
     const { user } = useAuth();
 
     return (
-        <nav className="navbar">
-            <div className="container navbar-inner">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '48px' }}>
-                    <Link to="/" className="navbar-brand">
-                        <span className="brand-text">EscrowChain</span>
+        <nav className="navbar" style={{ height: '80px', borderBottom: '1px solid var(--border)', background: '#fff' }}>
+            <div className="container navbar-inner" style={{ height: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '64px' }}>
+                    <Link to="/" className="navbar-brand" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ width: '36px', height: '36px', background: 'var(--accent)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, borderRadius: '2px' }}>E</div>
+                        <span className="brand-text" style={{ fontSize: '1.4rem', fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--dark-slate)' }}>EscrowChain</span>
                     </Link>
 
-                    <div className="navbar-menu">
-                        <Link to="/" className="nav-item">Solutions</Link>
-                        <Link to="/" className="nav-item">Industries</Link>
-                        <Link to="/" className="nav-item">Insights</Link>
-                        <Link to="/" className="nav-item">About</Link>
+                    <div className="navbar-menu" style={{ display: 'flex', gap: '32px' }}>
+                        <Link to="/" className="nav-item" style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-secondary)' }}>Capabilities</Link>
+                        <Link to="/" className="nav-item" style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-secondary)' }}>Network Security</Link>
+                        <Link to="/" className="nav-item" style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-secondary)' }}>Solutions</Link>
                     </div>
                 </div>
 
-                <div className="navbar-links">
-                    <div className="language-dropdown">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-secondary)', marginRight: '4px' }}>
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-                            <path d="M2 12h20"></path>
-                        </svg>
-                        <select className="lang-select" defaultValue="EN">
-                            <option value="EN">EN - English</option>
-                            <option value="ZH">ZH - 中文</option>
-                            <option value="HI">HI - हिन्दी</option>
-                            <option value="ES">ES - Español</option>
-                            <option value="FR">FR - Français</option>
-                        </select>
-                    </div>
-
+                <div className="navbar-links" style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
                     {user ? (
-                        <Link to="/dashboard" className="btn btn-primary btn-sm btn-square">Dashboard</Link>
+                        <Link to="/dashboard" className="btn btn-primary btn-sm btn-square">Open Dashboard</Link>
                     ) : (
                         <>
-                            <Link to="/login" className="nav-link">Client Login</Link>
-                            <Link to="/register" className="btn btn-primary btn-sm btn-square">Contact Sales</Link>
+                            <Link to="/login" className="nav-link" style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Sign In</Link>
+                            <Link to="/register" className="btn btn-primary btn-sm btn-square" style={{ padding: '10px 24px' }}>Request Access</Link>
                         </>
                     )}
                 </div>

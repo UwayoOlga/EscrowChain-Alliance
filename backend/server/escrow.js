@@ -12,12 +12,17 @@ const requireAuth = (req, res, next) => {
 
 router.use(requireAuth);
 
-// Get escrow transactions for a lease
-router.get('/lease/:leaseId', async (req, res) => {
+// Get all escrow transactions for the logged-in user (across all leases)
+router.get('/my-transactions', async (req, res) => {
     try {
         const result = await query(
-            'SELECT * FROM escrow_transactions WHERE lease_id = $1 ORDER BY created_at DESC',
-            [req.params.leaseId]
+            `SELECT et.*, l.id as lease_uid, p.address as property_address 
+             FROM escrow_transactions et
+             JOIN leases l ON et.lease_id = l.id
+             JOIN properties p ON l.property_id = p.id
+             WHERE l.landlord_id = $1 OR l.tenant_id = $1
+             ORDER BY et.created_at DESC`,
+            [req.user.id]
         );
         res.json(result.rows);
     } catch (error) {

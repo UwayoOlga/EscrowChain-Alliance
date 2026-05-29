@@ -66,11 +66,18 @@ const initDb = async () => {
         CREATE TABLE IF NOT EXISTS properties (
             id TEXT PRIMARY KEY,
             landlord_id TEXT NOT NULL,
+            title TEXT,
             address TEXT NOT NULL,
+            description TEXT,
             rent_amount REAL NOT NULL,
             deposit_amount REAL NOT NULL,
+            bedrooms INTEGER DEFAULT 0,
+            bathrooms INTEGER DEFAULT 0,
+            size TEXT,
+            amenities TEXT,
             status TEXT DEFAULT 'available',
             images TEXT,
+            lease_template TEXT,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (landlord_id) REFERENCES users(id)
         )
@@ -106,6 +113,38 @@ const initDb = async () => {
             FOREIGN KEY (lease_id) REFERENCES leases(id)
         )
     `);
+
+    await query(`
+        CREATE TABLE IF NOT EXISTS disputes (
+            id TEXT PRIMARY KEY,
+            lease_id TEXT NOT NULL,
+            raised_by TEXT NOT NULL,
+            reason TEXT NOT NULL,
+            status TEXT DEFAULT 'pending',
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (lease_id) REFERENCES leases(id),
+            FOREIGN KEY (raised_by) REFERENCES users(id)
+        )
+    `);
+
+    // Ensure columns exist (for existing databases)
+    const alterTables = [
+        ['properties', 'title', 'TEXT'],
+        ['properties', 'images', 'TEXT'],
+        ['properties', 'lease_template', 'TEXT'],
+        ['properties', 'created_at', 'TEXT DEFAULT CURRENT_TIMESTAMP'],
+        ['properties', 'bedrooms', 'INTEGER DEFAULT 0'],
+        ['properties', 'bathrooms', 'INTEGER DEFAULT 0'],
+        ['properties', 'size', 'TEXT'],
+        ['properties', 'amenities', 'TEXT'],
+        ['leases', 'created_at', 'TEXT DEFAULT CURRENT_TIMESTAMP']
+    ];
+
+    for (const [table, col, type] of alterTables) {
+        try {
+            await query(`ALTER TABLE ${table} ADD COLUMN ${col} ${type}`);
+        } catch (e) { /* column already exists */ }
+    }
 
     console.log('✅ Database tables ready.');
 };

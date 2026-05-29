@@ -7,142 +7,309 @@ export default function Dashboard() {
     const { user } = useAuth();
     const [properties, setProperties] = useState([]);
     const [leases, setLeases] = useState([]);
+    const [transactions, setTransactions] = useState([]);
+    const [disputes, setDisputes] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        if (!user) return;
         Promise.all([
-            api.getProperties().catch(() => []),
-            api.getLeases().catch(() => [])
-        ]).then(([props, leas]) => {
-            setProperties(Array.isArray(props) ? props : []);
-            setLeases(Array.isArray(leas) ? leas : []);
+            api.getProperties(),
+            api.getLeases(),
+            api.getTransactions(),
+            api.getDisputes()
+        ]).then(([p, l, t, d]) => {
+            setProperties(p || []);
+            setLeases(l || []);
+            setTransactions(t || []);
+            setDisputes(d || []);
+        }).catch(err => {
+            console.error(err);
+        }).finally(() => {
             setLoading(false);
         });
-    }, []);
+    }, [user]);
 
-    const activeLeases = leases.filter(l => l.status === 'active');
-    const pendingLeases = leases.filter(l => l.status === 'pending');
+    if (loading) return <div className="page container"><p>Loading Portfolio Data...</p></div>;
 
-    // Landlord Metrics
-    const myProperties = properties.filter(p => p.landlord_id === user?.id);
-    const totalYield = activeLeases.reduce((sum, l) => sum + (l.rent_amount || 0), 0);
-    const tenantRentOutput = activeLeases.reduce((sum, l) => sum + (l.rent_amount || 0), 0);
-    const tenantEscrowLocked = leases.reduce((sum, l) => sum + (l.deposit_amount || 0), 0);
+    const isLandlord = user?.role?.toLowerCase() === 'landlord';
 
-    if (loading) return <div className="page container"><p>Loading...</p></div>;
+    // Role-specific stats
+    const myProperties = properties.filter(p => p.landlord_id === user.id);
+    const myLeases = leases.filter(l => isLandlord ? l.landlord_id === user.id : l.tenant_id === user.id);
+    const activeLeases = myLeases.filter(l => l.status === 'active');
+    const pendingLeases = myLeases.filter(l => l.status === 'pending');
+    const activeDisputes = disputes.filter(d => d.status === 'pending');
 
-    return (
-        <div className="page container fade-in">
-            <div className="page-header" style={{ marginBottom: '40px', borderBottom: '1px solid var(--border)', paddingBottom: '24px' }}>
-                <span className="text-overline">Enterprise Portal</span>
-                <h1 style={{ fontSize: '2.5rem', letterSpacing: '-0.02em', marginBottom: '8px' }}>Welcome back, {user?.name}</h1>
-                <p>Dashboard Overview / <strong>{user?.role.toUpperCase()} VIEW</strong></p>
-            </div>
+    // Financial Stats
+    const totalTransactions = transactions.filter(t => t.status === 'confirmed');
+    const totalEarnings = totalTransactions
+        .filter(t => t.action === (isLandlord ? 'CollectRent' : 'None')) // Tenants don't "earn" rent
+        .reduce((sum, t) => sum + t.amount, 0);
 
-            {user?.role === 'landlord' ? (
-                <>
-                    <div className="grid grid-4" style={{ marginBottom: 40 }}>
-                        <div className="card stat-card" style={{ borderTop: '4px solid var(--dark-slate)' }}>
-                            <div className="stat-value">{myProperties.length}</div>
-                            <div className="stat-label">Portfolio Assets</div>
-                        </div>
-                        <div className="card stat-card" style={{ borderTop: '4px solid var(--accent)' }}>
-                            <div className="stat-value">{activeLeases.length}</div>
-                            <div className="stat-label">Active Contracts</div>
-                        </div>
-                        <div className="card stat-card" style={{ borderTop: '4px solid var(--success)' }}>
-                            <div className="stat-value">₳ {totalYield}</div>
-                            <div className="stat-label">Monthly Gross Yield</div>
-                        </div>
-                        <div className="card stat-card" style={{ borderTop: '4px solid var(--warning)' }}>
-                            <div className="stat-value">{pendingLeases.length}</div>
-                            <div className="stat-label">Pending Signatures</div>
-                        </div>
-                    </div>
-                </>
-            ) : (
-                <>
-                    <div className="grid grid-3" style={{ marginBottom: 40 }}>
-                        <div className="card stat-card" style={{ borderTop: '4px solid var(--accent)' }}>
-                            <div className="stat-value">{activeLeases.length}</div>
-                            <div className="stat-label">Active Contracts</div>
-                        </div>
-                        <div className="card stat-card" style={{ borderTop: '4px solid var(--dark-slate)' }}>
-                            <div className="stat-value">
-                                ₳ {tenantRentOutput}
-                            </div>
-                            <div className="stat-label">Next Rent Due</div>
-                        </div>
-                        <div className="card stat-card" style={{ borderTop: '4px solid var(--success)' }}>
-                            <div className="stat-value">
-                                ₳ {tenantEscrowLocked}
-                            </div>
-                            <div className="stat-label">Total Escrow Locked</div>
-                        </div>
-                    </div>
-                </>
-            )}
+    const totalPaid = totalTransactions
+        .filter(t => t.action === 'CollectRent')
+        .reduce((sum, t) => sum + t.amount, 0);
 
-            <div className="grid grid-2">
-                <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                    <div style={{ padding: '24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <h3 style={{ fontSize: '1.1rem' }}>{user?.role === 'landlord' ? 'Your Portfolio' : 'Market Properties'}</h3>
-                        <Link to="/properties" className="btn btn-secondary btn-sm btn-square">View All</Link>
-                    </div>
-                    {properties.length === 0 ? (
-                        <div className="empty-state" style={{ padding: '40px 20px' }}>
-                            <p style={{ marginBottom: '16px' }}>No properties found</p>
-                            {user?.role === 'landlord' && (
-                                <Link to="/properties" className="btn btn-primary btn-sm btn-square">Add First Property</Link>
-                            )}
-                        </div>
-                    ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            {(user?.role === 'landlord' ? myProperties : properties).slice(0, 4).map(p => (
-                                <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderBottom: '1px solid var(--border)' }}>
-                                    <div>
-                                        <div style={{ fontWeight: 600, color: 'var(--dark-slate)' }}>{p.address}</div>
-                                        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px' }}>₳ {p.rent_amount} / month • Deposit: ₳ {p.deposit_amount}</div>
-                                    </div>
-                                    <span className={`badge ${p.status === 'available' ? 'badge-success' : 'badge-warning'}`}>
-                                        {p.status}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+    const escrowBalance = transactions
+        .filter(t => t.status === 'pending')
+        .reduce((sum, t) => sum + t.amount, 0);
+
+    const recentPayments = transactions.slice(0, 5);
+
+    // LANDLORD UI
+    if (isLandlord) {
+        const totalProperties = myProperties.length;
+        const occupiedCount = activeLeases.length;
+        const occupancyRate = totalProperties > 0 ? (occupiedCount / totalProperties) * 100 : 0;
+
+        return (
+            <div className="dashboard-enterprise fade-in">
+                <div className="dashboard-intro" style={{ marginBottom: '32px' }}>
+                    <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--dark-slate)' }}>Management Overview</h1>
+                    <p style={{ color: 'var(--text-secondary)' }}>Executive audit of your real estate portfolio performance.</p>
                 </div>
 
-                <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                    <div style={{ padding: '24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <h3 style={{ fontSize: '1.1rem' }}>Escrow Contracts</h3>
-                        <Link to="/leases" className="btn btn-secondary btn-sm btn-square">Manage Contracts</Link>
+                <div className="grid grid-4" style={{ marginBottom: '32px' }}>
+                    <div className="card metric-card" style={{ borderTop: 'none' }}>
+                        <span className="metric-label">Occupancy Rate</span>
+                        <div className="metric-value">{occupancyRate.toFixed(1)}%</div>
+                        <div className="metric-sub">{occupiedCount} of {totalProperties} Units</div>
                     </div>
-                    {leases.length === 0 ? (
-                        <div className="empty-state" style={{ padding: '40px 20px' }}>
-                            <p style={{ marginBottom: '16px' }}>No active contracts</p>
-                            <Link to="/leases" className="btn btn-secondary btn-sm btn-square">Find Contracts</Link>
-                        </div>
-                    ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            {leases.slice(0, 4).map(l => (
-                                <div key={l.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderBottom: '1px solid var(--border)' }}>
-                                    <div>
-                                        <div style={{ fontWeight: 600, color: 'var(--dark-slate)' }}>Agreement #{l.id}</div>
-                                        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-                                            {l.start_date} &rarr; {l.end_date}
+                    <div className="card metric-card" style={{ borderTop: 'none' }}>
+                        <span className="metric-label">Total Realized Yield</span>
+                        <div className="metric-value">₳ {totalEarnings.toLocaleString()}</div>
+                        <div className="metric-sub">Confirmed Ledger Transfers</div>
+                    </div>
+                    <div className="card metric-card" style={{ borderTop: 'none' }}>
+                        <span className="metric-label">In Escrow (Pending)</span>
+                        <div className="metric-value">₳ {escrowBalance.toLocaleString()}</div>
+                        <div className="metric-sub">Funds in Smart Contract</div>
+                    </div>
+                    <div className="card metric-card" style={{ borderLeft: activeDisputes.length > 0 ? '4px solid var(--danger)' : '' }}>
+                        <span className="metric-label">Active Disputes</span>
+                        <div className="metric-value" style={{ color: activeDisputes.length > 0 ? 'var(--danger)' : '' }}>{activeDisputes.length}</div>
+                        <div className="metric-sub">Requiring Mediation</div>
+                    </div>
+                </div>
+
+                <div className="dashboard-row" style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr', gap: '32px' }}>
+                    <div className="dashboard-main-col">
+                        <div className="card" style={{ marginBottom: '32px', height: '300px', display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
+                                <h3 style={{ fontSize: '1rem', fontWeight: 700 }}>Revenue Performance</h3>
+                                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Last 6 Months (₳)</span>
+                            </div>
+                            <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: '12px', padding: '0 12px' }}>
+                                {[40, 65, 45, 80, 55, 90].map((h, i) => (
+                                    <div key={i} style={{ flex: 1, background: i === 5 ? 'var(--dark-slate)' : 'var(--bg-secondary)', height: `${h}%`, borderRadius: '2px', position: 'relative' }}>
+                                        <div style={{ position: 'absolute', bottom: '-24px', left: '50%', transform: 'translateX(-50%)', fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                                            {['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN'][i]}
                                         </div>
                                     </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                        <span style={{ fontWeight: 600, color: 'var(--dark-slate)' }}>₳ {l.rent_amount}/mo</span>
-                                        <span className={`badge ${l.status === 'active' ? 'badge-success' : l.status === 'pending' ? 'badge-warning' : 'badge-info'}`}>
-                                            {l.status}
-                                        </span>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="card" style={{ padding: 0 }}>
+                            <div style={{ padding: '24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Recent Ledger Activity</h3>
+                                <Link to="/payments" className="link-arrow dark" style={{ fontSize: '0.85rem' }}>Full History &rarr;</Link>
+                            </div>
+                            <div className="table-wrap">
+                                <table style={{ border: 'none' }}>
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Asset</th>
+                                            <th>Action</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {recentPayments.map(t => (
+                                            <tr key={t.id}>
+                                                <td style={{ fontSize: '0.85rem' }}>{new Date(t.created_at).toLocaleDateString()}</td>
+                                                <td style={{ fontWeight: 600 }}>{t.property_address || 'Ref: ' + t.lease_id?.substring(0, 8)}</td>
+                                                <td>{t.action}</td>
+                                                <td style={{ fontWeight: 700 }}>₳ {t.amount}</td>
+                                                <td><span className={`badge ${t.status === 'confirmed' ? 'badge-success' : 'badge-warning'}`}>{t.status}</span></td>
+                                            </tr>
+                                        ))}
+                                        {recentPayments.length === 0 && (
+                                            <tr><td colSpan="5" style={{ textAlign: 'center', padding: '60px' }}>No recent financial events.</td></tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="dashboard-side-col">
+                        <div className="card" style={{ marginBottom: '32px' }}>
+                            <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '20px' }}>Priority Alerts</h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                {activeDisputes.length > 0 && (
+                                    <div className="card" style={{ padding: '16px', background: 'var(--danger-bg)', border: 'none', boxShadow: 'none' }}>
+                                        <div style={{ fontWeight: 700, color: 'var(--danger)', fontSize: '0.85rem' }}>Conflict Management Required</div>
+                                        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Case-{activeDisputes[0].id.substring(0, 8)} awaiting your response.</p>
+                                    </div>
+                                )}
+                                {pendingLeases.length > 0 && (
+                                    <div className="card" style={{ padding: '16px', background: 'var(--warning-bg)', border: 'none', boxShadow: 'none' }}>
+                                        <div style={{ fontWeight: 700, color: 'var(--warning)', fontSize: '0.85rem' }}>Lease Proposal Status</div>
+                                        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{pendingLeases.length} proposals pending tenant signature.</p>
+                                    </div>
+                                )}
+                                {activeDisputes.length === 0 && pendingLeases.length === 0 && (
+                                    <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--border-hover)" strokeWidth="1.5" style={{ marginBottom: '12px' }}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                                        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Protocol state: Stable.</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="card">
+                            <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '20px' }}>Asset Summary</h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                                    <span style={{ color: 'var(--text-secondary)' }}>Portfolio Occupancy</span>
+                                    <span style={{ fontWeight: 700 }}>{occupiedCount} / {totalProperties}</span>
+                                </div>
+                                <div className="progress-bar" style={{ height: '6px', background: 'var(--bg-secondary)', borderRadius: '3px', overflow: 'hidden' }}>
+                                    <div style={{ height: '100%', background: 'var(--dark-slate)', width: `${occupancyRate}%` }}></div>
+                                </div>
+                            </div>
+                            <Link to="/properties" className="btn btn-secondary btn-sm btn-square" style={{ width: '100%', marginTop: '24px' }}>
+                                Manage Properties
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // TENANT UI
+    const activeLease = activeLeases[0];
+    const myProperty = activeLease ? properties.find(p => p.id === activeLease.property_id) : null;
+
+    return (
+        <div className="dashboard-enterprise fade-in">
+            <div className="dashboard-intro" style={{ marginBottom: '32px' }}>
+                <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--dark-slate)' }}>Resident Dashboard</h1>
+                <p style={{ color: 'var(--text-secondary)' }}>Overview of your active rental agreements and transaction history.</p>
+            </div>
+
+            <div className="grid grid-4" style={{ marginBottom: '32px' }}>
+                <div className="card metric-card" style={{ borderTop: 'none' }}>
+                    <span className="metric-label">Rental Status</span>
+                    <div className="metric-value" style={{ fontSize: '1.2rem', color: activeLease ? 'var(--success)' : 'var(--text-muted)' }}>
+                        {activeLease ? 'LEASE ACTIVE' : 'NO ACTIVE LEASE'}
+                    </div>
+                    <div className="metric-sub">{activeLease ? myProperty?.address : 'Available to rent'}</div>
+                </div>
+                <div className="card metric-card" style={{ borderTop: 'none' }}>
+                    <span className="metric-label">Locked Deposit</span>
+                    <div className="metric-value">₳ {activeLease?.deposit_amount || 0}</div>
+                    <div className="metric-sub">Held in Escrow Contract</div>
+                </div>
+                <div className="card metric-card" style={{ borderTop: 'none' }}>
+                    <span className="metric-label">Total Paid (Ledger)</span>
+                    <div className="metric-value">₳ {totalPaid.toLocaleString()}</div>
+                    <div className="metric-sub">Verified Rent Transfers</div>
+                </div>
+                <div className="card metric-card" style={{ borderLeft: activeDisputes.length > 0 ? '4px solid var(--danger)' : '' }}>
+                    <span className="metric-label">Open Disputes</span>
+                    <div className="metric-value" style={{ color: activeDisputes.length > 0 ? 'var(--danger)' : '' }}>{activeDisputes.length}</div>
+                    <div className="metric-sub">Pending Resolution</div>
+                </div>
+            </div>
+
+            <div className="dashboard-row" style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr', gap: '32px' }}>
+                <div className="dashboard-main-col">
+                    <div className="card" style={{ marginBottom: '32px', padding: '40px' }}>
+                        <h3 style={{ marginBottom: '24px', fontWeight: 800 }}>My Active Home</h3>
+                        {activeLease ? (
+                            <div className="grid grid-2" style={{ gap: '32px' }}>
+                                <div>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '8px' }}>Property</div>
+                                    <div style={{ fontSize: '1.2rem', fontWeight: 700 }}>{myProperty?.title}</div>
+                                    <p style={{ color: 'var(--text-secondary)', marginTop: '4px' }}>{myProperty?.address}</p>
+
+                                    <div style={{ marginTop: '24px' }}>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '8px' }}>Lease Expiry</div>
+                                        <div style={{ fontWeight: 600 }}>{new Date(activeLease.end_date).toLocaleDateString()}</div>
                                     </div>
                                 </div>
-                            ))}
+                                <div style={{ borderLeft: '1px solid var(--border)', paddingLeft: '32px' }}>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '8px' }}>Monthly Rent</div>
+                                    <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--dark-slate)' }}>₳ {activeLease.rent_amount}</div>
+                                    <button className="btn btn-dark btn-square" style={{ width: '100%', marginTop: '24px' }}>Pay Current Rent</button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                                <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>You do not have any active lease agreements at this time.</p>
+                                <Link to="/properties" className="btn btn-primary btn-square">Browse Verified Assets</Link>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="card" style={{ padding: 0 }}>
+                        <div style={{ padding: '24px', borderBottom: '1px solid var(--border)' }}>
+                            <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>My Transaction Ledger</h3>
                         </div>
-                    )}
+                        <div className="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Type</th>
+                                        <th>Amount</th>
+                                        <th>Tx Hash</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {totalTransactions.length > 0 ? totalTransactions.slice(0, 5).map(t => (
+                                        <tr key={t.id}>
+                                            <td>{new Date(t.created_at).toLocaleDateString()}</td>
+                                            <td>{t.action}</td>
+                                            <td style={{ fontWeight: 700 }}>₳ {t.amount}</td>
+                                            <td style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>{t.tx_hash?.substring(0, 16)}...</td>
+                                            <td><span className="badge badge-success">Confirmed</span></td>
+                                        </tr>
+                                    )) : (
+                                        <tr><td colSpan="5" style={{ textAlign: 'center', padding: '60px', color: 'var(--text-muted)' }}>No on-chain history found.</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="dashboard-side-col">
+                    <div className="card" style={{ marginBottom: '32px' }}>
+                        <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '20px' }}>Security & Escrow</h3>
+                        <div style={{ padding: '24px', background: 'var(--bg-secondary)', borderRadius: '4px' }}>
+                            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                                Your security deposit of <strong>₳ {activeLease?.deposit_amount || 0}</strong> is currently secured by a multi-sig smart contract on the Cardano blockchain. It can only be released upon mutual agreement or dispute resolution.
+                            </p>
+                        </div>
+                        <button className="btn btn-secondary btn-sm btn-square" style={{ width: '100%', marginTop: '16px' }}>View Contract Protocol</button>
+                    </div>
+
+                    <div className="card">
+                        <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '20px' }}>Tenant Support</h3>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '24px' }}>Need to report a maintenance issue or raise a dispute regarding your active home?</p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <button className="btn btn-dark btn-sm btn-square">File Maintenance Request</button>
+                            <Link to="/disputes" className="btn btn-danger btn-sm btn-square" style={{ textAlign: 'center', textDecoration: 'none' }}>Initiate Dispute Resolution</Link>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

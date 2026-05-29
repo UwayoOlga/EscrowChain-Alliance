@@ -11,6 +11,13 @@ import propertiesRouter from './properties.js';
 import leasesRouter from './leases.js';
 import escrowRouter from './escrow.js';
 import usersRouter from './users.js';
+import disputesRouter from './disputes.js';
+
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -18,8 +25,15 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
-app.use(express.json());
+app.use(cors({
+    origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'],
+    credentials: true
+}));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Serve static files for property images
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Session store — PostgreSQL or SQLite depending on config
 const PostgresStore = pgSession(session);
@@ -30,7 +44,7 @@ const sessionStore = dbType === 'postgres'
     : new SQLite({ db: 'sessions.db', dir: './server' });
 
 app.use(session({
-    store: sessionStore,
+    // store: sessionStore, // Commented out for debugging
     secret: process.env.SESSION_SECRET || 'escrowchain-secret',
     resave: false,
     saveUninitialized: false,
@@ -49,6 +63,7 @@ app.use('/api/properties', propertiesRouter);
 app.use('/api/leases', leasesRouter);
 app.use('/api/escrow', escrowRouter);
 app.use('/api/users', usersRouter);
+app.use('/api/disputes', disputesRouter);
 
 app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
