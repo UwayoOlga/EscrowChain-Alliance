@@ -52,7 +52,7 @@
   --transition: 0.15s ease-in-out;
 
   /* ── Typography scale ── */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
 
   --text-xs: 0.75rem;
   /* 12px */
@@ -127,8 +127,19 @@ a:hover {
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all var(--transition);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .btn-primary {
@@ -181,7 +192,7 @@ a:hover {
   color: var(--text-primary);
   font-family: inherit;
   font-size: 0.95rem;
-  transition: border-color var(--transition);
+  transition: all 0.2s ease;
   outline: none;
 }
 
@@ -189,6 +200,7 @@ a:hover {
 .select:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-glow);
+  transform: translateY(-1px);
 }
 
 .input::placeholder {
@@ -214,11 +226,12 @@ a:hover {
   border-radius: var(--radius);
   padding: 24px;
   box-shadow: var(--shadow);
-  transition: all var(--transition);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card:hover {
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+  border-color: var(--border-hover);
 }
 
 /* Badges */

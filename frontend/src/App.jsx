@@ -12,6 +12,8 @@ import Landing from './pages/Landing';
 import Tenants from './pages/Tenants';
 import Payments from './pages/Payments';
 import Disputes from './pages/Disputes';
+import Documents from './pages/Documents';
+import Maintenance from './pages/Maintenance';
 import MainLayout from './components/MainLayout';
 
 // Protect private routes
@@ -42,6 +44,8 @@ function AppContent() {
           <Route path="/tenants" element={<PrivateRoute><Tenants /></PrivateRoute>} />
           <Route path="/payments" element={<PrivateRoute><Payments /></PrivateRoute>} />
           <Route path="/disputes" element={<PrivateRoute><Disputes /></PrivateRoute>} />
+          <Route path="/documents" element={<PrivateRoute><Documents /></PrivateRoute>} />
+          <Route path="/maintenance" element={<PrivateRoute><Maintenance /></PrivateRoute>} />
           <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
 
           <Route path="*" element={<Navigate to="/" replace />} />

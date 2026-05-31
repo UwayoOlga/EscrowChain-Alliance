@@ -55,4 +55,13 @@ export const api = {
     getDisputes: () => request('/api/disputes'),
     createDispute: (body) => request('/api/disputes', { method: 'POST', body }),
     updateDisputeStatus: (id, status) => request(`/api/disputes/${id}/status`, { method: 'PATCH', body: { status } }),
+
+    // Maintenance
+    getMaintenanceRequests: () => request('/api/maintenance'),
+    createMaintenanceRequest: (body) => request('/api/maintenance', { method: 'POST', body }),
+    updateMaintenanceStatus: (id, status) => request(`/api/maintenance/${id}/status`, { method: 'PATCH', body: { status } }),
+
+    // Documents
+    getDocuments: () => request('/api/documents'),
+    createDocument: (body) => request('/api/documents', { method: 'POST', body }),
 };

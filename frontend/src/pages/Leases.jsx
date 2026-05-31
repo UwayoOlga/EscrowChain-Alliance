@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 import { useWallet } from '@meshsdk/react';
+import { Transaction } from '@meshsdk/core';
 
 export default function Leases() {
     const { user } = useAuth();
@@ -28,24 +29,42 @@ export default function Leases() {
 
         setProcessing(lease.id);
         try {
-            // Placeholder: Actual Mesh transaction would go here
-            // const tx = new Transaction({ initiator: wallet });
-            // tx.sendLovelace(addr, amount);
-            // const signedTx = await wallet.signTx(tx);
-            // const txHash = await wallet.submitTx(signedTx);
+            console.log('Building on-chain transaction for lease:', lease.id);
 
-            console.log('Simulating on-chain verification for lease:', lease.id);
-            await new Promise(r => setTimeout(r, 1500)); // Simulate tx delay
+            const tx = new Transaction({ initiator: wallet });
+
+            // Calculate total locked amount in Lovelace (ADA * 1,000,000)
+            const totalAda = Number(lease.rent_amount) + Number(lease.deposit_amount);
+            const lovelace = (totalAda * 1000000).toString();
+
+            // Destination is our Escrow Contract Address (Dummy testnet address for now)
+            const escrowAddress = 'addr_test1qrz...';
+            tx.sendLovelace(escrowAddress, lovelace);
+
+            // Build, Sign and Submit via connected wallet extension
+            const unsignedTx = await tx.build();
+            const signedTx = await wallet.signTx(unsignedTx);
+            const txHash = await wallet.submitTx(signedTx);
+
+            console.log('Transaction confirmed on-chain. Hash:', txHash);
 
             await api.updateLeaseStatus(lease.id, 'active');
 
             // Log the escrow transaction
             await api.createEscrow({
                 leaseId: lease.id,
-                action: 'CollectRent',
-                amount: lease.rent_amount + lease.deposit_amount,
-                txHash: 'mock_tx_' + Date.now()
+                action: 'ContractSigned',
+                amount: totalAda,
+                txHash: txHash
             });
+
+            // Auto-generate the signed lease document for both parties
+            await api.createDocument({
+                title: `Lease Contract CT-${lease.id.substring(0, 8).toUpperCase()}`,
+                fileUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', // Dummy PDF representing the signed contract
+                type: 'lease' // Maps to the badge style on the Documents page
+            });
+
 
             load();
         } catch (err) {

@@ -30,10 +30,23 @@ router.get('/my-transactions', async (req, res) => {
     }
 });
 
+// Get escrow transactions for a specific lease
+router.get('/lease/:leaseId', async (req, res) => {
+    try {
+        const result = await query(
+            `SELECT * FROM escrow_transactions WHERE lease_id = $1 ORDER BY created_at DESC`,
+            [req.params.leaseId]
+        );
+        res.json(result.rows);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Create an escrow transaction (matches smart contract actions)
 router.post('/', async (req, res) => {
     const { leaseId, action, amount, txHash } = req.body;
-    const validActions = ['CollectRent', 'RefundDeposit', 'CompleteLease'];
+    const validActions = ['CollectRent', 'RefundDeposit', 'CompleteLease', 'ContractSigned'];
 
     if (!leaseId || !action || !amount) {
         return res.status(400).json({ error: 'leaseId, action, and amount are required' });

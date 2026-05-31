@@ -5,14 +5,47 @@ import { api } from '../api';
 export default function Disputes() {
     const { user } = useAuth();
     const [disputes, setDisputes] = useState([]);
+    const [leases, setLeases] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        api.getDisputes()
-            .then(data => setDisputes(Array.isArray(data) ? data : []))
+    const [isCreating, setIsCreating] = useState(false);
+    const [selectedLease, setSelectedLease] = useState('');
+    const [reason, setReason] = useState('');
+    const [submitting, setSubmitting] = useState(false);
+
+    const loadData = () => {
+        setLoading(true);
+        Promise.all([api.getDisputes(), api.getLeases()])
+            .then(([dData, lData]) => {
+                setDisputes(Array.isArray(dData) ? dData : []);
+                setLeases(Array.isArray(lData) ? lData : []);
+            })
             .catch(err => console.error(err))
             .finally(() => setLoading(false));
+    };
+
+    useEffect(() => {
+        loadData();
     }, []);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setSubmitting(true);
+        try {
+            await api.createDispute({
+                leaseId: selectedLease,
+                reason: reason
+            });
+            setIsCreating(false);
+            setReason('');
+            setSelectedLease('');
+            loadData();
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
     if (loading) return <div className="page container"><p>Loading Resolution Center...</p></div>;
 
@@ -33,7 +66,41 @@ export default function Disputes() {
                         <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
                             Please select an active lease agreement and provide a detailed reason for the mediation request.
                         </p>
-                        <button className="btn btn-dark btn-lg btn-square">Initiate Resolution +</button>
+
+                        {!isCreating ? (
+                            <button className="btn btn-dark btn-lg btn-square" onClick={() => setIsCreating(true)}>Initiate Resolution +</button>
+                        ) : (
+                            <form onSubmit={handleSubmit} style={{ textAlign: 'left', marginTop: '32px' }} className="fade-in">
+                                <div className="form-group">
+                                    <label>Select Lease Contract</label>
+                                    <select className="input" required value={selectedLease} onChange={(e) => setSelectedLease(e.target.value)}>
+                                        <option value="" disabled>-- Select Active Lease --</option>
+                                        {leases.map(l => (
+                                            <option key={l.id} value={l.id}>
+                                                Contract CT-{l.id.substring(0, 8).toUpperCase()} (₳ {l.rent_amount}/mo)
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>Reason for Dispute</label>
+                                    <textarea
+                                        className="input"
+                                        rows="4"
+                                        required
+                                        placeholder="Describe the issue (e.g., unpaid rent, property damage)..."
+                                        value={reason}
+                                        onChange={(e) => setReason(e.target.value)}
+                                    ></textarea>
+                                </div>
+                                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                                    <button type="button" className="btn btn-secondary btn-square" onClick={() => setIsCreating(false)}>Cancel</button>
+                                    <button type="submit" className="btn btn-dark btn-square" disabled={submitting}>
+                                        {submitting ? 'Submitting...' : 'Submit to Arbitration'}
+                                    </button>
+                                </div>
+                            </form>
+                        )}
                     </div>
                 </div>
 

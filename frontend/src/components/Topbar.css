@@ -1,6 +1,9 @@
 .topbar {
     height: 64px;
-    background: var(--bg-primary);
+    background: rgba(248, 250, 252, 0.85);
+    /* Glassmorphism effect */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
     padding: 0 32px;
     display: flex;
@@ -19,6 +22,15 @@
     padding: 8px 16px;
     border-radius: var(--radius-sm);
     width: 400px;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.topbar-search:focus-within {
+    background: #fff;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+    width: 450px;
 }
 
 .search-icon {

@@ -127,6 +127,32 @@ const initDb = async () => {
         )
     `);
 
+    await query(`
+        CREATE TABLE IF NOT EXISTS maintenance_requests (
+            id TEXT PRIMARY KEY,
+            property_id TEXT NOT NULL,
+            tenant_id TEXT NOT NULL,
+            title TEXT NOT NULL,
+            description TEXT,
+            status TEXT DEFAULT 'pending',
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (property_id) REFERENCES properties(id),
+            FOREIGN KEY (tenant_id) REFERENCES users(id)
+        )
+    `);
+
+    await query(`
+        CREATE TABLE IF NOT EXISTS documents (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL,
+            title TEXT NOT NULL,
+            file_url TEXT NOT NULL,
+            type TEXT DEFAULT 'lease',
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    `);
+
     // Ensure columns exist (for existing databases)
     const alterTables = [
         ['properties', 'title', 'TEXT'],

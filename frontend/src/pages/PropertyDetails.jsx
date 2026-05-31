@@ -203,7 +203,89 @@ export default function PropertyDetails() {
                     </div>
                 )}
 
-                {/* ADDITIONAL TAB CONTENT BLOCKS... */}
+                {activeTab === 'financials' && (
+                    <div className="card" style={{ padding: '48px', textAlign: 'left' }}>
+                        <h3 style={{ marginBottom: '32px', fontWeight: 800 }}>Payment Ledger</h3>
+                        <div className="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Description</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Tx Hash</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>{new Date().toLocaleDateString()}</td>
+                                        <td>Security Deposit</td>
+                                        <td style={{ fontWeight: 700 }}>₳ {property.deposit_amount}</td>
+                                        <td>{property.active_lease ? <span className="badge badge-success">LOCKED</span> : <span className="badge badge-secondary">PENDING</span>}</td>
+                                        <td style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>{property.active_lease ? 'tx_123...456' : '—'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>{new Date().toLocaleDateString()}</td>
+                                        <td>First Month Rent</td>
+                                        <td style={{ fontWeight: 700 }}>₳ {property.rent_amount}</td>
+                                        <td>{property.active_lease ? <span className="badge badge-success">PAID</span> : <span className="badge badge-secondary">PENDING</span>}</td>
+                                        <td style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>{property.active_lease ? 'tx_abc...def' : '—'}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'documents' && (
+                    <div className="grid grid-2" style={{ gap: '24px' }}>
+                        <div className="card" style={{ padding: '32px' }}>
+                            <h3 style={{ marginBottom: '16px', fontWeight: 800 }}>Lease Agreement</h3>
+                            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '24px' }}>Standard programmatic agreement binding tenant and landlord via Cardano smart contract.</p>
+                            <button className="btn btn-secondary btn-square">Download Contract (PDF)</button>
+                        </div>
+                        <div className="card" style={{ padding: '32px' }}>
+                            <h3 style={{ marginBottom: '16px', fontWeight: 800 }}>Audit Logs & Certificates</h3>
+                            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '24px' }}>On-chain compliance certificates and physical inspection reports.</p>
+                            <button className="btn btn-secondary btn-square">View Audit Trail</button>
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'escrow' && (
+                    <div className="card" style={{ padding: '48px', textAlign: 'center' }}>
+                        <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px auto' }}>
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                        </div>
+                        <h3 style={{ marginBottom: '16px', fontWeight: 800 }}>Escrow Smart Contract State</h3>
+                        <p style={{ margin: '0 auto 32px auto', maxWidth: '500px', color: 'var(--text-secondary)' }}>
+                            Funds are secured programmatically on the Cardano blockchain. Neither party can withdraw the deposit without mutual on-chain consensus.
+                        </p>
+
+                        <div className="grid grid-3" style={{ gap: '24px', textAlign: 'left', marginBottom: '32px' }}>
+                            <div style={{ padding: '24px', background: 'var(--bg-secondary)', borderRadius: '4px' }}>
+                                <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '8px' }}>LOCKED DEPOSIT</div>
+                                <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>₳ {property.deposit_amount}</div>
+                            </div>
+                            <div style={{ padding: '24px', background: 'var(--bg-secondary)', borderRadius: '4px' }}>
+                                <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '8px' }}>CONTRACT ADDRESS</div>
+                                <div style={{ fontFamily: 'monospace', fontSize: '0.9rem', wordBreak: 'break-all' }}>addr_test1qr...xyz</div>
+                            </div>
+                            <div style={{ padding: '24px', background: 'var(--bg-secondary)', borderRadius: '4px' }}>
+                                <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '8px' }}>CONSENSUS STATUS</div>
+                                <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--success)' }}>AWAITING MATURITY</div>
+                            </div>
+                        </div>
+
+                        {isLandlord && property.active_lease && (
+                            <button className="btn btn-dark btn-square" style={{ marginRight: '12px' }}>Initiate Return</button>
+                        )}
+                        {isLandlord && property.active_lease && (
+                            <button className="btn btn-danger btn-square">File Dispute</button>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* LEASE DRAFTING MODAL */}

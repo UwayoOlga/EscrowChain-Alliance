@@ -13,7 +13,7 @@ export default function Properties() {
 
     const [formData, setFormData] = useState({
         title: '', address: '', description: '', rentAmount: '', depositAmount: '',
-        bedrooms: '', bathrooms: '', size: '', amenities: '', leaseTemplate: ''
+        bedrooms: '', bathrooms: '', size: '', amenities: '', leaseTemplate: '', status: 'available'
     });
     const [selectedFiles, setSelectedFiles] = useState([]);
 
@@ -39,7 +39,7 @@ export default function Properties() {
         setEditingId(null);
         setFormData({
             title: '', address: '', description: '', rentAmount: '', depositAmount: '',
-            bedrooms: '', bathrooms: '', size: '', amenities: '', leaseTemplate: ''
+            bedrooms: '', bathrooms: '', size: '', amenities: '', leaseTemplate: '', status: 'available'
         });
         setSelectedFiles([]);
         if (fileInputRef.current) fileInputRef.current.value = '';
@@ -56,7 +56,8 @@ export default function Properties() {
             bathrooms: p.bathrooms || '',
             size: p.size || '',
             amenities: p.amenities || '',
-            leaseTemplate: p.lease_template || ''
+            leaseTemplate: p.lease_template || '',
+            status: p.status || 'available'
         });
         setEditingId(p.id);
         setShowForm(true);
@@ -181,6 +182,16 @@ export default function Properties() {
                             <label>Amenities (Comma separated)</label>
                             <input type="text" className="input" placeholder="Pool, Gym, Parking..."
                                 value={formData.amenities} onChange={e => setFormData({ ...formData, amenities: e.target.value })} />
+                        </div>
+                        <div className="form-group">
+                            <label>Lifecycle Status</label>
+                            <select className="input" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
+                                <option value="available">Available</option>
+                                <option value="occupied">Occupied (Auto-managed)</option>
+                                <option value="under maintenance">Under Maintenance</option>
+                                <option value="archived">Archived</option>
+                                <option value="under dispute">Under Dispute</option>
+                            </select>
                         </div>
                         <div className="form-group" style={{ gridColumn: 'span 2' }}>
                             <label>Detailed Description</label>
