@@ -69,7 +69,7 @@ router.post('/', async (req, res) => {
         const id = uuidv4();
         await query(
             'INSERT INTO escrow_transactions (id, lease_id, action, amount, tx_hash, status) VALUES ($1, $2, $3, $4, $5, $6)',
-            [id, leaseId, action, amount, txHash || null, txHash ? 'confirmed' : 'pending']
+            [id, leaseId, action, amount, txHash || null, 'pending']
         );
 
         const result = await query('SELECT * FROM escrow_transactions WHERE id = $1', [id]);

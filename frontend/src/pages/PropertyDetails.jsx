@@ -7,7 +7,9 @@ export default function PropertyDetails() {
     const { id } = useParams();
     const { user } = useAuth();
     const [property, setProperty] = useState(null);
+    const [transactions, setTransactions] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [activeTab, setActiveTab] = useState('overview');
 
     const [isDrafting, setIsDrafting] = useState(false);
@@ -52,14 +54,34 @@ export default function PropertyDetails() {
     };
 
     useEffect(() => {
-        api.getProperty(id)
-            .then(data => setProperty(data))
-            .catch(err => console.error(err))
-            .finally(() => setLoading(false));
+        const fetchAssetIntelligence = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+
+                const propData = await api.getProperty(id);
+                if (!propData) throw new Error('Asset ID not found in ledger.');
+                setProperty(propData);
+
+                // Dynamically resolve on-chain history if lease exists
+                if (propData.active_lease?.id) {
+                    const txHistory = await api.getEscrowByLease(propData.active_lease.id);
+                    setTransactions(Array.isArray(txHistory) ? txHistory : []);
+                }
+            } catch (err) {
+                console.error('Data acquisition failed:', err);
+                setError(err.message || 'Failed to sync with local intelligence node.');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchAssetIntelligence();
     }, [id]);
 
     if (loading) return <div className="page container">Decrypting Asset Metadata...</div>;
-    if (!property) return <div className="page container">Asset ID not found in ledger.</div>;
+    if (error) return <div className="page container" style={{ color: 'var(--danger)' }}>Error: {error}</div>;
+    if (!property) return <div className="page container">Asset could not be validated.</div>;
 
     const tabs = [
         { id: 'overview', label: 'Overview' },
@@ -211,27 +233,36 @@ export default function PropertyDetails() {
                                 <thead>
                                     <tr>
                                         <th>Date</th>
-                                        <th>Description</th>
+                                        <th>Action Type</th>
                                         <th>Amount</th>
                                         <th>Status</th>
                                         <th>Tx Hash</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td>{new Date().toLocaleDateString()}</td>
-                                        <td>Security Deposit</td>
-                                        <td style={{ fontWeight: 700 }}>₳ {property.deposit_amount}</td>
-                                        <td>{property.active_lease ? <span className="badge badge-success">LOCKED</span> : <span className="badge badge-secondary">PENDING</span>}</td>
-                                        <td style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>{property.active_lease ? 'tx_123...456' : '—'}</td>
-                                    </tr>
-                                    <tr>
-                                        <td>{new Date().toLocaleDateString()}</td>
-                                        <td>First Month Rent</td>
-                                        <td style={{ fontWeight: 700 }}>₳ {property.rent_amount}</td>
-                                        <td>{property.active_lease ? <span className="badge badge-success">PAID</span> : <span className="badge badge-secondary">PENDING</span>}</td>
-                                        <td style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>{property.active_lease ? 'tx_abc...def' : '—'}</td>
-                                    </tr>
+                                    {transactions.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="5" style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
+                                                No financial transactions recorded for this asset yet.
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        transactions.map(tx => (
+                                            <tr key={tx.id}>
+                                                <td>{new Date(tx.created_at).toLocaleDateString()}</td>
+                                                <td style={{ fontWeight: 500 }}>{tx.action}</td>
+                                                <td style={{ fontWeight: 700 }}>₳ {tx.amount}</td>
+                                                <td>
+                                                    <span className={`badge ${tx.status === 'confirmed' ? 'badge-success' : 'badge-secondary'}`}>
+                                                        {tx.status.toUpperCase()}
+                                                    </span>
+                                                </td>
+                                                <td style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
+                                                    {tx.tx_hash ? tx.tx_hash.substring(0, 16) + '...' : '—'}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
                                 </tbody>
                             </table>
                         </div>
@@ -241,14 +272,9 @@ export default function PropertyDetails() {
                 {activeTab === 'documents' && (
                     <div className="grid grid-2" style={{ gap: '24px' }}>
                         <div className="card" style={{ padding: '32px' }}>
-                            <h3 style={{ marginBottom: '16px', fontWeight: 800 }}>Lease Agreement</h3>
-                            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '24px' }}>Standard programmatic agreement binding tenant and landlord via Cardano smart contract.</p>
-                            <button className="btn btn-secondary btn-square">Download Contract (PDF)</button>
-                        </div>
-                        <div className="card" style={{ padding: '32px' }}>
-                            <h3 style={{ marginBottom: '16px', fontWeight: 800 }}>Audit Logs & Certificates</h3>
-                            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '24px' }}>On-chain compliance certificates and physical inspection reports.</p>
-                            <button className="btn btn-secondary btn-square">View Audit Trail</button>
+                            <h3 style={{ marginBottom: '16px', fontWeight: 800 }}>Central Compliance Vault</h3>
+                            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '24px' }}>Access your central Document Hub to view uploaded physical leases, compliance records, and programmatic audit trails for this asset.</p>
+                            <Link to="/documents" className="btn btn-dark btn-square" style={{ textDecoration: 'none', display: 'inline-block' }}>Open Document Hub</Link>
                         </div>
                     </div>
                 )}
@@ -270,7 +296,9 @@ export default function PropertyDetails() {
                             </div>
                             <div style={{ padding: '24px', background: 'var(--bg-secondary)', borderRadius: '4px' }}>
                                 <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '8px' }}>CONTRACT ADDRESS</div>
-                                <div style={{ fontFamily: 'monospace', fontSize: '0.9rem', wordBreak: 'break-all' }}>addr_test1qr...xyz</div>
+                                <div style={{ fontFamily: 'monospace', fontSize: '0.9rem', wordBreak: 'break-all' }}>
+                                    {property.active_lease ? 'MAPPED TO PLUTUS V2 CBOR' : 'AWAITING LEASE'}
+                                </div>
                             </div>
                             <div style={{ padding: '24px', background: 'var(--bg-secondary)', borderRadius: '4px' }}>
                                 <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '8px' }}>CONSENSUS STATUS</div>

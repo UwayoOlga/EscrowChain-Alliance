@@ -1,16 +1,52 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useAuth } from '../context/AuthContext';
 
 export default function Documents() {
+    const { user } = useAuth();
     const [documents, setDocuments] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [uploading, setUploading] = useState(false);
 
-    useEffect(() => {
+    const [uploadFile, setUploadFile] = useState(null);
+    const [uploadTitle, setUploadTitle] = useState('');
+    const [uploadType, setUploadType] = useState('lease');
+
+    const loadData = () => {
         api.getDocuments()
             .then(data => setDocuments(Array.isArray(data) ? data : []))
             .catch(err => console.error(err))
             .finally(() => setLoading(false));
+    };
+
+    useEffect(() => {
+        loadData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    const handleUpload = async (e) => {
+        e.preventDefault();
+        if (!uploadFile) return alert('Please select a file to upload');
+
+        setUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append('file', uploadFile);
+            formData.append('title', uploadTitle || uploadFile.name);
+            formData.append('type', uploadType);
+
+            await api.createDocument(formData);
+
+            setUploadFile(null);
+            setUploadTitle('');
+
+            loadData();
+        } catch (err) {
+            alert('Upload failed: ' + err.message);
+        } finally {
+            setUploading(false);
+        }
+    };
 
     const typeIcon = (type) => {
         const icons = {
@@ -25,12 +61,15 @@ export default function Documents() {
         const map = {
             lease: 'badge-info',
             receipt: 'badge-success',
-            certificate: 'badge-warning'
+            certificate: 'badge-warning',
+            document: 'badge-secondary'
         };
         return map[type] || 'badge-secondary';
     };
 
     if (loading) return <div className="page container"><p>Loading Document Vault...</p></div>;
+
+    const isLandlord = user?.role?.toLowerCase() === 'landlord';
 
     return (
         <div className="page container fade-in" style={{ maxWidth: '960px' }}>
@@ -42,9 +81,49 @@ export default function Documents() {
                 </p>
             </div>
 
+            {/* UPLOAD FORM FOR LANDLORDS */}
+            {isLandlord && (
+                <div className="card" style={{ marginBottom: '40px', padding: '32px' }}>
+                    <h3 style={{ fontSize: '1.25rem', marginBottom: '24px', fontWeight: 700 }}>Deploy Document</h3>
+                    <form onSubmit={handleUpload} className="grid" style={{ gridTemplateColumns: '1fr 1fr 1fr auto', gap: '16px', alignItems: 'end' }}>
+                        <div className="form-group">
+                            <label>Document Title</label>
+                            <input
+                                type="text"
+                                className="input"
+                                placeholder="e.g. Master Lease Addendum"
+                                value={uploadTitle}
+                                onChange={(e) => setUploadTitle(e.target.value)}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label>File Type</label>
+                            <select className="select" value={uploadType} onChange={(e) => setUploadType(e.target.value)}>
+                                <option value="lease">Lease Agreement</option>
+                                <option value="receipt">Financial Receipt</option>
+                                <option value="certificate">Legal Certificate</option>
+                                <option value="document">Misc Document</option>
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label>Physical File</label>
+                            <input
+                                type="file"
+                                className="input"
+                                onChange={(e) => setUploadFile(e.target.files[0])}
+                                style={{ padding: '8px' }}
+                            />
+                        </div>
+                        <button type="submit" className="btn btn-dark btn-square" disabled={uploading} style={{ height: '46px' }}>
+                            {uploading ? 'Uploading...' : 'Secure Upload'}
+                        </button>
+                    </form>
+                </div>
+            )}
+
             {documents.length === 0 ? (
                 <div className="card" style={{ textAlign: 'center', padding: '80px 40px', backgroundColor: 'var(--bg-secondary)', border: '1px dashed var(--border)' }}>
-                    <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px auto' }}>
+                    <div className="empty-state" style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px auto' }}>
                         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
@@ -73,7 +152,7 @@ export default function Documents() {
                                 </div>
                             </div>
                             <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm btn-square">
-                                Download
+                                Download File
                             </a>
                         </div>
                     ))}

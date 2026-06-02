@@ -14,6 +14,7 @@ import Payments from './pages/Payments';
 import Disputes from './pages/Disputes';
 import Documents from './pages/Documents';
 import Maintenance from './pages/Maintenance';
+import Messages from './pages/Messages';
 import MainLayout from './components/MainLayout';
 
 // Protect private routes
@@ -46,6 +47,7 @@ function AppContent() {
           <Route path="/disputes" element={<PrivateRoute><Disputes /></PrivateRoute>} />
           <Route path="/documents" element={<PrivateRoute><Documents /></PrivateRoute>} />
           <Route path="/maintenance" element={<PrivateRoute><Maintenance /></PrivateRoute>} />
+          <Route path="/messages" element={<PrivateRoute><Messages /></PrivateRoute>} />
           <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
 
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -64,4 +64,9 @@ export const api = {
     // Documents
     getDocuments: () => request('/api/documents'),
     createDocument: (body) => request('/api/documents', { method: 'POST', body }),
+
+    // Messages
+    getMessageContacts: () => request('/api/messages/contacts'),
+    getMessages: (userId) => request(`/api/messages/${userId}`),
+    sendMessage: (body) => request('/api/messages', { method: 'POST', body }),
 };

@@ -153,6 +153,19 @@ const initDb = async () => {
         )
     `);
 
+    await query(`
+        CREATE TABLE IF NOT EXISTS messages (
+            id TEXT PRIMARY KEY,
+            sender_id TEXT NOT NULL,
+            receiver_id TEXT NOT NULL,
+            content TEXT NOT NULL,
+            read BOOLEAN DEFAULT FALSE,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (sender_id) REFERENCES users(id),
+            FOREIGN KEY (receiver_id) REFERENCES users(id)
+        )
+    `);
+
     // Ensure columns exist (for existing databases)
     const alterTables = [
         ['properties', 'title', 'TEXT'],

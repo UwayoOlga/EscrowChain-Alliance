@@ -14,6 +14,7 @@ import usersRouter from './users.js';
 import disputesRouter from './disputes.js';
 import maintenanceRouter from './maintenance.js';
 import documentsRouter from './documents.js';
+import messagesRouter from './messages.js';
 
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -68,6 +69,7 @@ app.use('/api/users', usersRouter);
 app.use('/api/disputes', disputesRouter);
 app.use('/api/maintenance', maintenanceRouter);
 app.use('/api/documents', documentsRouter);
+app.use('/api/messages', messagesRouter);
 
 app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
