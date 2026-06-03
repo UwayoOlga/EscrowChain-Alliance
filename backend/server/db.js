@@ -169,6 +169,7 @@ const initDb = async () => {
     // Ensure columns exist (for existing databases)
     const alterTables = [
         ['properties', 'title', 'TEXT'],
+        ['properties', 'description', 'TEXT'],
         ['properties', 'images', 'TEXT'],
         ['properties', 'lease_template', 'TEXT'],
         ['properties', 'created_at', 'TEXT DEFAULT CURRENT_TIMESTAMP'],

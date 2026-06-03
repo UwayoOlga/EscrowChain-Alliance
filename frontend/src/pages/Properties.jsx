@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -154,12 +154,12 @@ export default function Properties() {
                                 value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} />
                         </div>
                         <div className="form-group">
-                            <label>Monthly Rent (₳)</label>
+                            <label>Monthly Rent (RWF)</label>
                             <input type="number" className="input" required
                                 value={formData.rentAmount} onChange={e => setFormData({ ...formData, rentAmount: e.target.value })} />
                         </div>
                         <div className="form-group">
-                            <label>Security Deposit (₳)</label>
+                            <label>Security Deposit (RWF)</label>
                             <input type="number" className="input" required
                                 value={formData.depositAmount} onChange={e => setFormData({ ...formData, depositAmount: e.target.value })} />
                         </div>
@@ -223,7 +223,7 @@ export default function Properties() {
                             <tr>
                                 <th>Asset Details</th>
                                 <th>Current Occupant</th>
-                                <th>Financials (₳)</th>
+                                <th>Financials (RWF)</th>
                                 <th>Lifecycle Status</th>
                                 <th>Lease Expiry</th>
                                 <th style={{ textAlign: 'right' }}>Management</th>
@@ -263,7 +263,7 @@ export default function Properties() {
                                     </td>
                                     <td>
                                         <div style={{ fontWeight: 700 }}>{p.rent_amount} / mo</div>
-                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>₳ {p.deposit_amount} Deposit</div>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>RWF {p.deposit_amount} Deposit</div>
                                     </td>
                                     <td>{getStatusBadge(p.status)}</td>
                                     <td style={{ fontSize: '0.85rem' }}>

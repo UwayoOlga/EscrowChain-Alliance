@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
@@ -88,12 +88,12 @@ export default function Dashboard() {
                     </div>
                     <div className="card metric-card" style={{ borderTop: 'none' }}>
                         <span className="metric-label">Total Realized Yield</span>
-                        <div className="metric-value">₳ {totalEarnings.toLocaleString()}</div>
+                        <div className="metric-value">RWF {totalEarnings.toLocaleString()}</div>
                         <div className="metric-sub">Confirmed Ledger Transfers</div>
                     </div>
                     <div className="card metric-card" style={{ borderTop: 'none' }}>
                         <span className="metric-label">In Escrow (Pending)</span>
-                        <div className="metric-value">₳ {escrowBalance.toLocaleString()}</div>
+                        <div className="metric-value">RWF {escrowBalance.toLocaleString()}</div>
                         <div className="metric-sub">Funds in Smart Contract</div>
                     </div>
                     <div className="card metric-card" style={{ borderLeft: activeDisputes.length > 0 ? '4px solid var(--danger)' : '' }}>
@@ -108,7 +108,7 @@ export default function Dashboard() {
                         <div className="card" style={{ marginBottom: '32px', height: '300px', display: 'flex', flexDirection: 'column' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
                                 <h3 style={{ fontSize: '1rem', fontWeight: 700 }}>Revenue Performance</h3>
-                                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Last 6 Months (₳)</span>
+                                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Last 6 Months (RWF)</span>
                             </div>
                             <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: '12px', padding: '0 12px' }}>
                                 {[40, 65, 45, 80, 55, 90].map((h, i) => (
@@ -143,7 +143,7 @@ export default function Dashboard() {
                                                 <td style={{ fontSize: '0.85rem' }}>{new Date(t.created_at).toLocaleDateString()}</td>
                                                 <td style={{ fontWeight: 600 }}>{t.property_address || 'Ref: ' + t.lease_id?.substring(0, 8)}</td>
                                                 <td>{t.action}</td>
-                                                <td style={{ fontWeight: 700 }}>₳ {t.amount}</td>
+                                                <td style={{ fontWeight: 700 }}>RWF {t.amount}</td>
                                                 <td><span className={`badge ${t.status === 'confirmed' ? 'badge-success' : 'badge-warning'}`}>{t.status}</span></td>
                                             </tr>
                                         ))}
@@ -261,12 +261,12 @@ export default function Dashboard() {
                 </div>
                 <div className="card metric-card" style={{ borderTop: 'none' }}>
                     <span className="metric-label">Locked Deposit</span>
-                    <div className="metric-value">₳ {activeLease?.deposit_amount || 0}</div>
+                    <div className="metric-value">RWF {activeLease?.deposit_amount || 0}</div>
                     <div className="metric-sub">Held in Escrow Contract</div>
                 </div>
                 <div className="card metric-card" style={{ borderTop: 'none' }}>
                     <span className="metric-label">Total Paid</span>
-                    <div className="metric-value">₳ {totalPaid.toLocaleString()}</div>
+                    <div className="metric-value">RWF {totalPaid.toLocaleString()}</div>
                     <div className="metric-sub">Verified On-Chain</div>
                 </div>
             </div>
@@ -300,7 +300,7 @@ export default function Dashboard() {
                                 </div>
                                 <div style={{ borderLeft: '1px solid var(--border)', paddingLeft: '32px' }}>
                                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '8px' }}>Monthly Rent</div>
-                                    <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--dark-slate)' }}>₳ {activeLease.rent_amount}</div>
+                                    <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--dark-slate)' }}>RWF {activeLease.rent_amount}</div>
                                     <Link to="/leases" className="btn btn-dark btn-square" style={{ width: '100%', marginTop: '24px', textDecoration: 'none', textAlign: 'center' }}>Pay Current Rent</Link>
                                     <Link to={`/properties/${activeLease.property_id}`} className="btn btn-secondary btn-square" style={{ width: '100%', marginTop: '8px', textDecoration: 'none', textAlign: 'center' }}>View Property Details</Link>
                                 </div>
@@ -338,7 +338,7 @@ export default function Dashboard() {
                                         <tr key={t.id}>
                                             <td>{new Date(t.created_at).toLocaleDateString()}</td>
                                             <td>{t.action}</td>
-                                            <td style={{ fontWeight: 700 }}>₳ {t.amount}</td>
+                                            <td style={{ fontWeight: 700 }}>RWF {t.amount}</td>
                                             <td style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>{t.tx_hash ? t.tx_hash.substring(0, 16) + '...' : '—'}</td>
                                             <td><span className={`badge ${t.status === 'confirmed' ? 'badge-success' : 'badge-warning'}`}>{t.status}</span></td>
                                         </tr>
@@ -359,7 +359,7 @@ export default function Dashboard() {
                             <div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                                     <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Amount Due</span>
-                                    <span style={{ fontSize: '1.25rem', fontWeight: 800 }}>₳ {activeLease.rent_amount}</span>
+                                    <span style={{ fontSize: '1.25rem', fontWeight: 800 }}>RWF {activeLease.rent_amount}</span>
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                                     <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Due Date</span>
@@ -420,7 +420,7 @@ export default function Dashboard() {
                         <div style={{ padding: '20px', background: 'var(--bg-secondary)', borderRadius: '4px', marginBottom: '16px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                                 <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Deposit Locked</span>
-                                <span style={{ fontWeight: 700 }}>₳ {activeLease?.deposit_amount || 0}</span>
+                                <span style={{ fontWeight: 700 }}>RWF {activeLease?.deposit_amount || 0}</span>
                             </div>
                             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>
                                 Secured by multi-sig smart contract on Cardano. Released upon mutual agreement.

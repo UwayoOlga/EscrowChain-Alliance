@@ -1,4 +1,4 @@
-
+﻿
 // Basic polyfills for Node.js modules that MeshSDK expects
 export class EventEmitter {
     constructor() { this.events = {}; }

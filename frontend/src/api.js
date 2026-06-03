@@ -1,4 +1,4 @@
-const API = 'http://localhost:5000';
+﻿const API = 'http://localhost:5000';
 
 async function request(path, options = {}) {
     const isFormData = options.body instanceof FormData;

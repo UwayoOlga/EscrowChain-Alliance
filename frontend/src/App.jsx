@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+﻿import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Login from './pages/Login';
@@ -15,6 +15,7 @@ import Disputes from './pages/Disputes';
 import Documents from './pages/Documents';
 import Maintenance from './pages/Maintenance';
 import Messages from './pages/Messages';
+import Marketplace from './pages/Marketplace';
 import MainLayout from './components/MainLayout';
 
 // Protect private routes
@@ -47,6 +48,7 @@ function AppContent() {
           <Route path="/disputes" element={<PrivateRoute><Disputes /></PrivateRoute>} />
           <Route path="/documents" element={<PrivateRoute><Documents /></PrivateRoute>} />
           <Route path="/maintenance" element={<PrivateRoute><Maintenance /></PrivateRoute>} />
+          <Route path="/marketplace" element={<PrivateRoute><Marketplace /></PrivateRoute>} />
           <Route path="/messages" element={<PrivateRoute><Messages /></PrivateRoute>} />
           <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
 

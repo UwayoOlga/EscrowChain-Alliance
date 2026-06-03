@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
@@ -112,6 +112,8 @@ export default function Leases() {
     const statusBadge = (status) => {
         const map = {
             active: 'badge-success',
+            approved: 'badge-success',
+            requested: 'badge-warning',
             pending: 'badge-warning',
             completed: 'badge-info',
             cancelled: 'badge-danger'
@@ -146,8 +148,8 @@ export default function Leases() {
                         <thead>
                             <tr>
                                 <th>Escrow Reference</th>
-                                <th>Requirement (₳)</th>
-                                <th>Locked Deposit (₳)</th>
+                                <th>Requirement (RWF)</th>
+                                <th>Locked Deposit (RWF)</th>
                                 <th>Contract Period</th>
                                 <th>Execution Status</th>
                                 <th>{isLandlord ? 'Management' : 'Signatures'}</th>
@@ -157,24 +159,37 @@ export default function Leases() {
                             {leases.map(l => (
                                 <tr key={l.id}>
                                     <td style={{ fontWeight: 600, color: 'var(--dark-slate)' }}>CT-{l.id.toString().substring(0, 8).toUpperCase()}</td>
-                                    <td style={{ fontWeight: 600, color: 'var(--accent)' }}>₳ {l.rent_amount}</td>
-                                    <td>₳ {l.deposit_amount}</td>
+                                    <td style={{ fontWeight: 600, color: 'var(--accent)' }}>RWF {l.rent_amount}</td>
+                                    <td>RWF {l.deposit_amount}</td>
                                     <td style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                                         {l.start_date} &rarr; {l.end_date}
                                     </td>
                                     <td><span className={`badge ${statusBadge(l.status)}`}>{l.status}</span></td>
                                     <td>
                                         <div style={{ display: 'flex', gap: 8 }}>
-                                            {l.status === 'pending' && !isLandlord && (
+                                            {l.status === 'requested' && isLandlord && (
+                                                <>
+                                                    <button className="btn btn-dark btn-sm btn-square" onClick={() => updateStatus(l.id, 'approved')}>
+                                                        Accept Tenant
+                                                    </button>
+                                                    <button className="btn btn-danger btn-sm btn-square" onClick={() => updateStatus(l.id, 'cancelled')}>
+                                                        Deny
+                                                    </button>
+                                                </>
+                                            )}
+                                            {l.status === 'requested' && !isLandlord && (
+                                                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Awaiting Landlord Review</span>
+                                            )}
+                                            {(l.status === 'approved' || l.status === 'pending') && !isLandlord && (
                                                 <button
                                                     className="btn btn-dark btn-sm btn-square"
                                                     disabled={processing === l.id}
                                                     onClick={() => handleApprove(l)}
                                                 >
-                                                    {processing === l.id ? 'Processing...' : 'Approve & Pay into Escrow'}
+                                                    {processing === l.id ? 'Processing...' : 'Sign Smart Contract & Lock Escrow'}
                                                 </button>
                                             )}
-                                            {l.status === 'pending' && isLandlord && (
+                                            {(l.status === 'approved' || l.status === 'pending') && isLandlord && (
                                                 <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Awaiting Tenant Signature</span>
                                             )}
                                             {l.status === 'active' && isLandlord && (

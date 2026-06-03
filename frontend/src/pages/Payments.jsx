@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 import { useWallet } from '@meshsdk/react';
@@ -131,12 +131,12 @@ export default function Payments() {
             <div className="grid grid-3" style={{ marginBottom: '48px' }}>
                 <div className="card metric-card" style={{ borderTop: '4px solid var(--success)' }}>
                     <span className="metric-label">{isLandlord ? 'Total Realized Yield' : 'Total Cumulative Payments'}</span>
-                    <div className="metric-value">₳ {totalVolume.toLocaleString()}</div>
+                    <div className="metric-value">RWF {totalVolume.toLocaleString()}</div>
                     <div className="metric-sub">Verified On-Chain Transfers</div>
                 </div>
                 <div className="card metric-card" style={{ borderTop: '4px solid var(--warning)' }}>
                     <span className="metric-label">{isLandlord ? 'Funds in Transit' : 'In Escrow (Pre-Lock)'}</span>
-                    <div className="metric-value">₳ {pendingEscrow.toLocaleString()}</div>
+                    <div className="metric-value">RWF {pendingEscrow.toLocaleString()}</div>
                     <div className="metric-sub">Held within Smart Contract</div>
                 </div>
                 <div className="card metric-card" style={{ borderTop: '4px solid var(--dark-slate)' }}>
@@ -159,7 +159,7 @@ export default function Payments() {
                                 </div>
                                 <div style={{ flex: 1, marginBottom: '32px' }}>
                                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Standard Rental Due</div>
-                                    <div style={{ fontWeight: 800, fontSize: '2rem', color: 'var(--dark-slate)' }}>₳ {lease.rent_amount}</div>
+                                    <div style={{ fontWeight: 800, fontSize: '2rem', color: 'var(--dark-slate)' }}>RWF {lease.rent_amount}</div>
                                 </div>
                                 <button
                                     className="btn btn-dark btn-square"
@@ -190,7 +190,7 @@ export default function Payments() {
                                     <th>Event Date</th>
                                     <th>Asset Source</th>
                                     <th>Action Type</th>
-                                    <th>Amount (₳)</th>
+                                    <th>Amount (RWF)</th>
                                     <th>Network Status</th>
                                     <th>Audit Trace</th>
                                 </tr>
@@ -209,7 +209,7 @@ export default function Payments() {
                                             <span style={{ fontWeight: 500 }}>{t.action}</span>
                                         </td>
                                         <td style={{ fontWeight: 700, color: t.action === 'CollectRent' ? 'var(--success)' : 'var(--text-primary)' }}>
-                                            {t.action === 'CollectRent' ? '+' : ''}₳ {t.amount}
+                                            {t.action === 'CollectRent' ? '+' : ''}RWF {t.amount}
                                         </td>
                                         <td>
                                             <span className={`badge ${t.status === 'confirmed' ? 'badge-success' : 'badge-warning'}`}>

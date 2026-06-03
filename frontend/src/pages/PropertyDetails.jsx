@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -33,21 +33,28 @@ export default function PropertyDetails() {
     };
 
     const submitLease = async () => {
-        if (!selectedTenant || !leaseDates.start || !leaseDates.end) {
-            alert('Please fill all lease requirements.');
+        // Exception validation: Ensure dates are submitted if landlord drafted, or auto-generate for tenant
+        const finalTenantId = isLandlord ? selectedTenant?.id : user.id;
+        const finalStart = isLandlord ? leaseDates.start : new Date().toISOString().split('T')[0];
+        const finalEnd = isLandlord ? leaseDates.end : new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0];
+
+        if (!finalTenantId) {
+            alert('A valid tenant entity is required.');
             return;
         }
+
         setSubmittingLease(true);
         try {
             await api.createLease({
                 propertyId: property.id,
-                tenantId: selectedTenant.id,
-                startDate: leaseDates.start,
-                endDate: leaseDates.end
+                tenantId: finalTenantId,
+                startDate: finalStart,
+                endDate: finalEnd
             });
+            alert('Rental application securely locked in. The landlord has been notified.');
             window.location.reload();
         } catch (err) {
-            alert(err.message);
+            alert('Transaction failed: ' + (err.response?.data?.error || err.message));
         } finally {
             setSubmittingLease(false);
         }
@@ -108,8 +115,19 @@ export default function PropertyDetails() {
                     </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--dark-slate)' }}>₳ {property.rent_amount}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Monthly Contract Value</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--dark-slate)' }}>RWF {property.rent_amount}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '16px' }}>Monthly Contract Value</div>
+
+                    {user?.role?.toLowerCase() === 'tenant' && property.status === 'available' && (
+                        <button
+                            className="btn btn-dark btn-lg btn-square"
+                            style={{ width: '100%', fontSize: '0.9rem' }}
+                            onClick={submitLease}
+                            disabled={submittingLease}
+                        >
+                            {submittingLease ? 'Securing Subgraph...' : 'Rent this Property'}
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -216,9 +234,20 @@ export default function PropertyDetails() {
                             </div>
                         ) : (
                             <div>
-                                <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>No active tenant has been assigned to this asset.</p>
-                                {isLandlord && (
-                                    <button className="btn btn-dark btn-square" onClick={() => setIsDrafting(true)}>Draft Lease Agreement</button>
+                                {property.status !== 'available' ? (
+                                    <div style={{ color: 'var(--text-muted)', marginBottom: '24px', padding: '24px', background: 'var(--bg-secondary)', borderRadius: '4px' }}>
+                                        This physical asset is currently <strong>{property.status.toUpperCase()}</strong>. Exception locks prevent overlapping tenant assignments.
+                                    </div>
+                                ) : (
+                                    <>
+                                        <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>No active tenant has been assigned to this asset.</p>
+
+                                        {isLandlord ? (
+                                            <button className="btn btn-dark btn-square" onClick={() => setIsDrafting(true)}>Draft Lease Agreement</button>
+                                        ) : user?.role?.toLowerCase() === 'tenant' ? (
+                                            <p style={{ color: 'var(--text-secondary)' }}>Click the "Rent this Property" button in the upper header to request this property.</p>
+                                        ) : null}
+                                    </>
                                 )}
                             </div>
                         )}
@@ -234,7 +263,7 @@ export default function PropertyDetails() {
                                     <tr>
                                         <th>Date</th>
                                         <th>Action Type</th>
-                                        <th>Amount</th>
+                                        <th>Amount (RWF)</th>
                                         <th>Status</th>
                                         <th>Tx Hash</th>
                                     </tr>
@@ -251,7 +280,7 @@ export default function PropertyDetails() {
                                             <tr key={tx.id}>
                                                 <td>{new Date(tx.created_at).toLocaleDateString()}</td>
                                                 <td style={{ fontWeight: 500 }}>{tx.action}</td>
-                                                <td style={{ fontWeight: 700 }}>₳ {tx.amount}</td>
+                                                <td style={{ fontWeight: 700 }}>RWF {tx.amount}</td>
                                                 <td>
                                                     <span className={`badge ${tx.status === 'confirmed' ? 'badge-success' : 'badge-secondary'}`}>
                                                         {tx.status.toUpperCase()}
@@ -292,7 +321,7 @@ export default function PropertyDetails() {
                         <div className="grid grid-3" style={{ gap: '24px', textAlign: 'left', marginBottom: '32px' }}>
                             <div style={{ padding: '24px', background: 'var(--bg-secondary)', borderRadius: '4px' }}>
                                 <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '8px' }}>LOCKED DEPOSIT</div>
-                                <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>₳ {property.deposit_amount}</div>
+                                <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>RWF {property.deposit_amount}</div>
                             </div>
                             <div style={{ padding: '24px', background: 'var(--bg-secondary)', borderRadius: '4px' }}>
                                 <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '8px' }}>CONTRACT ADDRESS</div>

@@ -106,8 +106,12 @@ router.post('/', requireAuth, upload.array('images', 6), async (req, res) => {
                 bedrooms, bathrooms, size, amenities, images, lease_template, status
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
             [
-                id, req.user.id, title, address, description, rentAmount, depositAmount || 0,
-                bedrooms || 0, bathrooms || 0, size, amenities,
+                id, req.user.id, title, address, description,
+                Number(rentAmount) || 0,
+                Number(depositAmount) || 0,
+                Number(bedrooms) || 0,
+                Number(bathrooms) || 0,
+                size, amenities,
                 JSON.stringify(imagePaths), leaseTemplate, 'available'
             ]
         );
@@ -167,8 +171,13 @@ router.patch('/:id', requireAuth, upload.array('images', 6), async (req, res) =>
                 images = $11
             WHERE id = $12`,
             [
-                title, description, rentAmount, depositAmount,
-                status, bedrooms, bathrooms, size, amenities, leaseTemplate,
+                title, description,
+                Number(rentAmount) || null,
+                Number(depositAmount) || null,
+                status,
+                Number(bedrooms) || null,
+                Number(bathrooms) || null,
+                size, amenities, leaseTemplate,
                 JSON.stringify(allImages),
                 req.params.id
             ]

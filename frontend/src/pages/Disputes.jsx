@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 
@@ -77,7 +77,7 @@ export default function Disputes() {
                                         <option value="" disabled>-- Select Active Lease --</option>
                                         {leases.map(l => (
                                             <option key={l.id} value={l.id}>
-                                                Contract CT-{l.id.substring(0, 8).toUpperCase()} (₳ {l.rent_amount}/mo)
+                                                Contract CT-{l.id.substring(0, 8).toUpperCase()} (RWF {l.rent_amount}/mo)
                                             </option>
                                         ))}
                                     </select>

@@ -37,22 +37,38 @@ router.post('/', async (req, res) => {
         // Get the property to pull rent/deposit amounts
         const property = await query('SELECT * FROM properties WHERE id = $1', [propertyId]);
         if (property.rows.length === 0) return res.status(404).json({ error: 'Property not found' });
-
         const prop = property.rows[0];
 
-        // Only the property landlord can create a lease
-        if (prop.landlord_id !== req.user.id) {
-            return res.status(403).json({ error: 'Only the landlord can create a lease' });
+        // Only allow tenants to rent, or landlords to draft for a tenant
+        if (req.user.role === 'tenant') {
+            if (req.user.id !== tenantId) {
+                return res.status(403).json({ error: 'Tenants can only lease for themselves.' });
+            }
+        } else if (prop.landlord_id !== req.user.id) {
+            return res.status(403).json({ error: 'Only the landlord or an applying tenant can initiate this lease.' });
+        }
+
+        // Exception Handling: No 2 tenants can rent the same property
+        if (prop.status !== 'available') {
+            return res.status(409).json({ error: 'This property has already been leased or is currently unavailable.' });
         }
 
         const id = uuidv4();
+        const initialStatus = req.user.role === 'tenant' ? 'requested' : 'approved';
         await query(
-            'INSERT INTO leases (id, property_id, landlord_id, tenant_id, rent_amount, deposit_amount, start_date, end_date) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
-            [id, propertyId, req.user.id, tenantId, prop.rent_amount, prop.deposit_amount, startDate, endDate]
+            'INSERT INTO leases (id, property_id, landlord_id, tenant_id, rent_amount, deposit_amount, start_date, end_date, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
+            [id, propertyId, req.user.id, tenantId, prop.rent_amount, prop.deposit_amount, startDate, endDate, initialStatus]
         );
 
-        // Mark property as rented
-        await query('UPDATE properties SET status = $1 WHERE id = $2', ['rented', propertyId]);
+        // Mark property as securely pending so no other tenant can double-book
+        await query('UPDATE properties SET status = $1 WHERE id = $2', ['pending approval', propertyId]);
+
+        // Auto-Generate a "Notification" or placeholder message to Landlord
+        const msgId = uuidv4();
+        await query(
+            'INSERT INTO messages (id, sender_id, receiver_id, content) VALUES ($1, $2, $3, $4)',
+            [msgId, req.user.id, prop.landlord_id, `SYSTEM: I have initiated a lease for ${prop.title}.`]
+        );
 
         const result = await query('SELECT * FROM leases WHERE id = $1', [id]);
         res.json(result.rows[0]);
@@ -80,10 +96,10 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// Update lease status (activate, complete, cancel)
+// Update lease status (activate, complete, cancel, approve)
 router.patch('/:id/status', async (req, res) => {
     const { status } = req.body;
-    const validStatuses = ['active', 'completed', 'cancelled'];
+    const validStatuses = ['approved', 'active', 'completed', 'cancelled'];
 
     if (!validStatuses.includes(status)) {
         return res.status(400).json({ error: `Status must be one of: ${validStatuses.join(', ')}` });
