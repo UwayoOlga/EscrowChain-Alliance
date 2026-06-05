@@ -1,136 +1,272 @@
-﻿import { useState, useEffect } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 
+const STATUS_STYLES = {
+    pending: { badge: 'badge-warning', label: 'OPEN' },
+    arbitration: { badge: 'badge-info', label: 'ARBITRATION' },
+    resolved: { badge: 'badge-success', label: 'RESOLVED' },
+    dismissed: { badge: 'badge-secondary', label: 'DISMISSED' },
+};
+
+function EvidenceGrid({ paths }) {
+    if (!paths || paths.length === 0) return null;
+    return (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>
+            {paths.map((p, i) => (
+                <a key={i} href={`http://localhost:5000${p}`} target="_blank" rel="noreferrer">
+                    {p.endsWith('.pdf') ? (
+                        <div style={{ padding: '8px 14px', background: 'var(--bg-secondary)', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 700, color: 'var(--accent)' }}>
+                            📄 PDF {i + 1}
+                        </div>
+                    ) : (
+                        <img
+                            src={`http://localhost:5000${p}`}
+                            alt={`Evidence ${i + 1}`}
+                            style={{ width: '72px', height: '72px', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--border)' }}
+                        />
+                    )}
+                </a>
+            ))}
+        </div>
+    );
+}
+
 export default function Disputes() {
     const { user } = useAuth();
+    const isLandlord = user?.role?.toLowerCase() === 'landlord';
+
     const [disputes, setDisputes] = useState([]);
     const [leases, setLeases] = useState([]);
     const [loading, setLoading] = useState(true);
-
     const [isCreating, setIsCreating] = useState(false);
-    const [selectedLease, setSelectedLease] = useState('');
-    const [reason, setReason] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const [selectedFiles, setSelectedFiles] = useState([]);
+    const [form, setForm] = useState({ leaseId: '', reason: '' });
+    const fileInputRef = useRef(null);
 
     const loadData = () => {
         setLoading(true);
         Promise.all([api.getDisputes(), api.getLeases()])
             .then(([dData, lData]) => {
                 setDisputes(Array.isArray(dData) ? dData : []);
-                setLeases(Array.isArray(lData) ? lData : []);
+                // Only show leases that are active or under dispute — prevents filing on pending ones
+                const eligible = (Array.isArray(lData) ? lData : []).filter(
+                    l => l.status === 'active' || l.status === 'under dispute'
+                );
+                setLeases(eligible);
             })
             .catch(err => console.error(err))
             .finally(() => setLoading(false));
     };
 
-    useEffect(() => {
-        loadData();
-    }, []);
+    useEffect(() => { loadData(); }, []);
+
+    const resetForm = () => {
+        setIsCreating(false);
+        setForm({ leaseId: '', reason: '' });
+        setSelectedFiles([]);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!form.leaseId || !form.reason.trim()) {
+            alert('Please select a lease and provide a reason.');
+            return;
+        }
+
         setSubmitting(true);
         try {
-            await api.createDispute({
-                leaseId: selectedLease,
-                reason: reason
-            });
-            setIsCreating(false);
-            setReason('');
-            setSelectedLease('');
+            const formData = new FormData();
+            formData.append('leaseId', form.leaseId);
+            formData.append('reason', form.reason);
+            selectedFiles.forEach(file => formData.append('evidence', file));
+
+            await api.createDispute(formData);
+            resetForm();
+            loadData();
+        } catch (err) {
+            alert('Submission failed: ' + err.message);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleStatusUpdate = async (id, status) => {
+        try {
+            await api.updateDisputeStatus(id, status);
             loadData();
         } catch (err) {
             alert(err.message);
-        } finally {
-            setSubmitting(false);
         }
     };
 
     if (loading) return <div className="page container"><p>Loading Resolution Center...</p></div>;
 
     return (
-        <div className="page container fade-in" style={{ maxWidth: '900px' }}>
-            <div className="page-header text-center" style={{ marginBottom: '64px' }}>
-                <span className="text-overline">Mediation & Governance</span>
-                <h1 style={{ fontSize: '2.5rem', marginBottom: '12px' }}>Dispute Resolution</h1>
-                <p style={{ maxWidth: '600px', margin: '0 auto' }}>
-                    Securely report and manage conflicts regarding smart contract execution and physical asset conditions.
-                </p>
+        <div className="page-dashboard fade-in">
+            {/* ── Page Header ── */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '48px' }}>
+                <div>
+                    <span className="text-overline">Mediation & Governance</span>
+                    <h1 style={{ fontSize: '2.2rem', fontWeight: 800, marginBottom: '8px' }}>Dispute Resolution Vault</h1>
+                    <p style={{ color: 'var(--text-secondary)' }}>
+                        Report lease conflicts, upload photographic evidence and freeze escrow funds pending arbitration.
+                    </p>
+                </div>
+                {!isCreating && (
+                    <button className="btn btn-primary btn-square" onClick={() => setIsCreating(true)}>
+                        Open Case +
+                    </button>
+                )}
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                <div className="card" style={{ padding: '40px', borderTop: '4px solid var(--dark-slate)', backgroundColor: 'var(--bg-secondary)' }}>
-                    <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-                        <h3 style={{ fontSize: '1.25rem', marginBottom: '12px' }}>Open a Dispute Case</h3>
-                        <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
-                            Please select an active lease agreement and provide a detailed reason for the mediation request.
-                        </p>
+            {/* ── Create Form ── */}
+            {isCreating && (
+                <div className="card" style={{ padding: '40px', marginBottom: '48px', borderTop: '4px solid var(--accent)' }}>
+                    <h3 style={{ fontWeight: 800, marginBottom: '8px' }}>File a Dispute Case</h3>
+                    <p style={{ color: 'var(--text-secondary)', marginBottom: '32px', fontSize: '0.9rem' }}>
+                        Submitting this form will immediately freeze the lease's escrow balance until the case is resolved.
+                    </p>
 
-                        {!isCreating ? (
-                            <button className="btn btn-dark btn-lg btn-square" onClick={() => setIsCreating(true)}>Initiate Resolution +</button>
-                        ) : (
-                            <form onSubmit={handleSubmit} style={{ textAlign: 'left', marginTop: '32px' }} className="fade-in">
-                                <div className="form-group">
-                                    <label>Select Lease Contract</label>
-                                    <select className="input" required value={selectedLease} onChange={(e) => setSelectedLease(e.target.value)}>
-                                        <option value="" disabled>-- Select Active Lease --</option>
-                                        {leases.map(l => (
-                                            <option key={l.id} value={l.id}>
-                                                Contract CT-{l.id.substring(0, 8).toUpperCase()} (RWF {l.rent_amount}/mo)
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="form-group">
-                                    <label>Reason for Dispute</label>
-                                    <textarea
-                                        className="input"
-                                        rows="4"
-                                        required
-                                        placeholder="Describe the issue (e.g., unpaid rent, property damage)..."
-                                        value={reason}
-                                        onChange={(e) => setReason(e.target.value)}
-                                    ></textarea>
-                                </div>
-                                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                                    <button type="button" className="btn btn-secondary btn-square" onClick={() => setIsCreating(false)}>Cancel</button>
-                                    <button type="submit" className="btn btn-dark btn-square" disabled={submitting}>
-                                        {submitting ? 'Submitting...' : 'Submit to Arbitration'}
-                                    </button>
-                                </div>
-                            </form>
-                        )}
-                    </div>
-                </div>
-
-                <div style={{ marginTop: '24px' }}>
-                    <h2 style={{ fontSize: '1.25rem', marginBottom: '24px', fontWeight: 700 }}>Active Cases</h2>
-                    {disputes.length === 0 ? (
-                        <div style={{ padding: '60px', textAlign: 'center', border: '1px dashed var(--border)' }}>
-                            <p style={{ color: 'var(--text-secondary)' }}>No active dispute cases on the ledger.</p>
+                    {leases.length === 0 ? (
+                        <div style={{ padding: '32px', background: 'var(--bg-secondary)', borderRadius: '8px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                            You have no active leases eligible for dispute.
                         </div>
                     ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            {disputes.map(d => (
-                                <div key={d.id} className="card" style={{ padding: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                                            <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--dark-slate)' }}>CASE-{d.id.substring(0, 8).toUpperCase()}</span>
-                                            <span className={`badge ${d.status === 'pending' ? 'badge-warning' : 'badge-success'}`}>{d.status}</span>
-                                        </div>
-                                        <div style={{ fontWeight: 500, marginBottom: '4px' }}>{d.property_address}</div>
-                                        <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{d.reason}</div>
+                        <form onSubmit={handleSubmit} className="grid grid-2" style={{ gap: '24px' }}>
+                            <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                                <label>Select Lease Contract</label>
+                                <select className="input" required value={form.leaseId} onChange={e => setForm({ ...form, leaseId: e.target.value })}>
+                                    <option value="" disabled>-- Select Active Lease --</option>
+                                    {leases.map(l => (
+                                        <option key={l.id} value={l.id}>
+                                            CT-{l.id.substring(0, 8).toUpperCase()} · RWF {l.rent_amount}/mo
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                                <label>Detailed Reason for Dispute</label>
+                                <textarea
+                                    className="input"
+                                    rows="5"
+                                    required
+                                    placeholder="Describe the conflict clearly (e.g., landlord withheld deposit, property damage not disclosed, unpaid rent)..."
+                                    value={form.reason}
+                                    onChange={e => setForm({ ...form, reason: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                                <label>Evidence Files (Photos or PDF, up to 5 files)</label>
+                                <input
+                                    type="file"
+                                    className="input"
+                                    multiple
+                                    accept="image/*,application/pdf"
+                                    ref={fileInputRef}
+                                    onChange={e => setSelectedFiles(Array.from(e.target.files))}
+                                />
+                                {selectedFiles.length > 0 && (
+                                    <div style={{ fontSize: '0.8rem', color: 'var(--accent)', marginTop: '6px' }}>
+                                        {selectedFiles.length} file(s) selected.
                                     </div>
-                                    <div style={{ textAlign: 'right' }}>
-                                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '8px' }}>Opened: {new Date(d.created_at).toLocaleDateString()}</div>
-                                        <button className="btn btn-secondary btn-sm btn-square">View Details</button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                                )}
+                            </div>
+
+                            <div style={{ gridColumn: 'span 2', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                                <button type="button" className="btn btn-secondary btn-square" onClick={resetForm}>Cancel</button>
+                                <button type="submit" className="btn btn-dark btn-lg btn-square" disabled={submitting}>
+                                    {submitting ? 'Submitting to Arbitration...' : 'Submit Dispute Case'}
+                                </button>
+                            </div>
+                        </form>
                     )}
                 </div>
+            )}
+
+            {/* ── Active Cases List ── */}
+            <div>
+                <h2 style={{ fontSize: '1.1rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '24px' }}>
+                    Active Cases — {disputes.length}
+                </h2>
+
+                {disputes.length === 0 ? (
+                    <div style={{ padding: '80px 20px', textAlign: 'center', border: '1px dashed var(--border)', borderRadius: '12px' }}>
+                        <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--text-muted)', marginBottom: '16px' }}>
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>No active dispute cases on the ledger.</p>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>All smart contracts are operating within normal parameters.</p>
+                    </div>
+                ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        {disputes.map(d => {
+                            const statusStyle = STATUS_STYLES[d.status] || STATUS_STYLES.pending;
+                            let evidence = [];
+                            try { evidence = JSON.parse(d.evidence || '[]'); } catch { evidence = []; }
+
+                            return (
+                                <div key={d.id} className="card" style={{ padding: '32px', borderLeft: d.status === 'pending' ? '4px solid var(--accent)' : '4px solid var(--border)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                                                <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--dark-slate)' }}>
+                                                    CASE-{d.id.substring(0, 8).toUpperCase()}
+                                                </span>
+                                                <span className={`badge ${statusStyle.badge}`}>{statusStyle.label}</span>
+                                            </div>
+                                            <div style={{ fontWeight: 700, marginBottom: '4px' }}>
+                                                {d.property_title || d.property_address}
+                                            </div>
+                                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
+                                                Raised by <strong>{d.raised_by_name}</strong> · {new Date(d.created_at).toLocaleDateString('en-RW', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                            </div>
+                                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.7, maxWidth: '600px' }}>
+                                                {d.reason}
+                                            </p>
+                                            <EvidenceGrid paths={evidence} />
+                                        </div>
+
+                                        {/* ── Landlord Resolution Actions ── */}
+                                        {isLandlord && d.status === 'pending' && (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '180px' }}>
+                                                <button
+                                                    className="btn btn-dark btn-sm btn-square"
+                                                    onClick={() => handleStatusUpdate(d.id, 'arbitration')}
+                                                >
+                                                    Escalate to Arbitration
+                                                </button>
+                                                <button
+                                                    className="btn btn-secondary btn-sm btn-square"
+                                                    onClick={() => handleStatusUpdate(d.id, 'resolved')}
+                                                >
+                                                    Mark as Resolved
+                                                </button>
+                                                <button
+                                                    className="btn btn-danger btn-sm btn-square"
+                                                    style={{ background: 'transparent', color: 'var(--danger)', border: '1px solid var(--danger)' }}
+                                                    onClick={() => handleStatusUpdate(d.id, 'dismissed')}
+                                                >
+                                                    Dismiss Case
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {!isLandlord && d.status === 'pending' && (
+                                            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic', alignSelf: 'center' }}>
+                                                Awaiting landlord review
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -51,9 +51,9 @@ export const api = {
     createEscrow: (body) => request('/api/escrow', { method: 'POST', body }),
     updateEscrow: (id, body) => request(`/api/escrow/${id}`, { method: 'PATCH', body }),
 
-    // Disputes
+    // Disputes – createDispute accepts FormData so evidence files can be attached
     getDisputes: () => request('/api/disputes'),
-    createDispute: (body) => request('/api/disputes', { method: 'POST', body }),
+    createDispute: (formData) => request('/api/disputes', { method: 'POST', body: formData }),
     updateDisputeStatus: (id, status) => request(`/api/disputes/${id}/status`, { method: 'PATCH', body: { status } }),
 
     // Maintenance

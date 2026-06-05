@@ -1,6 +1,7 @@
 import express from 'express';
 import { query } from './db.js';
 import { v4 as uuidv4 } from 'uuid';
+import { notifyLeaseRequested, notifyLeaseApproved } from './mailer.js';
 
 const router = express.Router();
 
@@ -63,12 +64,25 @@ router.post('/', async (req, res) => {
         // Mark property as securely pending so no other tenant can double-book
         await query('UPDATE properties SET status = $1 WHERE id = $2', ['pending approval', propertyId]);
 
-        // Auto-Generate a "Notification" or placeholder message to Landlord
+        // Auto-Generate a "Notification" message to Landlord
         const msgId = uuidv4();
         await query(
             'INSERT INTO messages (id, sender_id, receiver_id, content) VALUES ($1, $2, $3, $4)',
             [msgId, req.user.id, prop.landlord_id, `SYSTEM: I have initiated a lease for ${prop.title}.`]
         );
+
+        // Email the landlord that a new application arrived
+        const landlord = await query('SELECT name, email FROM users WHERE id = $1', [prop.landlord_id]);
+        const tenant = await query('SELECT name FROM users WHERE id = $1', [req.user.id]);
+        if (landlord.rows.length > 0 && tenant.rows.length > 0) {
+            await notifyLeaseRequested({
+                landlordEmail: landlord.rows[0].email,
+                landlordName: landlord.rows[0].name,
+                tenantName: tenant.rows[0].name,
+                propertyTitle: prop.title || prop.address,
+                leaseId: id
+            });
+        }
 
         const result = await query('SELECT * FROM leases WHERE id = $1', [id]);
         res.json(result.rows[0]);

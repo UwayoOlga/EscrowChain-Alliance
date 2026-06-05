@@ -177,7 +177,8 @@ const initDb = async () => {
         ['properties', 'bathrooms', 'INTEGER DEFAULT 0'],
         ['properties', 'size', 'TEXT'],
         ['properties', 'amenities', 'TEXT'],
-        ['leases', 'created_at', 'TEXT DEFAULT CURRENT_TIMESTAMP']
+        ['leases', 'created_at', 'TEXT DEFAULT CURRENT_TIMESTAMP'],
+        ['disputes', 'evidence', 'TEXT']
     ];
 
     for (const [table, col, type] of alterTables) {
