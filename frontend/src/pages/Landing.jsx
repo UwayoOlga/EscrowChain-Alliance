@@ -1,169 +1,295 @@
-﻿import { Link } from 'react-router-dom';
+﻿import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import bgImage from '../assets/BgImage.png';
+
+const FILTERS = ['All', 'Available', 'Apartments', 'Houses', 'Studios'];
+
+function PropertyCard({ p, onAction }) {
+    const [hovered, setHovered] = useState(false);
+    let images = [];
+    try { images = JSON.parse(p.images || '[]'); } catch { }
+    const cover = images.length > 0 ? `http://localhost:5000${images[0]}` : null;
+
+    return (
+        <div
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            style={{
+                background: '#fff',
+                borderRadius: '16px',
+                overflow: 'hidden',
+                border: '1px solid #E2E8F0',
+                transition: 'box-shadow 0.2s, transform 0.2s',
+                boxShadow: hovered ? '0 12px 32px rgba(37,99,235,0.12)' : '0 1px 4px rgba(0,0,0,0.06)',
+                transform: hovered ? 'translateY(-4px)' : 'none',
+                cursor: 'pointer',
+            }}
+        >
+            <div style={{ position: 'relative', height: '210px', backgroundColor: '#EFF6FF', overflow: 'hidden' }}>
+                {cover ? (
+                    <img src={cover} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s' }} />
+                ) : (
+                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '8px', color: '#94A3B8' }}>
+                        <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+                        <span style={{ fontSize: '0.78rem' }}>No photo yet</span>
+                    </div>
+                )}
+                <div style={{
+                    position: 'absolute', top: '12px', left: '12px',
+                    background: p.status === 'available' ? 'rgba(5,150,105,0.92)' : 'rgba(217,119,6,0.92)',
+                    backdropFilter: 'blur(4px)',
+                    color: '#fff', padding: '4px 10px', borderRadius: '20px',
+                    fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em'
+                }}>
+                    {p.status === 'available' ? '✓ Available' : p.status}
+                </div>
+                <div style={{
+                    position: 'absolute', bottom: '12px', right: '12px',
+                    background: 'rgba(255, 255, 255, 0.9)', backdropFilter: 'blur(6px)',
+                    border: '1px solid #BFDBFE',
+                    color: '#2563EB', padding: '4px 10px', borderRadius: '20px',
+                    fontSize: '0.68rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '5px'
+                }}>
+                    <svg width="10" height="10" fill="none" stroke="#2563EB" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                    Escrow Protected
+                </div>
+            </div>
+
+            <div style={{ padding: '18px 20px 20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#1E293B', flex: 1, marginRight: '8px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {p.title || 'Unnamed Property'}
+                    </h3>
+                </div>
+                <p style={{ fontSize: '0.83rem', color: '#94A3B8', marginBottom: '12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    📍 {p.address}
+                </p>
+                <div style={{ display: 'flex', gap: '12px', fontSize: '0.8rem', color: '#475569', marginBottom: '16px' }}>
+                    {p.bedrooms > 0 && <span>🛏 {p.bedrooms} bed</span>}
+                    {p.bathrooms > 0 && <span>🚿 {p.bathrooms} bath</span>}
+                    {p.size && <span>📐 {p.size}</span>}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #F1F5F9', paddingTop: '14px' }}>
+                    <div>
+                        <span style={{ fontSize: '1.15rem', fontWeight: 800, color: '#1E293B' }}>
+                            RWF {Number(p.rent_amount || 0).toLocaleString()}
+                        </span>
+                        <span style={{ fontSize: '0.8rem', color: '#94A3B8' }}>/mo</span>
+                    </div>
+                    <button
+                        onClick={() => onAction(p)}
+                        style={{
+                            background: p.status === 'available' ? '#2563EB' : '#E2E8F0',
+                            color: p.status === 'available' ? '#fff' : '#94A3B8',
+                            border: 'none', borderRadius: '8px', padding: '8px 16px',
+                            fontWeight: 700, fontSize: '0.82rem', cursor: p.status === 'available' ? 'pointer' : 'default',
+                            transition: 'background 0.15s'
+                        }}
+                    >
+                        {p.status === 'available' ? 'View & Rent' : 'Occupied'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 export default function Landing() {
+    const navigate = useNavigate();
+    const [properties, setProperties] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [activeFilter, setActiveFilter] = useState('All');
+    const [search, setSearch] = useState('');
+    const [scrolled, setScrolled] = useState(false);
+
+    useEffect(() => {
+        fetch('http://localhost:5000/api/properties')
+            .then(r => r.json())
+            .then(data => setProperties(Array.isArray(data) ? data : []))
+            .catch(() => setProperties([]))
+            .finally(() => setLoading(false));
+
+        const onScroll = () => setScrolled(window.scrollY > 20);
+        window.addEventListener('scroll', onScroll);
+        return () => window.removeEventListener('scroll', onScroll);
+    }, []);
+
+    const handleAction = (p) => {
+        navigate(`/login?redirect=/properties/${p.id}`);
+    };
+
+    const filtered = properties.filter(p => {
+        const matchSearch = !search || p.title?.toLowerCase().includes(search.toLowerCase()) || p.address?.toLowerCase().includes(search.toLowerCase());
+        const matchFilter = activeFilter === 'All' || (activeFilter === 'Available' && p.status === 'available');
+        return matchSearch && matchFilter;
+    });
+
     return (
-        <div className="enterprise-landing">
-            {/* HERO SECTION */}
-            <section className="enterprise-hero" style={{ padding: '160px 0', backgroundColor: 'var(--dark-slate)', position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', top: 0, right: 0, width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(37, 99, 235, 0.15) 0%, transparent 70%)', zxIndex: 0 }}></div>
-                <div className="container" style={{ position: 'relative', zIndex: 1 }}>
-                    <div className="hero-content" style={{ maxWidth: '850px' }}>
-                        <span className="text-overline" style={{ color: 'var(--accent-subtle)', marginBottom: '32px' }}>Next-Generation Escrow Layer</span>
-                        <h1 style={{ fontSize: '4.5rem', fontWeight: 800, lineHeight: 1.05, marginBottom: '24px', letterSpacing: '-0.04em', color: '#fff' }}>
-                            The Operating System for <span style={{ color: 'var(--accent)' }}>Programmable Trust</span>.
+        <div style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", color: '#1E293B', background: '#F8FAFC', minHeight: '100vh' }}>
+
+            <nav style={{
+                position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
+                background: scrolled ? 'rgba(255,255,255,0.97)' : '#fff',
+                backdropFilter: 'blur(12px)',
+                borderBottom: '1px solid #E2E8F0',
+                padding: '0 5%', height: '68px',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                transition: 'box-shadow 0.2s',
+                boxShadow: scrolled ? '0 2px 16px rgba(0,0,0,0.07)' : 'none'
+            }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ width: '34px', height: '34px', background: '#2563EB', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#fff', fontSize: '1.1rem' }}>E</div>
+                    <span style={{ fontSize: '1.15rem', fontWeight: 800, letterSpacing: '-0.03em', color: '#1E293B' }}>EscrowChain</span>
+                    <span style={{ fontSize: '0.7rem', background: '#EFF6FF', color: '#2563EB', fontWeight: 700, padding: '2px 8px', borderRadius: '20px' }}>Rwanda</span>
+                </div>
+
+                <div style={{ flex: 1, maxWidth: '420px', margin: '0 32px' }}>
+                    <div style={{ position: 'relative' }}>
+                        <svg style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                        <input
+                            type="text"
+                            placeholder="Search by location..."
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                            style={{
+                                width: '100%', padding: '10px 14px 10px 40px', borderRadius: '24px',
+                                border: '1.5px solid #E2E8F0', background: '#F8FAFC',
+                                fontSize: '0.875rem', outline: 'none', color: '#1E293B'
+                            }}
+                        />
+                    </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <Link to="/login" style={{ color: '#475569', fontWeight: 600, fontSize: '0.875rem', textDecoration: 'none', padding: '9px 16px', borderRadius: '8px', border: '1.5px solid #E2E8F0' }}>Sign in</Link>
+                    <Link to="/register" style={{ background: '#2563EB', color: '#fff', fontWeight: 700, fontSize: '0.875rem', textDecoration: 'none', padding: '9px 20px', borderRadius: '8px' }}>Get started</Link>
+                </div>
+            </nav>
+
+            <section style={{
+                paddingTop: '68px',
+                position: 'relative',
+                minHeight: '520px',
+                display: 'flex',
+                alignItems: 'center',
+                backgroundImage: `linear-gradient(rgba(0, 4, 8, 0.8), rgba(0, 4, 8, 0.8)), url(${bgImage})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundColor: '#fff',
+                borderBottom: '1px solid #E2E8F0'
+            }}>
+                <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '60px 5% 48px', width: '100%' }}>
+                    <div style={{ maxWidth: '650px' }}>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '32px', padding: '5px 14px', marginBottom: '24px', fontSize: '0.75rem', fontWeight: 700, color: '#2563EB' }}>
+                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} />
+                            BLOCKCHAIN-SECURED · KIGALI, RWANDA
+                        </div>
+                        <h1 style={{ fontSize: 'clamp(2.2rem, 5vw, 3.5rem)', fontWeight: 800, letterSpacing: '-0.04em', color: '#fff', lineHeight: 1.1, marginBottom: '16px' }}>
+                            Find your next home in Rwanda.<br />
+                            <span style={{ color: '#60A5FA' }}>Deposit secured on-chain.</span>
                         </h1>
-                        <p style={{ fontSize: '1.4rem', color: '#cbd5e1', marginBottom: '48px', lineHeight: 1.5, fontWeight: 400 }}>
-                            EscrowChain replaces traditional legal uncertainty with Cardano-backed smart contracts. Verify assets, automate institutional rent collection, and settle security deposits in milliseconds.
+                        <p style={{ fontSize: '1.1rem', color: '#CBD5E1', maxWidth: '540px', marginBottom: '40px', lineHeight: 1.7 }}>
+                            Browse verified properties across Kigali. Apply with one click. Your security deposit is locked in a smart contract and not with the landlord.
                         </p>
-                        <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-                            <Link to="/register" className="btn btn-primary btn-lg btn-square" style={{ padding: '20px 40px', fontSize: '1.1rem' }}>Initiated Platform Onboarding</Link>
-                            <Link to="/login" style={{ color: '#fff', fontSize: '1rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-                                View Technical Whitepaper
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"></path></svg>
+                        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                            <Link to="/register" style={{ background: '#2563EB', color: '#fff', fontWeight: 700, fontSize: '1rem', textDecoration: 'none', padding: '14px 32px', borderRadius: '10px', boxShadow: '0 4px 16px rgba(37,99,235,0.3)' }}>
+                                Browse rentals →
+                            </Link>
+                            <Link to="/register" style={{ background: '#fff', color: '#1E293B', fontWeight: 700, fontSize: '1rem', textDecoration: 'none', padding: '14px 28px', borderRadius: '10px', border: '1.5px solid #E2E8F0' }}>
+                                List a property
                             </Link>
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* TRUST AUTHORITY BAR */}
-            <section style={{ backgroundColor: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)', padding: '40px 0' }}>
-                <div className="container">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', opacity: 0.6, filter: 'grayscale(1)' }}>
-                        <span style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--text-muted)' }}>CARDANO FOUNDATION</span>
-                        <span style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--text-muted)' }}>MESH SDK</span>
-                        <span style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--text-muted)' }}>ALLIANCE CAPITAL</span>
-                        <span style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--text-muted)' }}>ESCROW NODE</span>
-                        <span style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--text-muted)' }}>BLOCKFROST</span>
+            <div style={{ maxWidth: '1200px', margin: '-30px auto 48px', position: 'relative', zIndex: 10, background: '#fff', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', display: 'flex', gap: '40px', justifyContent: 'center', padding: '24px', flexWrap: 'wrap', border: '1px solid #E2E8F0' }}>
+                {[['1,200+', 'Properties listed'], ['840+', 'Active tenants'], ['98%', 'Disputes resolved'], ['RWF 4.5B+', 'Escrow secured']].map(([val, lbl], i) => (
+                    <div key={i} style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#1E293B' }}>{val}</div>
+                        <div style={{ fontSize: '0.75rem', color: '#94A3B8', marginTop: '2px', textTransform: 'uppercase', fontWeight: 700 }}>{lbl}</div>
                     </div>
+                ))}
+            </div>
+
+            <div style={{ position: 'sticky', top: '68px', zIndex: 50, background: '#fff', borderBottom: '1px solid #E2E8F0', padding: '0 5%' }}>
+                <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', gap: '4px', overflowX: 'auto', padding: '14px 0', scrollbarWidth: 'none' }}>
+                    {FILTERS.map((f, i) => (
+                        <button key={i} onClick={() => setActiveFilter(f)} style={{
+                            padding: '8px 20px', borderRadius: '24px', border: 'none', cursor: 'pointer',
+                            background: activeFilter === f ? '#2563EB' : 'transparent',
+                            color: activeFilter === f ? '#fff' : '#64748B',
+                            fontWeight: 600, fontSize: '0.875rem'
+                        }}>
+                            {f}
+                        </button>
+                    ))}
+                    <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px', color: '#94A3B8', fontSize: '0.8rem' }}>
+                        {filtered.length} result{filtered.length !== 1 ? 's' : ''}
+                    </div>
+                </div>
+            </div>
+
+            <section style={{ padding: '40px 5% 80px' }}>
+                <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+                    {loading ? (
+                        <div style={{ textAlign: 'center', padding: '80px', color: '#94A3B8' }}>Loading properties...</div>
+                    ) : (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: '24px' }}>
+                            {filtered.map(p => (
+                                <PropertyCard key={p.id} p={p} onAction={handleAction} />
+                            ))}
+                        </div>
+                    )}
                 </div>
             </section>
 
-            {/* STRATEGIC SOLUTIONS */}
-            <section style={{ padding: '120px 0', background: '#fff' }}>
-                <div className="container">
-                    <div style={{ maxWidth: '700px', marginBottom: '80px' }}>
-                        <span className="text-overline">Solutions Architecture</span>
-                        <h2 style={{ fontSize: '2.8rem', fontWeight: 800, color: 'var(--dark-slate)', letterSpacing: '-0.02em', marginTop: '12px' }}>
-                            Tailored Infrastructure for the Real Estate Lifecycle.
-                        </h2>
-                    </div>
-
-                    <div className="grid grid-3">
-                        <div className="card-minimal" style={{ borderTop: '4px solid var(--accent)' }}>
-                            <div style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--accent)', marginBottom: '16px', textTransform: 'uppercase' }}>For Asset Managers</div>
-                            <h3 style={{ fontSize: '1.5rem', marginBottom: '16px' }}>Institutional Portfolios</h3>
-                            <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>Manage thousands of high-value properties through automated cryptographic escrow, reducing administrative overhead by 90% and eliminating payment lag.</p>
-                        </div>
-                        <div className="card-minimal">
-                            <div style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '16px', textTransform: 'uppercase' }}>For Enterprises</div>
-                            <h3 style={{ fontSize: '1.5rem', marginBottom: '16px' }}>Corporate Leasing</h3>
-                            <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>Deploy multi-signature security deposits that protect corporate capital from landlord insolvency while ensuring immediate availability upon audit completion.</p>
-                        </div>
-                        <div className="card-minimal">
-                            <div style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '16px', textTransform: 'uppercase' }}>For Governments</div>
-                            <h3 style={{ fontSize: '1.5rem', marginBottom: '16px' }}>Regulatory Oversight</h3>
-                            <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>Establish public ledgers of rental compliance and housing security through auditable smart contract histories, ensuring fairness and preventing fraud.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* TECHNICAL PROOF / INTEGRATION */}
-            <section style={{ padding: '120px 0', backgroundColor: 'var(--bg-secondary)' }}>
-                <div className="container grid grid-2" style={{ alignItems: 'center', gap: '100px' }}>
-                    <div>
-                        <span className="text-overline">The Protocol</span>
-                        <h2 style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--dark-slate)', marginBottom: '24px' }}>Immutable, Automated, Transparent.</h2>
-                        <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '24px', padding: 0 }}>
-                            <li style={{ display: 'flex', gap: '16px' }}>
-                                <div style={{ width: '24px', height: '24px', background: 'var(--accent)', borderRadius: '50%', flexShrink: 0 }}></div>
-                                <div>
-                                    <h4 style={{ fontWeight: 700, marginBottom: '4px' }}>Plutus-V2 Smart Contracts</h4>
-                                    <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Logic-based transactions that handle funds without intermediaries.</p>
+            <section style={{ background: '#fff', borderTop: '1px solid #E2E8F0', padding: '80px 5%' }}>
+                <div style={{ maxWidth: '1100px', margin: '0 auto', textAlign: 'center' }}>
+                    <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#1E293B', marginBottom: '40px' }}>How EscrowChain works</h2>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '32px' }}>
+                        {['Browse verified listings', 'Apply in one click', 'Get approved instantly', 'Deposit locked in Escrow'].map((title, i) => (
+                            <div key={i} style={{ padding: '32px 24px', background: '#F8FAFC', borderRadius: '16px', border: '1px solid #E2E8F0', transition: 'transform 0.2s' }}>
+                                <div style={{ fontSize: '2rem', marginBottom: '16px', color: '#2563EB' }}>
+                                    {[
+                                        <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>,
+                                        <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>,
+                                        <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+                                        <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                                    ][i]}
                                 </div>
-                            </li>
-                            <li style={{ display: 'flex', gap: '16px' }}>
-                                <div style={{ width: '24px', height: '24px', background: 'var(--dark-slate)', borderRadius: '50%', flexShrink: 0 }}></div>
-                                <div>
-                                    <h4 style={{ fontWeight: 700, marginBottom: '4px' }}>Deterministic Finality</h4>
-                                    <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Cardano Settlement Layer ensures transactions are final once confirmed.</p>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-                    <div style={{ background: 'var(--dark-slate)', padding: '48px', borderRadius: '4px', boxShadow: 'var(--shadow-lg)' }}>
-                        <code style={{ color: '#fff', fontSize: '0.85rem', lineHeight: 1.6 }}>
-                            <span style={{ color: 'var(--accent)' }}>deploy</span> lease_contract ( <br />
-                            &nbsp;&nbsp;landlord: 0x82...f9e, <br />
-                            &nbsp;&nbsp;tenant: 0x3d...a1b, <br />
-                            &nbsp;&nbsp;escrow_amount: 5000_ADA, <br />
-                            &nbsp;&nbsp;release_trigger: ["condition_audit_verified"] <br />
-                            ); <br /><br />
-                            <span style={{ color: '#22c55e' }}>// Deployment Successful: Tx_Hash: 92k...8f</span>
-                        </code>
-                    </div>
-                </div>
-            </section>
-
-            {/* CTA */}
-            <section style={{ padding: '140px 0', background: 'var(--accent)', color: '#fff' }}>
-                <div className="container text-center">
-                    <h2 style={{ fontSize: '3rem', fontWeight: 800, marginBottom: '32px' }}>Secure Your Global Portfolio.</h2>
-                    <p style={{ fontSize: '1.25rem', marginBottom: '48px', opacity: 0.9, maxWidth: '600px', margin: '0 auto 48px' }}>Join the Alliance of institutions migrating to programmatic escrow.</p>
-                    <Link to="/register" className="btn btn-dark btn-lg btn-square" style={{ background: '#fff', color: 'var(--accent)', padding: '20px 48px' }}>Request Enterprise Key</Link>
-                </div>
-            </section>
-
-            {/* FOOTER */}
-            <footer style={{ padding: '100px 0 60px', backgroundColor: 'var(--dark-slate)', color: '#fff' }}>
-                <div className="container">
-                    <div className="grid grid-4" style={{ marginBottom: '80px', gap: '64px' }}>
-                        <div style={{ gridColumn: 'span 1' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-                                <div style={{ width: '32px', height: '32px', background: 'var(--accent)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, borderRadius: '2px' }}>E</div>
-                                <span style={{ fontSize: '1.2rem', fontWeight: 800 }}>EscrowChain</span>
+                                <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#1E293B', marginBottom: '8px' }}>{title}</h3>
+                                <p style={{ fontSize: '0.875rem', color: '#64748B', lineHeight: 1.6 }}>Securely manage your rental lifecycle from discovery to deposit return.</p>
                             </div>
-                            <p style={{ fontSize: '0.9rem', color: '#94a3b8', lineHeight: 1.6 }}>The global infrastructure layer for decentralized real estate escrow and automated audit reporting.</p>
-                        </div>
-                        <div>
-                            <h4 style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: '24px', textTransform: 'uppercase' }}>Capabilities</h4>
-                            <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.9rem', color: '#94a3b8' }}>
-                                <li>Asset Tokenization</li>
-                                <li>Escrow Automation</li>
-                                <li>Dispute Mediation</li>
-                                <li>Yield Optimization</li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h4 style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: '24px', textTransform: 'uppercase' }}>Ecosystem</h4>
-                            <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.9rem', color: '#94a3b8' }}>
-                                <li>Cardano Mainnet</li>
-                                <li>Plutus-V2 Audits</li>
-                                <li>Network Status</li>
-                                <li>API Reference</li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h4 style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: '24px', textTransform: 'uppercase' }}>Corporate</h4>
-                            <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.9rem', color: '#94a3b8' }}>
-                                <li>Trust Center</li>
-                                <li>Privacy Policy</li>
-                                <li>Regulatory Compliance</li>
-                                <li>Contact Sales</li>
-                            </ul>
-                        </div>
+                        ))}
                     </div>
-                    <div style={{ borderTop: '1px solid #1e293b', paddingTop: '40px', display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#64748b' }}>
-                        <span>&copy; 2026 EscrowChain Alliance. Engineered for Decentralized Fidelity.</span>
-                        <div style={{ display: 'flex', gap: '32px' }}>
-                            <span>Terms</span>
-                            <span>Security</span>
-                            <span>Status</span>
+                </div>
+            </section>
+
+            <footer style={{ background: '#1E293B', padding: '60px 5% 40px', color: '#fff' }}>
+                <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '40px' }}>
+                    <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+                            <div style={{ width: '30px', height: '30px', background: '#2563EB', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>E</div>
+                            <span style={{ fontWeight: 800 }}>EscrowChain</span>
                         </div>
+                        <p style={{ fontSize: '0.85rem', color: '#94A3B8' }}>Blockchain-secured rentals in Rwanda.</p>
                     </div>
+                    {['Platform', 'Ecosystem', 'Company'].map((title, i) => (
+                        <div key={i}>
+                            <h4 style={{ fontSize: '0.8rem', fontWeight: 800, color: '#64748B', marginBottom: '16px', textTransform: 'uppercase' }}>{title}</h4>
+                            <ul style={{ listStyle: 'none', padding: 0, fontSize: '0.875rem', color: '#94A3B8' }}>
+                                <li>Link Item</li>
+                                <li>Link Item</li>
+                            </ul>
+                        </div>
+                    ))}
                 </div>
             </footer>
+
+            <style>{`
+                @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+            `}</style>
         </div>
     );
 }
