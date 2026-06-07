@@ -16,7 +16,11 @@ export default function PropertyDetails() {
     const [searchEmail, setSearchEmail] = useState('');
     const [prospects, setProspects] = useState([]);
     const [selectedTenant, setSelectedTenant] = useState(null);
-    const [leaseDates, setLeaseDates] = useState({ start: '', end: '' });
+    const [leaseDates, setLeaseDates] = useState({
+        start: new Date().toISOString().split('T')[0],
+        end: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0]
+    });
+    const [applicationNote, setApplicationNote] = useState('');
     const [submittingLease, setSubmittingLease] = useState(false);
 
     const isLandlord = user?.role?.toLowerCase() === 'landlord' && property?.landlord_id === user?.id;
@@ -49,10 +53,11 @@ export default function PropertyDetails() {
                 propertyId: property.id,
                 tenantId: finalTenantId,
                 startDate: finalStart,
-                endDate: finalEnd
+                endDate: finalEnd,
+                note: applicationNote || 'Interested in this property.'
             });
-            alert('Rental application securely locked in. The landlord has been notified.');
-            window.location.reload();
+            alert('Application submitted! The landlord has been notified via email.');
+            window.location.assign('/dashboard');
         } catch (err) {
             alert('Transaction failed: ' + (err.response?.data?.error || err.message));
         } finally {
@@ -118,18 +123,68 @@ export default function PropertyDetails() {
                     <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--dark-slate)' }}>RWF {property.rent_amount}</div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '16px' }}>Monthly Contract Value</div>
 
-                    {user?.role?.toLowerCase() === 'tenant' && property.status === 'available' && (
+                    {user?.role?.toLowerCase() === 'tenant' && property.status === 'available' && !isDrafting && (
                         <button
                             className="btn btn-dark btn-lg btn-square"
                             style={{ width: '100%', fontSize: '0.9rem' }}
-                            onClick={submitLease}
-                            disabled={submittingLease}
+                            onClick={() => setIsDrafting(true)}
                         >
-                            {submittingLease ? 'Securing Subgraph...' : 'Rent this Property'}
+                            Start Application
                         </button>
                     )}
                 </div>
             </div>
+
+            {/* TENANT APPLICATION FORM OVERLAY */}
+            {isDrafting && user?.role?.toLowerCase() === 'tenant' && (
+                <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--accent)', padding: '32px', borderRadius: '8px', marginBottom: '40px' }} className="fade-in">
+                    <h3 style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between' }}>
+                        Application Request
+                        <button onClick={() => setIsDrafting(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>Cancel</button>
+                    </h3>
+                    <div className="grid grid-2" style={{ gap: '24px', marginBottom: '24px' }}>
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, marginBottom: '8px' }}>DESIRED START DATE</label>
+                            <input
+                                type="date"
+                                className="input"
+                                value={leaseDates.start}
+                                onChange={e => setLeaseDates(prev => ({ ...prev, start: e.target.value }))}
+                            />
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, marginBottom: '8px' }}>DESIRED END DATE</label>
+                            <input
+                                type="date"
+                                className="input"
+                                value={leaseDates.end}
+                                onChange={e => setLeaseDates(prev => ({ ...prev, end: e.target.value }))}
+                            />
+                        </div>
+                    </div>
+                    <div style={{ marginBottom: '24px' }}>
+                        <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, marginBottom: '8px' }}>NOTE TO LANDLORD (Optional)</label>
+                        <textarea
+                            className="input"
+                            rows="3"
+                            placeholder="Introduce yourself and mention why you are interested..."
+                            value={applicationNote}
+                            onChange={e => setApplicationNote(e.target.value)}
+                        />
+                    </div>
+                    <button
+                        className="btn btn-accent btn-square"
+                        style={{ width: '100%', padding: '16px' }}
+                        onClick={submitLease}
+                        disabled={submittingLease}
+                    >
+                        {submittingLease ? 'Sending Application...' : 'Confirm & Submit Application'}
+                    </button>
+                    <p style={{ marginTop: '16px', fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center' }}>
+                        By submitting, you agree to secure the deposit on-chain once the landlord approves.
+                    </p>
+                </div>
+            )}
 
             {/* TAB NAVIGATION */}
             <div style={{ borderBottom: '1px solid var(--border)', display: 'flex', gap: '32px', marginBottom: '40px' }}>

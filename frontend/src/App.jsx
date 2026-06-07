@@ -16,6 +16,7 @@ import Documents from './pages/Documents';
 import Maintenance from './pages/Maintenance';
 import Messages from './pages/Messages';
 import Marketplace from './pages/Marketplace';
+import PublicPropertyDetails from './pages/PublicPropertyDetails';
 import MainLayout from './components/MainLayout';
 
 // Protect private routes
@@ -38,6 +39,7 @@ function AppContent() {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
           <Route path="/register" element={user ? <Navigate to="/dashboard" replace /> : <Register />} />
+          <Route path="/listing/:id" element={<PublicPropertyDetails />} />
 
           <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
           <Route path="/properties" element={<PrivateRoute><Properties /></PrivateRoute>} />

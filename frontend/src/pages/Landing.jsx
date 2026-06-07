@@ -115,7 +115,7 @@ export default function Landing() {
     }, []);
 
     const handleAction = (p) => {
-        navigate(`/login?redirect=/properties/${p.id}`);
+        navigate(`/listing/${p.id}`);
     };
 
     const filtered = properties.filter(p => {
