@@ -65,6 +65,22 @@ router.get('/status', (req, res) => {
     }
 });
 
+// Update user profile (e.g. wallet address)
+router.patch('/profile', async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ error: 'Unauthorized' });
+    const { name, wallet_address } = req.body;
+
+    try {
+        await query(
+            'UPDATE users SET name = COALESCE($1, name), wallet_address = COALESCE($2, wallet_address) WHERE id = $3',
+            [name || null, wallet_address || null, req.user.id]
+        );
+        res.json({ message: 'Profile updated successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Update failed' });
+    }
+});
+
 // Logout
 router.get('/logout', (req, res) => {
     req.logout((err) => {

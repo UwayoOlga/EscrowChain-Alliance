@@ -5,25 +5,23 @@ import bgImage from '../assets/BgImage.png';
 const FILTERS = ['All', 'Available', 'Apartments', 'Houses', 'Studios'];
 
 function PropertyCard({ p, onAction }) {
-    const [hovered, setHovered] = useState(false);
     let images = [];
     try { images = JSON.parse(p.images || '[]'); } catch { }
     const cover = images.length > 0 ? `http://localhost:5000${images[0]}` : null;
 
     return (
         <div
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
+            className="hover-lift"
             style={{
                 background: '#fff',
                 borderRadius: '16px',
                 overflow: 'hidden',
                 border: '1px solid #E2E8F0',
-                transition: 'box-shadow 0.2s, transform 0.2s',
-                boxShadow: hovered ? '0 12px 32px rgba(37,99,235,0.12)' : '0 1px 4px rgba(0,0,0,0.06)',
-                transform: hovered ? 'translateY(-4px)' : 'none',
                 cursor: 'pointer',
+                display: 'flex',
+                flexDirection: 'column'
             }}
+            onClick={() => onAction(p)}
         >
             <div style={{ position: 'relative', height: '210px', backgroundColor: '#EFF6FF', overflow: 'hidden' }}>
                 {cover ? (
@@ -101,6 +99,13 @@ export default function Landing() {
     const [activeFilter, setActiveFilter] = useState('All');
     const [search, setSearch] = useState('');
     const [scrolled, setScrolled] = useState(false);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 800);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 800);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         fetch('http://localhost:5000/api/properties')
@@ -132,23 +137,22 @@ export default function Landing() {
                 background: scrolled ? 'rgba(255,255,255,0.97)' : '#fff',
                 backdropFilter: 'blur(12px)',
                 borderBottom: '1px solid #E2E8F0',
-                padding: '0 5%', height: '68px',
+                padding: isMobile ? '0 16px' : '0 5%', height: '68px',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 transition: 'box-shadow 0.2s',
                 boxShadow: scrolled ? '0 2px 16px rgba(0,0,0,0.07)' : 'none'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{ width: '34px', height: '34px', background: '#2563EB', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#fff', fontSize: '1.1rem' }}>E</div>
-                    <span style={{ fontSize: '1.15rem', fontWeight: 800, letterSpacing: '-0.03em', color: '#1E293B' }}>EscrowChain</span>
-                    <span style={{ fontSize: '0.7rem', background: '#EFF6FF', color: '#2563EB', fontWeight: 700, padding: '2px 8px', borderRadius: '20px' }}>Rwanda</span>
+                    <span style={{ fontSize: '1.15rem', fontWeight: 800, letterSpacing: '-0.03em', color: '#1E293B', display: isMobile ? 'none' : 'block' }}>EscrowChain</span>
                 </div>
 
-                <div style={{ flex: 1, maxWidth: '420px', margin: '0 32px' }}>
+                <div style={{ flex: 1, maxWidth: '420px', margin: isMobile ? '0 12px' : '0 32px' }}>
                     <div style={{ position: 'relative' }}>
                         <svg style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                         <input
                             type="text"
-                            placeholder="Search by location..."
+                            placeholder="Find assets..."
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                             style={{
@@ -161,8 +165,8 @@ export default function Landing() {
                 </div>
 
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <Link to="/login" style={{ color: '#475569', fontWeight: 600, fontSize: '0.875rem', textDecoration: 'none', padding: '9px 16px', borderRadius: '8px', border: '1.5px solid #E2E8F0' }}>Sign in</Link>
-                    <Link to="/register" style={{ background: '#2563EB', color: '#fff', fontWeight: 700, fontSize: '0.875rem', textDecoration: 'none', padding: '9px 20px', borderRadius: '8px' }}>Get started</Link>
+                    <Link to="/login" style={{ color: '#475569', fontWeight: 600, fontSize: '0.8rem', textDecoration: 'none', padding: '8px 12px', borderRadius: '8px', border: '1.5px solid #E2E8F0' }}>{isMobile ? 'Login' : 'Sign in'}</Link>
+                    {!isMobile && <Link to="/register" style={{ background: '#2563EB', color: '#fff', fontWeight: 700, fontSize: '0.875rem', textDecoration: 'none', padding: '9px 20px', borderRadius: '8px' }}>Join</Link>}
                 </div>
             </nav>
 
@@ -178,15 +182,14 @@ export default function Landing() {
                 backgroundColor: '#fff',
                 borderBottom: '1px solid #E2E8F0'
             }}>
-                <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '60px 5% 48px', width: '100%' }}>
-                    <div style={{ maxWidth: '650px' }}>
+                <div style={{ maxWidth: '1200px', margin: '0 auto', padding: isMobile ? '40px 20px' : '60px 5% 48px', width: '100%', textAlign: isMobile ? 'center' : 'left' }}>
+                    <div style={{ maxWidth: isMobile ? '100%' : '650px', margin: isMobile ? '0 auto' : '0' }}>
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '32px', padding: '5px 14px', marginBottom: '24px', fontSize: '0.75rem', fontWeight: 700, color: '#2563EB' }}>
                             <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} />
-                            BLOCKCHAIN-SECURED · KIGALI, RWANDA
+                            SECURED ASSETS · KIGALI
                         </div>
-                        <h1 style={{ fontSize: 'clamp(2.2rem, 5vw, 3.5rem)', fontWeight: 800, letterSpacing: '-0.04em', color: '#fff', lineHeight: 1.1, marginBottom: '16px' }}>
-                            Find your next home in Rwanda.<br />
-                            <span style={{ color: '#60A5FA' }}>Deposit secured on-chain.</span>
+                        <h1 style={{ fontSize: isMobile ? '2.1rem' : 'clamp(2.2rem, 5vw, 3.5rem)', fontWeight: 800, letterSpacing: '-0.04em', color: '#fff', lineHeight: 1.1, marginBottom: '16px' }}>
+                            Trustless rentals in Rwanda.
                         </h1>
                         <p style={{ fontSize: '1.1rem', color: '#CBD5E1', maxWidth: '540px', marginBottom: '40px', lineHeight: 1.7 }}>
                             Browse verified properties across Kigali. Apply with one click. Your security deposit is locked in a smart contract and not with the landlord.

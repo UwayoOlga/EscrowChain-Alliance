@@ -17,7 +17,14 @@ router.use(requireAuth);
 router.get('/', async (req, res) => {
     try {
         const result = await query(
-            'SELECT * FROM leases WHERE landlord_id = $1 OR tenant_id = $1 ORDER BY created_at DESC',
+            `SELECT l.*, 
+                    u_landlord.wallet_address as landlord_wallet, 
+                    u_tenant.wallet_address as tenant_wallet
+             FROM leases l
+             JOIN users u_landlord ON l.landlord_id = u_landlord.id
+             JOIN users u_tenant ON l.tenant_id = u_tenant.id
+             WHERE l.landlord_id = $1 OR l.tenant_id = $1 
+             ORDER BY l.created_at DESC`,
             [req.user.id]
         );
         res.json(result.rows);
@@ -94,7 +101,16 @@ router.post('/', async (req, res) => {
 // Get a single lease
 router.get('/:id', async (req, res) => {
     try {
-        const result = await query('SELECT * FROM leases WHERE id = $1', [req.params.id]);
+        const result = await query(
+            `SELECT l.*, 
+                    u_landlord.wallet_address as landlord_wallet, 
+                    u_tenant.wallet_address as tenant_wallet
+             FROM leases l
+             JOIN users u_landlord ON l.landlord_id = u_landlord.id
+             JOIN users u_tenant ON l.tenant_id = u_tenant.id
+             WHERE l.id = $1`,
+            [req.params.id]
+        );
         if (result.rows.length === 0) return res.status(404).json({ error: 'Lease not found' });
 
         const lease = result.rows[0];

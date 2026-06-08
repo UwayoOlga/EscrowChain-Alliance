@@ -1,11 +1,20 @@
-﻿import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { CardanoWallet } from '@meshsdk/react';
-import './Topbar.css';
+﻿import { useAuth } from '../context/AuthContext';
+import { CardanoWallet, useWallet } from '@meshsdk/react';
+import { api } from '../api';
+import { useEffect } from 'react';
 
 export default function Topbar() {
     const { user, logout } = useAuth();
+    const { connected, wallet, address } = useWallet();
     const navigate = useNavigate();
+
+    useEffect(() => {
+        if (connected && address) {
+            console.log('🔄 Syncing on-chain identity:', address);
+            api.updateProfile({ walletAddress: address })
+                .catch(err => console.error('Wallet sync failed:', err));
+        }
+    }, [connected, address]);
 
     const handleLogout = async () => {
         await logout();

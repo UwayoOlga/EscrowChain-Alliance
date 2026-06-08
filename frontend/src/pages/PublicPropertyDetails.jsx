@@ -9,6 +9,13 @@ export default function PublicPropertyDetails() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [scrolled, setScrolled] = useState(false);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 1000);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 1000);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         const fetchProperty = async () => {
@@ -106,16 +113,18 @@ export default function PublicPropertyDetails() {
                     </div>
 
                     <div style={{
-                        height: '500px', display: 'grid',
-                        gridTemplateColumns: '2fr 1fr 1fr', gridTemplateRows: '1fr 1fr',
+                        height: isMobile ? '300px' : '500px',
+                        display: 'grid',
+                        gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr 1fr',
+                        gridTemplateRows: isMobile ? '1fr' : '1fr 1fr',
                         gap: '12px', borderRadius: '16px', overflow: 'hidden'
                     }}>
                         {/* Main Image */}
-                        <div style={{ gridRow: 'span 2', position: 'relative', background: '#F1F5F9' }}>
+                        <div style={{ gridRow: isMobile ? 'span 1' : 'span 2', position: 'relative', background: '#F1F5F9' }}>
                             {mainImage ? <img src={mainImage} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Main" /> : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94A3B8' }}>No Photo</div>}
                         </div>
-                        {/* Smaller Images */}
-                        {[1, 2, 3, 4].map(idx => (
+                        {/* Smaller Images - Only shown on Desktop */}
+                        {!isMobile && [1, 2, 3, 4].map(idx => (
                             <div key={idx} style={{ background: '#F1F5F9', position: 'relative', overflow: 'hidden' }}>
                                 {images[idx] ? (
                                     <img src={`http://localhost:5000${images[idx]}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={`View ${idx}`} />
@@ -131,7 +140,14 @@ export default function PublicPropertyDetails() {
             </section>
 
             {/* ── CONTENT & STICKY CARD ── */}
-            <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '48px 5% 100px', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 400px', gap: '80px' }}>
+            <main style={{
+                maxWidth: '1200px',
+                margin: '0 auto',
+                padding: isMobile ? '24px 20px 120px' : '48px 5% 100px',
+                display: 'grid',
+                gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1fr) 400px',
+                gap: isMobile ? '40px' : '80px'
+            }}>
 
                 {/* LEFT: Details */}
                 <div>
@@ -174,60 +190,68 @@ export default function PublicPropertyDetails() {
                 </div>
 
                 {/* RIGHT: Sticky Pricing Card */}
-                <aside>
+                {!isMobile ? (
+                    <aside>
+                        <div style={{
+                            position: 'sticky', top: '100px',
+                            background: '#fff', border: '1px solid #E2E8F0', borderRadius: '16px', padding: '32px',
+                            boxShadow: '0 12px 32px rgba(0,0,0,0.08)'
+                        }}>
+                            <div style={{ marginBottom: '24px' }}>
+                                <span style={{ fontSize: '1.6rem', fontWeight: 800, color: '#1E293B' }}>RWF {Number(property.rent_amount).toLocaleString()}</span>
+                                <span style={{ color: '#64748B', fontSize: '1rem' }}> / month</span>
+                            </div>
+
+                            <div style={{ border: '1px solid #E2E8F0', borderRadius: '12px', overflow: 'hidden', marginBottom: '24px' }}>
+                                <div style={{ padding: '12px 16px', borderBottom: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between' }}>
+                                    <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#1E293B', textTransform: 'uppercase' }}>Property ID</div>
+                                    <div style={{ fontSize: '0.7rem', color: '#64748B' }}>{property.id.substring(0, 8)}</div>
+                                </div>
+                                <div style={{ padding: '12px 16px', background: '#F8FAFC', display: 'flex', justifyContent: 'space-between' }}>
+                                    <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#1E293B', textTransform: 'uppercase' }}>Required Deposit</div>
+                                    <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#059669' }}>RWF {Number(property.deposit_amount).toLocaleString()}</div>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={handleApply}
+                                style={{
+                                    width: '100%', background: '#2563EB', color: '#fff', border: 'none',
+                                    padding: '16px', borderRadius: '12px', fontWeight: 800, fontSize: '1rem',
+                                    cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(37,99,235,0.3)',
+                                    marginBottom: '16px'
+                                }}
+                                className="hover-lift"
+                            >
+                                Apply to Rent
+                            </button>
+
+                            <p style={{ textAlign: 'center', fontSize: '0.85rem', color: '#94A3B8' }}>You won't be charged yet. The landlord must approve your application first.</p>
+                        </div>
+                    </aside>
+                ) : (
                     <div style={{
-                        position: 'sticky', top: '100px',
-                        background: '#fff', border: '1px solid #E2E8F0', borderRadius: '16px', padding: '32px',
-                        boxShadow: '0 12px 32px rgba(0,0,0,0.08)'
+                        position: 'fixed', bottom: 0, left: 0, right: 0,
+                        background: '#fff', borderTop: '1px solid #E2E8F0',
+                        padding: '16px 20px 32px', zIndex: 200,
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        boxShadow: '0 -4px 16px rgba(0,0,0,0.06)'
                     }}>
-                        <div style={{ marginBottom: '24px' }}>
-                            <span style={{ fontSize: '1.6rem', fontWeight: 800, color: '#1E293B' }}>RWF {Number(property.rent_amount).toLocaleString()}</span>
-                            <span style={{ color: '#64748B', fontSize: '1rem' }}> / month</span>
+                        <div>
+                            <div style={{ fontWeight: 800, fontSize: '1.2rem' }}>RWF {Number(property.rent_amount).toLocaleString()}</div>
+                            <div style={{ fontSize: '0.8rem', color: '#2563EB', fontWeight: 700 }}>{Number(property.deposit_amount).toLocaleString()} deposit</div>
                         </div>
-
-                        <div style={{ border: '1px solid #E2E8F0', borderRadius: '12px', overflow: 'hidden', marginBottom: '24px' }}>
-                            <div style={{ padding: '12px 16px', borderBottom: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between' }}>
-                                <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#1E293B', textTransform: 'uppercase' }}>Property ID</div>
-                                <div style={{ fontSize: '0.7rem', color: '#64748B' }}>{property.id.substring(0, 8)}</div>
-                            </div>
-                            <div style={{ padding: '12px 16px', background: '#F8FAFC', display: 'flex', justifyContent: 'space-between' }}>
-                                <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#1E293B', textTransform: 'uppercase' }}>Required Deposit</div>
-                                <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#059669' }}>RWF {Number(property.deposit_amount).toLocaleString()}</div>
-                            </div>
-                        </div>
-
                         <button
                             onClick={handleApply}
                             style={{
-                                width: '100%', background: '#2563EB', color: '#fff', border: 'none',
-                                padding: '16px', borderRadius: '12px', fontWeight: 800, fontSize: '1rem',
-                                cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(37,99,235,0.3)',
-                                marginBottom: '16px'
+                                background: '#2563EB', color: '#fff', border: 'none',
+                                padding: '12px 24px', borderRadius: '8px', fontWeight: 800, fontSize: '0.9rem'
                             }}
-                            onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-                            onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
                         >
-                            Apply to Rent
+                            Apply Now
                         </button>
-
-                        <p style={{ textAlign: 'center', fontSize: '0.85rem', color: '#94A3B8' }}>You won't be charged yet. The landlord must approve your application first.</p>
-
-                        <div style={{ marginTop: '32px', paddingTop: '24px', borderTop: '1px solid #F1F5F9' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', color: '#475569' }}>
-                                <span>Monthly Rent</span>
-                                <span style={{ fontWeight: 600 }}>RWF {Number(property.rent_amount).toLocaleString()}</span>
-                            </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', color: '#475569' }}>
-                                <span>Blockchain Escrow Fee</span>
-                                <span style={{ fontWeight: 600, color: '#059669' }}>FREE</span>
-                            </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '2px solid #F1F5F9', paddingTop: '16px', marginTop: '16px', fontSize: '1.1rem', fontWeight: 800 }}>
-                                <span>Total (excl. dep.)</span>
-                                <span>RWF {Number(property.rent_amount).toLocaleString()}</span>
-                            </div>
-                        </div>
                     </div>
-                </aside>
+                )}
             </main>
 
             {/* ── FOOTER ── */}
