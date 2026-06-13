@@ -9,10 +9,19 @@ export function AuthProvider({ children }) {
 
     // Check login status on mount
     useEffect(() => {
+        const handleUnauthorized = () => {
+            console.log('🛡️ Auth Guard: Clearing stale session.');
+            setUser(null);
+        };
+
+        window.addEventListener('unauthorized', handleUnauthorized);
+
         api.status()
             .then((data) => setUser(data.user))
             .catch(() => setUser(null))
             .finally(() => setLoading(false));
+
+        return () => window.removeEventListener('unauthorized', handleUnauthorized);
     }, []);
 
     const login = async (email, password) => {

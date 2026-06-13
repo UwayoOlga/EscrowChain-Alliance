@@ -47,13 +47,15 @@ const sessionStore = dbType === 'postgres'
     : new SQLite({ db: 'sessions.db', dir: './server' });
 
 app.use(session({
-    // store: sessionStore, // Commented out for debugging
+    store: sessionStore,
     secret: process.env.SESSION_SECRET || 'escrowchain-secret',
     resave: false,
     saveUninitialized: false,
     cookie: {
-        maxAge: 24 * 60 * 60 * 1000,
-        secure: process.env.NODE_ENV === 'production'
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        sameSite: 'lax'
     }
 }));
 

@@ -8,15 +8,27 @@ async function request(path, options = {}) {
         ...options.headers,
     };
 
-    const res = await fetch(`${API}${path}`, {
-        credentials: 'include',
-        headers,
-        ...options,
-        body: options.body ? (isFormData ? options.body : JSON.stringify(options.body)) : undefined,
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Request failed');
-    return data;
+    try {
+        const res = await fetch(`${API}${path}`, {
+            credentials: 'include',
+            headers,
+            ...options,
+            body: options.body ? (isFormData ? options.body : JSON.stringify(options.body)) : undefined,
+        });
+
+        // ── SESSION RESILIENCE: Detect 401 Unauthorized ──
+        if (res.status === 401 && !path.includes('/auth/login')) {
+            console.warn('⚠️ Session expired or invalid. Broadcasting unauthorized event.');
+            window.dispatchEvent(new CustomEvent('unauthorized'));
+        }
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Request failed');
+        return data;
+    } catch (error) {
+        console.error(`API Error [${path}]:`, error.message);
+        throw error;
+    }
 }
 
 export const api = {

@@ -11,6 +11,14 @@ const requireAuth = (req, res, next) => {
     next();
 };
 
+const requireRole = (role) => (req, res, next) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ error: 'Unauthorized' });
+    if (req.user.role !== role) {
+        return res.status(403).json({ error: `Forbidden: This action requires the ${role} role.` });
+    }
+    next();
+};
+
 router.use(requireAuth);
 
 // Get all leases for the logged-in user (as landlord or tenant)
@@ -23,11 +31,20 @@ router.get('/', async (req, res) => {
              FROM leases l
              JOIN users u_landlord ON l.landlord_id = u_landlord.id
              JOIN users u_tenant ON l.tenant_id = u_tenant.id
+             JOIN properties p ON l.property_id = p.id
+             LEFT JOIN escrow e ON l.id = e.lease_id AND e.status = 'confirmed'
              WHERE l.landlord_id = $1 OR l.tenant_id = $1 
              ORDER BY l.created_at DESC`,
             [req.user.id]
         );
-        res.json(result.rows);
+        // Map rows to include tx_hash and property details
+        const leases = result.rows.map(r => ({
+            ...r,
+            tx_hash: r.tx_hash,
+            property_address: r.address,
+            property_title: r.title
+        }));
+        res.json(leases);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

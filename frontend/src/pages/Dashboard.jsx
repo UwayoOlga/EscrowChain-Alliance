@@ -14,24 +14,39 @@ export default function Dashboard() {
 
     useEffect(() => {
         if (!user) return;
-        const fetches = [
-            api.getProperties(),
-            api.getLeases(),
-            api.getTransactions(),
-            api.getDisputes(),
-            api.getMaintenanceRequests()
-        ];
-        Promise.all(fetches).then(([p, l, t, d, m]) => {
-            setProperties(p || []);
-            setLeases(l || []);
-            setTransactions(t || []);
-            setDisputes(d || []);
-            setMaintenanceRequests(m || []);
-        }).catch(err => {
-            console.error(err);
-        }).finally(() => {
-            setLoading(false);
-        });
+
+        const loadDashboard = () => {
+            const fetches = [
+                api.getProperties(),
+                api.getLeases(),
+                api.getTransactions(),
+                api.getDisputes(),
+                api.getMaintenanceRequests()
+            ];
+            Promise.all(fetches).then(([p, l, t, d, m]) => {
+                setProperties(p || []);
+                setLeases(l || []);
+                setTransactions(t || []);
+                setDisputes(d || []);
+                setMaintenanceRequests(m || []);
+            }).catch(err => {
+                console.error('Dashboard sync error:', err);
+            });
+        };
+
+        // Initial load
+        loadDashboard();
+
+        // ── DASHBOARD SYNC: Refresh all metrics every 10s ──
+        const interval = setInterval(loadDashboard, 10000);
+
+        // Turn off loading once initial data is likely processed (handled in the Promise inside loadDashboard for the first run if we want, but let's keep it simple)
+        const initialTimer = setTimeout(() => setLoading(false), 800);
+
+        return () => {
+            clearInterval(interval);
+            clearTimeout(initialTimer);
+        };
     }, [user]);
 
     if (loading) return <div className="page container"><p>Loading Portfolio Data...</p></div>;

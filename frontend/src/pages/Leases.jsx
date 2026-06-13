@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 import { useWallet } from '@meshsdk/react';
 import { Transaction, resolvePlutusScriptAddress, BlockfrostProvider, deserializeAddress } from '@meshsdk/core';
+import { generateEscrowCertificate } from '../utils/pdfGenerator';
 
 async function awaitTransactionConfirmation(txHash) {
     const apiKey = import.meta.env.VITE_BLOCKFROST_PROJECT_ID;
@@ -35,7 +36,18 @@ export default function Leases() {
             .finally(() => setLoading(false));
     };
 
-    useEffect(load, []);
+    useEffect(() => {
+        load();
+        // ── SMART POLLING: Auto-refresh every 5s to sync with on-chain updates ──
+        const interval = setInterval(() => {
+            console.log('🔄 Syncing Asset Ledger statuses...');
+            api.getLeases()
+                .then(data => setLeases(Array.isArray(data) ? data : []))
+                .catch(() => { });
+        }, 5000);
+
+        return () => clearInterval(interval);
+    }, []);
 
     const handleApprove = async (lease) => {
         if (!connected) {
@@ -280,6 +292,15 @@ export default function Leases() {
                                             )}
                                             {(l.status === 'approved' || l.status === 'pending') && isLandlord && (
                                                 <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Awaiting Tenant Signature</span>
+                                            )}
+                                            {l.status === 'active' && (
+                                                <button
+                                                    className="btn btn-dark btn-sm btn-square"
+                                                    style={{ background: 'var(--accent)', borderColor: 'var(--accent)' }}
+                                                    onClick={() => generateEscrowCertificate(l, { title: l.property_title, address: l.property_address })}
+                                                >
+                                                    📜 Get Certificate
+                                                </button>
                                             )}
                                             {l.status === 'active' && isLandlord && (
                                                 <>

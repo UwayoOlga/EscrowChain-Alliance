@@ -39,6 +39,14 @@ const requireAuth = (req, res, next) => {
     next();
 };
 
+const requireRole = (role) => (req, res, next) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ error: 'Unauthorized' });
+    if (req.user.role !== role) {
+        return res.status(403).json({ error: `Forbidden: This action requires the ${role} role.` });
+    }
+    next();
+};
+
 // ── GET all properties (with tenant + lease info) ──
 router.get('/', async (req, res) => {
     try {
@@ -82,7 +90,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // ── POST create a new property (with image upload) ──
-router.post('/', requireAuth, upload.array('images', 6), async (req, res) => {
+router.post('/', requireRole('landlord'), upload.array('images', 6), async (req, res) => {
     const {
         title, address, description, rentAmount, depositAmount,
         bedrooms, bathrooms, size, amenities, leaseTemplate
@@ -100,13 +108,16 @@ router.post('/', requireAuth, upload.array('images', 6), async (req, res) => {
             ? req.files.map(f => `/uploads/properties/${f.filename}`)
             : [];
 
+        // ── SECURITY: Strictly pull landlord_id from account session ──
+        const landlordId = req.user.id;
+
         await query(
             `INSERT INTO properties (
                 id, landlord_id, title, address, description, rent_amount, deposit_amount, 
                 bedrooms, bathrooms, size, amenities, images, lease_template, status
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
             [
-                id, req.user.id, title, address, description,
+                id, landlordId, title, address, description,
                 Number(rentAmount) || 0,
                 Number(depositAmount) || 0,
                 Number(bedrooms) || 0,
@@ -124,7 +135,7 @@ router.post('/', requireAuth, upload.array('images', 6), async (req, res) => {
 });
 
 // ── PATCH update a property (with optional new images) ──
-router.patch('/:id', requireAuth, upload.array('images', 6), async (req, res) => {
+router.patch('/:id', requireRole('landlord'), upload.array('images', 6), async (req, res) => {
     const {
         title, description, rentAmount, depositAmount,
         status, bedrooms, bathrooms, size, amenities, leaseTemplate, existingImages
@@ -191,7 +202,7 @@ router.patch('/:id', requireAuth, upload.array('images', 6), async (req, res) =>
 });
 
 // ── DELETE a property (also removes images from disk) ──
-router.delete('/:id', requireAuth, async (req, res) => {
+router.delete('/:id', requireRole('landlord'), async (req, res) => {
     try {
         const property = await query('SELECT * FROM properties WHERE id = $1', [req.params.id]);
         if (property.rows.length === 0) return res.status(404).json({ error: 'Property not found' });
