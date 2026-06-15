@@ -24,12 +24,12 @@ if (usePostgres) {
         ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
     });
     dbType = 'postgres';
-    console.log('✅ Using PostgreSQL database.');
+    console.log('Using PostgreSQL database.');
 } else {
     const dbPath = path.resolve(__dirname, 'users.db');
     sqliteDb = new sqlite3.Database(dbPath, (err) => {
-        if (err) console.error('❌ SQLite error:', err);
-        else console.log('✅ Using SQLite database.');
+        if (err) console.error('SQLite error:', err);
+        else console.log('Using SQLite database.');
     });
 }
 
@@ -187,7 +187,7 @@ const initDb = async () => {
         } catch (e) { /* column already exists */ }
     }
 
-    console.log('✅ Database tables ready.');
+    console.log('Database tables ready.');
 };
 
 initDb().catch(console.error);

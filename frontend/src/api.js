@@ -1,4 +1,4 @@
-﻿const API = 'http://localhost:5000';
+﻿const API = import.meta.env.VITE_API_URL ?? 'http://localhost:5000';
 
 async function request(path, options = {}) {
     const isFormData = options.body instanceof FormData;
@@ -16,9 +16,8 @@ async function request(path, options = {}) {
             body: options.body ? (isFormData ? options.body : JSON.stringify(options.body)) : undefined,
         });
 
-        // ── SESSION RESILIENCE: Detect 401 Unauthorized ──
+        // Handle 401 Unauthorized
         if (res.status === 401 && !path.includes('/auth/login')) {
-            console.warn('⚠️ Session expired or invalid. Broadcasting unauthorized event.');
             window.dispatchEvent(new CustomEvent('unauthorized'));
         }
 

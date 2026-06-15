@@ -7,7 +7,7 @@ export const generateEscrowCertificate = (lease, property) => {
     const darkColor = '#1E293B';
     const silverColor = '#F1F5F9';
 
-    // ── HEADER ──
+    // Header section
     doc.setFillColor(darkColor);
     doc.rect(0, 0, 210, 40, 'F');
 
@@ -20,7 +20,7 @@ export const generateEscrowCertificate = (lease, property) => {
     doc.setFont('helvetica', 'normal');
     doc.text('ESCROWCHAIN ALLIANCE · BLOCKCHAIN-VERIFIED TENANCY', 105, 30, { align: 'center' });
 
-    // ── ASSET INFORMATION ──
+    // Body section
     doc.setTextColor(darkColor);
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
@@ -46,7 +46,7 @@ export const generateEscrowCertificate = (lease, property) => {
         columnStyles: { 0: { fontStyle: 'bold', width: 50 } }
     });
 
-    // ── ON-CHAIN DATA ──
+    // On-chain metadata
     const nextY = doc.lastAutoTable.finalY + 20;
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
@@ -68,7 +68,7 @@ export const generateEscrowCertificate = (lease, property) => {
         styles: { fontSize: 8, font: 'courier' }
     });
 
-    // ── LEGAL DISCLAIMER & SIGNATURE ──
+    // Footer section
     const footY = 240;
     doc.setFontSize(8);
     doc.setTextColor('#94A3B8');
@@ -80,6 +80,6 @@ export const generateEscrowCertificate = (lease, property) => {
     doc.text('VERIFIED BY ESCROWCHAIN NODE', 105, 270, { align: 'center' });
     doc.text(`${new Date().toLocaleString()}`, 105, 275, { align: 'center' });
 
-    // ── SAVE ──
+    // Download PDF
     doc.save(`Escrow_Certificate_${lease.id.substring(0, 8)}.pdf`);
 };

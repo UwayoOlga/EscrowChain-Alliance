@@ -2,7 +2,7 @@ import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 dotenv.config();
 
-// ── Build transporter from environment variables ──
+// Build transporter from environment variables
 // Supports any SMTP provider (Gmail, Sendgrid, Mailtrap, etc.)
 // For local development with Mailtrap: set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS in .env
 // For Gmail: set SMTP_USER=your@gmail.com and SMTP_PASS=your-app-password (not your account password)
@@ -19,7 +19,7 @@ const transporter = nodemailer.createTransport({
 const FROM_ADDRESS = process.env.SMTP_FROM || '"EscrowChain Alliance" <no-reply@escrowchain.rw>';
 const APP_URL = process.env.APP_URL || 'http://localhost:5173';
 
-// ── Shared HTML email wrapper ──
+// Shared HTML email wrapper
 function htmlWrapper(title, bodyHtml) {
     return `
     <!DOCTYPE html>
@@ -60,7 +60,7 @@ function htmlWrapper(title, bodyHtml) {
     </html>`;
 }
 
-// ── Safely send — never crash the calling request on mail failure ──
+// Safely send emails without blocking the request
 async function sendMail(to, subject, html) {
     if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
         console.warn('[Mailer] SMTP credentials not configured. Skipping email to:', to);
@@ -74,9 +74,7 @@ async function sendMail(to, subject, html) {
     }
 }
 
-// ──────────────────────────────────────────────
-//  Event: Tenant applied for a property
-// ──────────────────────────────────────────────
+// Tenant applied for a property
 export async function notifyLeaseRequested({ landlordEmail, landlordName, tenantName, propertyTitle, leaseId }) {
     const subject = `[EscrowChain] New Rental Application — ${propertyTitle}`;
     const html = htmlWrapper('New Rental Application Received', `
@@ -93,9 +91,7 @@ export async function notifyLeaseRequested({ landlordEmail, landlordName, tenant
     await sendMail(landlordEmail, subject, html);
 }
 
-// ──────────────────────────────────────────────
-//  Event: Landlord approved the application
-// ──────────────────────────────────────────────
+// Landlord approved the application
 export async function notifyLeaseApproved({ tenantEmail, tenantName, propertyTitle, leaseId, rentAmount }) {
     const subject = `[EscrowChain] Application Approved — ${propertyTitle}`;
     const html = htmlWrapper('Your Rental Application Was Approved! 🎉', `
@@ -112,9 +108,7 @@ export async function notifyLeaseApproved({ tenantEmail, tenantName, propertyTit
     await sendMail(tenantEmail, subject, html);
 }
 
-// ──────────────────────────────────────────────
-//  Event: A dispute was filed on a lease
-// ──────────────────────────────────────────────
+// A dispute was filed on a lease
 export async function notifyDisputeFiled({ recipientEmail, recipientName, raisedByName, propertyTitle, caseId, reason }) {
     const subject = `[EscrowChain] Dispute Filed — CASE-${caseId.substring(0, 8).toUpperCase()}`;
     const html = htmlWrapper('A Dispute Has Been Filed', `
@@ -131,9 +125,7 @@ export async function notifyDisputeFiled({ recipientEmail, recipientName, raised
     await sendMail(recipientEmail, subject, html);
 }
 
-// ──────────────────────────────────────────────
-//  Event: Escrow payment confirmed on-chain
-// ──────────────────────────────────────────────
+// Escrow payment confirmed on-chain
 export async function notifyPaymentConfirmed({ tenantEmail, tenantName, landlordEmail, landlordName, propertyTitle, amount, txHash }) {
     const body = (name) => htmlWrapper('Escrow Payment Confirmed On-Chain ✅', `
         <p>Hi ${name},</p>

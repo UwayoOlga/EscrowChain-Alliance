@@ -38,9 +38,8 @@ export default function Leases() {
 
     useEffect(() => {
         load();
-        // ── SMART POLLING: Auto-refresh every 5s to sync with on-chain updates ──
+        // Poll for updates every 5s
         const interval = setInterval(() => {
-            console.log('🔄 Syncing Asset Ledger statuses...');
             api.getLeases()
                 .then(data => setLeases(Array.isArray(data) ? data : []))
                 .catch(() => { });
@@ -57,24 +56,17 @@ export default function Leases() {
 
         setProcessing(lease.id);
         try {
-            console.log('Building on-chain transaction for lease:', lease.id);
-
             const tx = new Transaction({ initiator: wallet });
 
-            // Calculate total locked amount in Lovelace (ADA * 1,000,000)
             const totalAda = Number(lease.rent_amount) + Number(lease.deposit_amount);
             const lovelace = (totalAda * 1000000).toString();
 
-            // Plutus V2 Smart Contract bytes (compiled from Aiken escrow logic)
-            // This is the actual CBOR for a simple escrow validator
             const escrowBlueprint = {
                 code: '4d01000033222220051200120011',
                 version: 'V2',
             };
             const escrowAddress = resolvePlutusScriptAddress(escrowBlueprint, 0);
 
-            // ── BUILD DATUM (THE CONTRACT STATE) ──
-            // We extract the 28-byte Public Key Hash (PKH) for both parties
             if (!lease.landlord_wallet || !lease.tenant_wallet) {
                 throw new Error('Landlord or Tenant identity not verified on-chain. Both parties must connect wallets first.');
             }
@@ -82,28 +74,31 @@ export default function Leases() {
             const landlordPkh = deserializeAddress(lease.landlord_wallet).pubKeyHash;
             const tenantPkh = deserializeAddress(lease.tenant_wallet).pubKeyHash;
 
+            // Platform Arbitrator (Default EscrowChain wallet for dispute resolution)
+            const ARBITRATOR_WALLET = 'addr_test1vpmzvpzvpzvpzvpzvpzvpzvpzvpzvpzvpzvpzvpzvpzvpzvsq3z0v5';
+            const arbitratorPkh = deserializeAddress(ARBITRATOR_WALLET).pubKeyHash;
+
             const datum = {
                 alternative: 0,
                 fields: [
                     landlordPkh,
                     tenantPkh,
+                    arbitratorPkh,
                     Number(lease.rent_amount),
                     Number(lease.deposit_amount)
                 ],
             };
 
-            console.log('Sending funds to cryptographically resolved Escrow Script Address:', escrowAddress);
             tx.sendLovelace(
                 { address: escrowAddress, datum: { value: datum, inline: true } },
                 lovelace
             );
 
-            // 1. Submit to Mempool
+            // Transaction submission
             const unsignedTx = await tx.build();
             const signedTx = await wallet.signTx(unsignedTx);
             const txHash = await wallet.submitTx(signedTx);
 
-            // 2. Register Lease Activity as Pending
             const escrowRecord = await api.createEscrow({
                 leaseId: lease.id,
                 action: 'ContractSigned',
@@ -111,17 +106,15 @@ export default function Leases() {
                 txHash: txHash
             });
 
-            // 3. Await cryptographically verified block minting
             await awaitTransactionConfirmation(txHash);
 
-            // 4. Finalize Backend Record
             await api.updateEscrow(escrowRecord.id, { status: 'confirmed' });
             await api.updateLeaseStatus(lease.id, 'active');
 
             // Auto-generate the signed lease document for both parties
             await api.createDocument({
                 title: `Lease Contract CT-${lease.id.substring(0, 8).toUpperCase()}`,
-                fileUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', // Dummy PDF representation
+                fileUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
                 type: 'lease'
             });
 
@@ -317,7 +310,12 @@ export default function Leases() {
                                                 </>
                                             )}
                                             {l.status === 'active' && !isLandlord && (
-                                                <Link to="/payments" className="btn btn-secondary btn-sm btn-square">Pay Next Installment</Link>
+                                                <>
+                                                    <Link to="/payments" className="btn btn-secondary btn-sm btn-square">Pay Next Installment</Link>
+                                                    <Link to="/disputes" className="btn btn-danger btn-sm btn-square" style={{ backgroundColor: 'transparent', color: 'var(--danger)', border: '1px solid var(--danger)' }}>
+                                                        File Dispute
+                                                    </Link>
+                                                </>
                                             )}
                                             {(l.status === 'completed' || l.status === 'cancelled') && (
                                                 <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Contract Terminated</span>
