@@ -5,7 +5,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { notifyDisputeFiled } from './mailer.js';
+import { notifyDisputeFiled, notifyArbitrator } from './mailer.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -136,6 +136,14 @@ router.post('/', upload.array('evidence', 5), async (req, res) => {
                 reason: reason.trim()
             });
         }
+
+        // Notify the Platform Arbitrator
+        await notifyArbitrator({
+            raisedByName,
+            propertyTitle,
+            caseId: id,
+            reason: reason.trim()
+        });
 
         const result = await query('SELECT * FROM disputes WHERE id = $1', [id]);
         res.json(result.rows[0]);

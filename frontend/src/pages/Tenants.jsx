@@ -44,7 +44,6 @@ export default function Tenants() {
             <h2 style={{ marginBottom: 24, fontSize: '1.5rem', color: 'var(--dark-slate)' }}>My Tenants</h2>
             {tenants.length === 0 ? (
                 <div className="card" style={{ padding: '60px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '3rem', marginBottom: '16px' }}>👥</div>
                     <h3 style={{ marginBottom: '8px' }}>No Tenants Found</h3>
                     <p style={{ color: 'var(--text-secondary)', maxWidth: '400px', margin: '0 auto' }}>
                         You currently don't have any tenants linked to your properties through active or pending lease agreements.

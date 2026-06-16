@@ -58,8 +58,8 @@ export const generateEscrowCertificate = (lease, property) => {
         theme: 'grid',
         head: [['Field', 'Cryptographic Value']],
         body: [
-            ['Validator Script', 'Escrow_V2_Plutus'],
-            ['Network', 'Cardano Mainnet (Simulation)'],
+            ['Validator Script', 'Escrow_V3_Arbitrated'],
+            ['Network', 'Cardano Preprod Testnet'],
             ['Vault Address', 'addr1_escrow_v2_...'], // Mocked for display
             ['Transaction Hash', lease.tx_hash || 'PENDING_MINTING'],
             ['Escrow Status', 'LOCKED_AND_VERIFIED']

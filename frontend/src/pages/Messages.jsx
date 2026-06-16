@@ -31,7 +31,7 @@ export default function Messages() {
                 .catch(err => console.error(err));
         };
         fetchThread();
-        // Robust pattern: Poll every 10s for new messages seamlessly
+        fetchThread();
         const interval = setInterval(fetchThread, 10000);
         return () => clearInterval(interval);
     }, [selectedContact]);
@@ -54,7 +54,7 @@ export default function Messages() {
                 created_at: new Date().toISOString()
             };
 
-            // Optimistic rendering for snappier UI
+            // Update state immediately
             setMessages(prev => [...prev, newMsg]);
             setReplyText('');
 
@@ -71,7 +71,7 @@ export default function Messages() {
         <div className="page fade-in" style={{ height: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column', padding: '24px 32px' }}>
             <div className="page-header" style={{ marginBottom: '24px' }}>
                 <span className="text-overline">Direct Line</span>
-                <h1 style={{ fontSize: '2rem', marginBottom: '8px' }}>Communique</h1>
+                <h1 style={{ fontSize: '2rem', marginBottom: '8px' }}>Messages</h1>
             </div>
 
             <div className="card" style={{ flex: 1, display: 'flex', overflow: 'hidden', padding: 0 }}>
@@ -103,7 +103,7 @@ export default function Messages() {
 
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#FAFAFA' }}>
                             <div style={{ padding: '24px', borderBottom: '1px solid var(--border)', background: '#fff' }}>
-                                <div style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)' }}>ENCRYPTED SESSION</div>
+                                <div style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)' }}>SECURE SESSION</div>
                                 <div style={{ fontWeight: 700, fontSize: '1.2rem', color: 'var(--dark-slate)' }}>{selectedContact?.name}</div>
                             </div>
 

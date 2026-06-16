@@ -106,7 +106,6 @@ export default function Disputes() {
 
     return (
         <div className="page-dashboard fade-in">
-            {/* ── Page Header ── */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '48px' }}>
                 <div>
                     <span className="text-overline">Mediation & Governance</span>
@@ -122,7 +121,6 @@ export default function Disputes() {
                 )}
             </div>
 
-            {/* ── Create Form ── */}
             {isCreating && (
                 <div className="card" style={{ padding: '40px', marginBottom: '48px', borderTop: '4px solid var(--accent)' }}>
                     <h3 style={{ fontWeight: 800, marginBottom: '8px' }}>File a Dispute Case</h3>
@@ -188,7 +186,6 @@ export default function Disputes() {
                 </div>
             )}
 
-            {/* ── Active Cases List ── */}
             <div>
                 <h2 style={{ fontSize: '1.1rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '24px' }}>
                     Active Cases — {disputes.length}

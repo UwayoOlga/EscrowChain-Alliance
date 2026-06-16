@@ -1,6 +1,6 @@
 ﻿import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import bgImage from '../assets/BgImage.png';
+import heroImage from '../assets/hero_modern.png';
 
 const FILTERS = ['All', 'Available', 'Apartments', 'Houses', 'Studios'];
 
@@ -39,7 +39,7 @@ function PropertyCard({ p, onAction }) {
                     color: '#fff', padding: '4px 10px', borderRadius: '20px',
                     fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em'
                 }}>
-                    {p.status === 'available' ? '✓ Available' : p.status}
+                    {p.status === 'available' ? 'Available' : p.status}
                 </div>
                 <div style={{
                     position: 'absolute', bottom: '12px', right: '12px',
@@ -60,12 +60,12 @@ function PropertyCard({ p, onAction }) {
                     </h3>
                 </div>
                 <p style={{ fontSize: '0.83rem', color: '#94A3B8', marginBottom: '12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    📍 {p.address}
+                    {p.address}
                 </p>
                 <div style={{ display: 'flex', gap: '12px', fontSize: '0.8rem', color: '#475569', marginBottom: '16px' }}>
-                    {p.bedrooms > 0 && <span>🛏 {p.bedrooms} bed</span>}
-                    {p.bathrooms > 0 && <span>🚿 {p.bathrooms} bath</span>}
-                    {p.size && <span>📐 {p.size}</span>}
+                    {p.bedrooms > 0 && <span>{p.bedrooms} bed</span>}
+                    {p.bathrooms > 0 && <span>{p.bathrooms} bath</span>}
+                    {p.size && <span>{p.size}</span>}
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #F1F5F9', paddingTop: '14px' }}>
                     <div>
@@ -176,15 +176,15 @@ export default function Landing() {
                 minHeight: '520px',
                 display: 'flex',
                 alignItems: 'center',
-                backgroundImage: `linear-gradient(rgba(0, 4, 8, 0.8), rgba(0, 4, 8, 0.8)), url(${bgImage})`,
+                backgroundImage: `linear-gradient(rgba(0, 4, 8, 0.7), rgba(0, 4, 8, 0.7)), url(${heroImage})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
-                backgroundColor: '#fff',
+                backgroundColor: '#1E293B',
                 borderBottom: '1px solid #E2E8F0'
             }}>
                 <div style={{ maxWidth: '1200px', margin: '0 auto', padding: isMobile ? '40px 20px' : '60px 5% 48px', width: '100%', textAlign: isMobile ? 'center' : 'left' }}>
                     <div style={{ maxWidth: isMobile ? '100%' : '650px', margin: isMobile ? '0 auto' : '0' }}>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: '32px', padding: '5px 14px', marginBottom: '24px', fontSize: '0.75rem', fontWeight: 700, color: '#2563EB' }}>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', background: 'rgba(37,99,235,0.1)', border: '1px solid rgba(37,99,235,0.2)', borderRadius: '32px', padding: '5px 14px', marginBottom: '24px', fontSize: '0.75rem', fontWeight: 700, color: '#60A5FA' }}>
                             <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} />
                             SECURED ASSETS · KIGALI
                         </div>
@@ -192,13 +192,13 @@ export default function Landing() {
                             Trustless rentals in Rwanda.
                         </h1>
                         <p style={{ fontSize: '1.1rem', color: '#CBD5E1', maxWidth: '540px', marginBottom: '40px', lineHeight: 1.7 }}>
-                            Browse verified properties across Kigali. Apply with one click. Your security deposit is locked in a smart contract and not with the landlord.
+                            Browse verified properties across Kigali. Your security deposit is locked in a smart contract and not with the landlord.
                         </p>
-                        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: isMobile ? 'center' : 'flex-start' }}>
                             <Link to="/register" style={{ background: '#2563EB', color: '#fff', fontWeight: 700, fontSize: '1rem', textDecoration: 'none', padding: '14px 32px', borderRadius: '10px', boxShadow: '0 4px 16px rgba(37,99,235,0.3)' }}>
-                                Browse rentals →
+                                Browse rentals &rarr;
                             </Link>
-                            <Link to="/register" style={{ background: '#fff', color: '#1E293B', fontWeight: 700, fontSize: '1rem', textDecoration: 'none', padding: '14px 28px', borderRadius: '10px', border: '1.5px solid #E2E8F0' }}>
+                            <Link to="/register" style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 700, fontSize: '1rem', textDecoration: 'none', padding: '14px 28px', borderRadius: '10px', border: '1.5px solid rgba(255,255,255,0.2)', backdropFilter: 'blur(8px)' }}>
                                 List a property
                             </Link>
                         </div>
@@ -227,16 +227,13 @@ export default function Landing() {
                             {f}
                         </button>
                     ))}
-                    <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px', color: '#94A3B8', fontSize: '0.8rem' }}>
-                        {filtered.length} result{filtered.length !== 1 ? 's' : ''}
-                    </div>
                 </div>
             </div>
 
             <section style={{ padding: '40px 5% 80px' }}>
                 <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
                     {loading ? (
-                        <div style={{ textAlign: 'center', padding: '80px', color: '#94A3B8' }}>Loading properties...</div>
+                        <div style={{ textAlign: 'center', padding: '80px', color: '#94A3B8' }}>Loading portfolio...</div>
                     ) : (
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: '24px' }}>
                             {filtered.map(p => (
@@ -247,52 +244,15 @@ export default function Landing() {
                 </div>
             </section>
 
-            <section style={{ background: '#fff', borderTop: '1px solid #E2E8F0', padding: '80px 5%' }}>
-                <div style={{ maxWidth: '1100px', margin: '0 auto', textAlign: 'center' }}>
-                    <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#1E293B', marginBottom: '40px' }}>How EscrowChain works</h2>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '32px' }}>
-                        {['Browse verified listings', 'Apply in one click', 'Get approved instantly', 'Deposit locked in Escrow'].map((title, i) => (
-                            <div key={i} style={{ padding: '32px 24px', background: '#F8FAFC', borderRadius: '16px', border: '1px solid #E2E8F0', transition: 'transform 0.2s' }}>
-                                <div style={{ fontSize: '2rem', marginBottom: '16px', color: '#2563EB' }}>
-                                    {[
-                                        <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>,
-                                        <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>,
-                                        <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-                                        <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-                                    ][i]}
-                                </div>
-                                <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#1E293B', marginBottom: '8px' }}>{title}</h3>
-                                <p style={{ fontSize: '0.875rem', color: '#64748B', lineHeight: 1.6 }}>Securely manage your rental lifecycle from discovery to deposit return.</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
             <footer style={{ background: '#1E293B', padding: '60px 5% 40px', color: '#fff' }}>
-                <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '40px' }}>
-                    <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-                            <div style={{ width: '30px', height: '30px', background: '#2563EB', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>E</div>
-                            <span style={{ fontWeight: 800 }}>EscrowChain</span>
-                        </div>
-                        <p style={{ fontSize: '0.85rem', color: '#94A3B8' }}>Blockchain-secured rentals in Rwanda.</p>
+                <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '24px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ width: '30px', height: '30px', background: '#2563EB', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>E</div>
+                        <span style={{ fontWeight: 800 }}>EscrowChain Alliance</span>
                     </div>
-                    {['Platform', 'Ecosystem', 'Company'].map((title, i) => (
-                        <div key={i}>
-                            <h4 style={{ fontSize: '0.8rem', fontWeight: 800, color: '#64748B', marginBottom: '16px', textTransform: 'uppercase' }}>{title}</h4>
-                            <ul style={{ listStyle: 'none', padding: 0, fontSize: '0.875rem', color: '#94A3B8' }}>
-                                <li>Link Item</li>
-                                <li>Link Item</li>
-                            </ul>
-                        </div>
-                    ))}
+                    <p style={{ fontSize: '0.85rem', color: '#94A3B8' }}>© 2026 Blockchain-secured rentals in Rwanda. Built for the Decentralized Future.</p>
                 </div>
             </footer>
-
-            <style>{`
-                @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-            `}</style>
         </div>
     );
 }

@@ -29,6 +29,13 @@ export default function Leases() {
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState(null);
 
+    const checkNetwork = async () => {
+        const networkId = await wallet.getNetworkId();
+        if (networkId !== 0) { // 0 = Testnet/Preprod, 1 = Mainnet
+            throw new Error('Please switch your wallet network to "Preprod" or "Testnet" in your settings.');
+        }
+    };
+
     const load = () => {
         api.getLeases()
             .then(data => setLeases(Array.isArray(data) ? data : []))
@@ -56,6 +63,7 @@ export default function Leases() {
 
         setProcessing(lease.id);
         try {
+            await checkNetwork();
             const tx = new Transaction({ initiator: wallet });
 
             const totalAda = Number(lease.rent_amount) + Number(lease.deposit_amount);
@@ -135,6 +143,7 @@ export default function Leases() {
 
         setProcessing(lease.id);
         try {
+            await checkNetwork();
             const apiKey = import.meta.env.VITE_BLOCKFROST_PROJECT_ID;
             const provider = new BlockfrostProvider(apiKey);
 
@@ -225,6 +234,11 @@ export default function Leases() {
                 <span className="text-overline">Contract Explorer</span>
                 <h1 style={{ fontSize: '2.2rem', letterSpacing: '-0.02em', marginBottom: '8px' }}>Asset Ledger Entries</h1>
                 <p>Monitor your active escrow balances and programmatic real estate leases.</p>
+                <div style={{ marginTop: '12px' }}>
+                    <a href="https://docs.cardano.org/cardano-testnets/tools/faucet/" target="_blank" rel="noreferrer" className="badge badge-info" style={{ textDecoration: 'none', padding: '6px 12px' }}>
+                        Need Test ADA? Visit Preprod Faucet &nearr;
+                    </a>
+                </div>
             </div>
 
             {leases.length === 0 ? (

@@ -141,3 +141,23 @@ export async function notifyPaymentConfirmed({ tenantEmail, tenantName, landlord
     await sendMail(tenantEmail, subject, body(tenantName));
     await sendMail(landlordEmail, subject, body(landlordName));
 }
+
+// ARBITRATOR NOTIFICATION
+export async function notifyArbitrator({ raisedByName, propertyTitle, caseId, reason }) {
+    const arbitratorEmail = process.env.ARBITRATOR_EMAIL || 'support@escrowchain.rw';
+
+    const subject = `[URGENT] New Arbitration Request — CASE-${caseId.substring(0, 8).toUpperCase()}`;
+    const html = htmlWrapper('Arbitration Request Received', `
+        <p>A formal dispute has been filed that requires professional arbitration.</p>
+        <div class="detail">
+            <p><strong>Property:</strong> ${propertyTitle}</p>
+            <p><strong>Case Reference:</strong> CASE-${caseId.substring(0, 8).toUpperCase()}</p>
+            <p><strong>Filed By:</strong> ${raisedByName}</p>
+            <p><strong>Reason for Dispute:</strong> ${reason}</p>
+        </div>
+        <p>Please log in to the administrative panel to review the smart contract state and provided evidence.</p>
+        <a class="btn" href="${APP_URL}/admin/disputes">Review Case Files →</a>
+    `);
+
+    await sendMail(arbitratorEmail, subject, html);
+}
