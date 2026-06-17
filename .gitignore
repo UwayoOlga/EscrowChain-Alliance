@@ -1,5 +1,10 @@
 node_modules/
 dist/
 .env
+.env.*
 *.log
 .DS_Store
+backend/uploads/
+frontend/node_modules/
+backend/node_modules/
+/tmp/
