@@ -84,6 +84,17 @@ const initDb = async () => {
     `);
 
     await query(`
+        CREATE TABLE IF NOT EXISTS property_images (
+            id TEXT PRIMARY KEY,
+            property_id TEXT NOT NULL,
+            image_url TEXT NOT NULL,
+            is_primary BOOLEAN DEFAULT FALSE,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (property_id) REFERENCES properties(id) ON DELETE CASCADE
+        )
+    `);
+
+    await query(`
         CREATE TABLE IF NOT EXISTS leases (
             id TEXT PRIMARY KEY,
             property_id TEXT NOT NULL,
@@ -105,12 +116,18 @@ const initDb = async () => {
         CREATE TABLE IF NOT EXISTS escrow_transactions (
             id TEXT PRIMARY KEY,
             lease_id TEXT NOT NULL,
-            action TEXT NOT NULL,
+            landlord_id TEXT NOT NULL,
+            tenant_id TEXT NOT NULL,
             amount REAL NOT NULL,
+            currency TEXT DEFAULT 'RWF',
             tx_hash TEXT,
-            status TEXT DEFAULT 'pending',
+            status TEXT CHECK(status IN ('pending', 'locked', 'released', 'refunded', 'disputed')) DEFAULT 'pending',
+            action TEXT NOT NULL,
+            metadata TEXT,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (lease_id) REFERENCES leases(id)
+            FOREIGN KEY (lease_id) REFERENCES leases(id),
+            FOREIGN KEY (landlord_id) REFERENCES users(id),
+            FOREIGN KEY (tenant_id) REFERENCES users(id)
         )
     `);
 
@@ -118,11 +135,14 @@ const initDb = async () => {
         CREATE TABLE IF NOT EXISTS disputes (
             id TEXT PRIMARY KEY,
             lease_id TEXT NOT NULL,
+            transaction_id TEXT,
             raised_by TEXT NOT NULL,
             reason TEXT NOT NULL,
             status TEXT DEFAULT 'pending',
+            resolution_notes TEXT,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (lease_id) REFERENCES leases(id),
+            FOREIGN KEY (transaction_id) REFERENCES escrow_transactions(id),
             FOREIGN KEY (raised_by) REFERENCES users(id)
         )
     `);
@@ -144,25 +164,54 @@ const initDb = async () => {
     await query(`
         CREATE TABLE IF NOT EXISTS documents (
             id TEXT PRIMARY KEY,
-            user_id TEXT NOT NULL,
+            uploader_id TEXT NOT NULL,
+            property_id TEXT,
+            lease_id TEXT,
             title TEXT NOT NULL,
             file_url TEXT NOT NULL,
-            type TEXT DEFAULT 'lease',
+            file_type TEXT DEFAULT 'pdf',
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id)
+            FOREIGN KEY (uploader_id) REFERENCES users(id),
+            FOREIGN KEY (property_id) REFERENCES properties(id),
+            FOREIGN KEY (lease_id) REFERENCES leases(id)
+        )
+    `);
+
+    await query(`
+        CREATE TABLE IF NOT EXISTS conversations (
+            id TEXT PRIMARY KEY,
+            participant_one TEXT NOT NULL,
+            participant_two TEXT NOT NULL,
+            last_message TEXT,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (participant_one) REFERENCES users(id),
+            FOREIGN KEY (participant_two) REFERENCES users(id),
+            UNIQUE(participant_one, participant_two)
         )
     `);
 
     await query(`
         CREATE TABLE IF NOT EXISTS messages (
             id TEXT PRIMARY KEY,
+            conversation_id TEXT NOT NULL,
             sender_id TEXT NOT NULL,
-            receiver_id TEXT NOT NULL,
             content TEXT NOT NULL,
             read BOOLEAN DEFAULT FALSE,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (sender_id) REFERENCES users(id),
-            FOREIGN KEY (receiver_id) REFERENCES users(id)
+            FOREIGN KEY (conversation_id) REFERENCES conversations(id),
+            FOREIGN KEY (sender_id) REFERENCES users(id)
+        )
+    `);
+
+    await query(`
+        CREATE TABLE IF NOT EXISTS audit_logs (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL,
+            action TEXT NOT NULL,
+            resource_id TEXT,
+            metadata TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
         )
     `);
 
@@ -178,7 +227,15 @@ const initDb = async () => {
         ['properties', 'size', 'TEXT'],
         ['properties', 'amenities', 'TEXT'],
         ['leases', 'created_at', 'TEXT DEFAULT CURRENT_TIMESTAMP'],
-        ['disputes', 'evidence', 'TEXT']
+        ['disputes', 'evidence', 'TEXT'],
+        ['escrow_transactions', 'landlord_id', 'TEXT'],
+        ['escrow_transactions', 'tenant_id', 'TEXT'],
+        ['escrow_transactions', 'currency', "TEXT DEFAULT 'RWF'"],
+        ['escrow_transactions', 'metadata', 'TEXT'],
+        ['documents', 'uploader_id', 'TEXT'],
+        ['documents', 'property_id', 'TEXT'],
+        ['documents', 'lease_id', 'TEXT'],
+        ['documents', 'file_type', 'TEXT']
     ];
 
     for (const [table, col, type] of alterTables) {

@@ -88,33 +88,43 @@ export default function Dashboard() {
         const occupiedCount = activeLeases.length;
         const occupancyRate = totalProperties > 0 ? (occupiedCount / totalProperties) * 100 : 0;
 
+        // Advanced Revenue Metrics
+        const monthlyRunRate = activeLeases.reduce((sum, l) => sum + l.rent_amount, 0);
+        const resolvedDisputes = disputes.filter(d => d.status === 'resolved');
+
         return (
             <div className="dashboard-enterprise fade-in">
-                <div className="dashboard-intro" style={{ marginBottom: '32px' }}>
-                    <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--dark-slate)' }}>Management Overview</h1>
-                    <p style={{ color: 'var(--text-secondary)' }}>Executive audit of your real estate portfolio performance.</p>
+                <div className="dashboard-intro" style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                    <div>
+                        <h1 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--dark-slate)', letterSpacing: '-0.03em' }}>Portfolio Performance</h1>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem' }}>Institutional audit of realestate assets and smart contract liquidity.</p>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase' }}>Network Status</div>
+                        <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>Cardano Preprod Active</div>
+                    </div>
                 </div>
 
                 <div className="grid grid-4" style={{ marginBottom: '32px' }}>
-                    <div className="card metric-card" style={{ borderTop: 'none' }}>
+                    <div className="card metric-card" style={{ borderTop: '4px solid var(--accent)' }}>
                         <span className="metric-label">Occupancy Rate</span>
                         <div className="metric-value">{occupancyRate.toFixed(1)}%</div>
-                        <div className="metric-sub">{occupiedCount} of {totalProperties} Units</div>
+                        <div className="metric-sub">{occupiedCount} of {totalProperties} units generating yield</div>
                     </div>
-                    <div className="card metric-card" style={{ borderTop: 'none' }}>
-                        <span className="metric-label">Total Realized Yield</span>
-                        <div className="metric-value">RWF {totalEarnings.toLocaleString()}</div>
-                        <div className="metric-sub">Confirmed Ledger Transfers</div>
+                    <div className="card metric-card" style={{ borderLeft: '1px solid var(--border)' }}>
+                        <span className="metric-label">Monthly Run Rate</span>
+                        <div className="metric-value">RWF {monthlyRunRate.toLocaleString()}</div>
+                        <div className="metric-sub">Projected incoming lease revenue</div>
                     </div>
-                    <div className="card metric-card" style={{ borderTop: 'none' }}>
-                        <span className="metric-label">In Escrow (Pending)</span>
+                    <div className="card metric-card" style={{ borderLeft: '1px solid var(--border)' }}>
+                        <span className="metric-label">Total Escrow Vault</span>
                         <div className="metric-value">RWF {escrowBalance.toLocaleString()}</div>
-                        <div className="metric-sub">Funds in Smart Contract</div>
+                        <div className="metric-sub">Deposits locked in protocol</div>
                     </div>
-                    <div className="card metric-card" style={{ borderLeft: activeDisputes.length > 0 ? '4px solid var(--danger)' : '' }}>
-                        <span className="metric-label">Active Disputes</span>
+                    <div className="card metric-card" style={{ borderLeft: activeDisputes.length > 0 ? '4px solid var(--danger)' : '1px solid var(--border)' }}>
+                        <span className="metric-label">Critical Disputes</span>
                         <div className="metric-value" style={{ color: activeDisputes.length > 0 ? 'var(--danger)' : '' }}>{activeDisputes.length}</div>
-                        <div className="metric-sub">Requiring Mediation</div>
+                        <div className="metric-sub">{resolvedDisputes.length} cases successfully mediated</div>
                     </div>
                 </div>
 

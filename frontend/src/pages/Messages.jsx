@@ -26,11 +26,10 @@ export default function Messages() {
     useEffect(() => {
         if (!selectedContact) return;
         const fetchThread = () => {
-            api.getMessages(selectedContact.id)
+            api.getMessages(selectedContact.other_user_id)
                 .then(data => setMessages(data))
                 .catch(err => console.error(err));
         };
-        fetchThread();
         fetchThread();
         const interval = setInterval(fetchThread, 10000);
         return () => clearInterval(interval);
@@ -46,11 +45,11 @@ export default function Messages() {
         if (!replyText.trim() || !selectedContact) return;
 
         try {
+            const content = replyText.trim();
             const newMsg = {
                 id: Date.now().toString(),
                 sender_id: user.id,
-                receiver_id: selectedContact.id,
-                content: replyText.trim(),
+                content: content,
                 created_at: new Date().toISOString()
             };
 
@@ -58,7 +57,7 @@ export default function Messages() {
             setMessages(prev => [...prev, newMsg]);
             setReplyText('');
 
-            await api.sendMessage({ receiverId: selectedContact.id, content: newMsg.content });
+            await api.sendMessage({ receiverId: selectedContact.other_user_id, content: content });
         } catch (error) {
             console.error(error);
             alert('Failed to securely dispatch message. Verify active connection.');
@@ -82,29 +81,39 @@ export default function Messages() {
                 ) : (
                     <>
                         <div style={{ width: '320px', borderRight: '1px solid var(--border)', background: 'var(--bg-secondary)', overflowY: 'auto' }}>
-                            {contacts.map(contact => (
+                            {contacts.map(c => (
                                 <div
-                                    key={contact.id}
-                                    onClick={() => setSelectedContact(contact)}
+                                    key={c.id}
+                                    onClick={() => setSelectedContact(c)}
                                     style={{
                                         padding: '16px 24px',
                                         borderBottom: '1px solid var(--border)',
                                         cursor: 'pointer',
-                                        background: selectedContact?.id === contact.id ? '#ffffff' : 'transparent',
-                                        borderLeft: selectedContact?.id === contact.id ? '4px solid var(--accent)' : '4px solid transparent',
+                                        background: selectedContact?.id === c.id ? '#ffffff' : 'transparent',
+                                        borderLeft: selectedContact?.id === c.id ? '4px solid var(--accent)' : '4px solid transparent',
                                         transition: 'all 0.2s ease'
                                     }}
                                 >
-                                    <div style={{ fontWeight: 700, color: 'var(--dark-slate)', marginBottom: '4px' }}>{contact.name}</div>
-                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{contact.role}</div>
+                                    <div style={{ fontWeight: 700, color: 'var(--dark-slate)', marginBottom: '4px' }}>{c.other_user_name}</div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{c.other_user_role}</span>
+                                        {c.last_message && (
+                                            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                                                {c.updated_at ? new Date(c.updated_at).toLocaleDateString() : ''}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                        {c.last_message || 'Start a conversation'}
+                                    </div>
                                 </div>
                             ))}
                         </div>
 
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#FAFAFA' }}>
                             <div style={{ padding: '24px', borderBottom: '1px solid var(--border)', background: '#fff' }}>
-                                <div style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)' }}>SECURE SESSION</div>
-                                <div style={{ fontWeight: 700, fontSize: '1.2rem', color: 'var(--dark-slate)' }}>{selectedContact?.name}</div>
+                                <div style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)' }}>SECURE THREAD</div>
+                                <div style={{ fontWeight: 700, fontSize: '1.2rem', color: 'var(--dark-slate)' }}>{selectedContact?.other_user_name}</div>
                             </div>
 
                             <div style={{ flex: 1, padding: '24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>

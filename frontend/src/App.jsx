@@ -16,6 +16,7 @@ import Documents from './pages/Documents';
 import Maintenance from './pages/Maintenance';
 import Messages from './pages/Messages';
 import Marketplace from './pages/Marketplace';
+import AuditLogs from './pages/AuditLogs';
 import PublicPropertyDetails from './pages/PublicPropertyDetails';
 import MainLayout from './components/MainLayout';
 
@@ -53,6 +54,7 @@ function AppContent() {
           <Route path="/marketplace" element={<PrivateRoute><Marketplace /></PrivateRoute>} />
           <Route path="/messages" element={<PrivateRoute><Messages /></PrivateRoute>} />
           <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
+          <Route path="/audit-logs" element={<PrivateRoute><AuditLogs /></PrivateRoute>} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

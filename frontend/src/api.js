@@ -42,6 +42,7 @@ export const api = {
     updateProfile: (body) => request('/api/users/me', { method: 'PATCH', body }),
     getTenants: () => request('/api/users/tenants'),
     getProspects: (email) => request(`/api/users/prospects?email=${encodeURIComponent(email)}`),
+    getAuditLogs: () => request('/api/users/audit-logs'),
 
     // Properties
     getProperties: () => request('/api/properties'),

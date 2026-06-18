@@ -1,16 +1,43 @@
-# React + Vite
+# EscrowChain Alliance — Enterprise Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+EscrowChain Alliance is a Web3-powered rental management platform that leverages the **Cardano** blockchain to provide trustless, secure, and transparent escrow services for landlords and tenants.
 
-Currently, two official plugins are available:
+## 🚀 Key Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+*   **Trustless Escrow**: Security deposits are locked in smart contracts (Plutus/Aiken), not held by landlords.
+*   **Cryptographic Leasing**: On-chain approval workflows using **Cardano MeshSDK**.
+*   **Asset Management**: Institutional-grade property ledger with deep metadata support.
+*   **Secure Communication**: Encrypted-style direct messaging between verified owners and residents.
+*   **Resolution Protocol**: Integrated 2-of-3 multi-sig arbitration for rental disputes.
 
-## React Compiler
+## 🛠 Technical Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+*   **Core**: React + Vite
+*   **State Management**: React Hooks & Context API
+*   **Blockchain Integration**: MeshSDK (@meshsdk/react, @meshsdk/core)
+*   **Styling**: Pure CSS with Corporate Minimalist aesthetic
+*   **API Layer**: Axios with centralized error interceptors
 
-## Expanding the ESLint configuration
+## 📦 Installation & Setup
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+1.  **Install Dependencies**:
+    ```bash
+    npm install
+    ```
+
+2.  **Environment Configuration**:
+    Create a `.env` file based on the root `.env.example`. Ensure `VITE_BLOCKFROST_PROJECT_ID` is set for Preprod Testnet access.
+
+3.  **Development Mode**:
+    ```bash
+    npm run dev
+    ```
+
+## 🏗 Architecture Diagram (Public)
+
+*   **User Interface**: Clean, functional dashboard for multi-role management.
+*   **Wallet Integration**: Connects with Eternl, Vespr, or Lace to authorize on-chain scripts.
+*   **Off-Chain Sync**: Communicates with the Express backend for metadata and document vault storage.
+
+---
+© 2026 EscrowChain Alliance Protocol. Built for the Decentralized Future.
