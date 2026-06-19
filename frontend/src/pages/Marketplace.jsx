@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { api } from '../api';
+import { api, BASE_URL } from '../api';
 
 export default function Marketplace() {
     const [properties, setProperties] = useState([]);
@@ -43,7 +43,7 @@ export default function Marketplace() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '32px' }}>
                     {properties.map(p => {
                         const images = p.images ? JSON.parse(p.images) : [];
-                        const coverImage = images.length > 0 ? `http://localhost:5000${images[0]}` : null;
+                        const coverImage = images.length > 0 ? `${BASE_URL}${images[0]}` : null;
 
                         return (
                             <Link to={`/properties/${p.id}`} key={p.id} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>

@@ -67,7 +67,7 @@ router.post('/', asyncHandler(async (req, res) => {
 
 // PATCH update status (Admin or participants only)
 router.patch('/:id', asyncHandler(async (req, res) => {
-    const { status, txHash } = req.body;
+    const { status, txHash, metadata } = req.body;
     const validStatuses = ['pending', 'locked', 'released', 'refunded', 'disputed'];
 
     if (status && !validStatuses.includes(status)) {
@@ -82,9 +82,16 @@ router.patch('/:id', asyncHandler(async (req, res) => {
         return res.status(403).json({ error: 'Unauthorized to modify transaction' });
     }
 
+    let updatedMetadata = tx.metadata;
+    if (metadata) {
+        let oldMeta = {};
+        try { oldMeta = JSON.parse(tx.metadata || '{}'); } catch { }
+        updatedMetadata = JSON.stringify({ ...oldMeta, ...metadata });
+    }
+
     await query(
-        'UPDATE escrow_transactions SET status = COALESCE($1, status), tx_hash = COALESCE($2, tx_hash) WHERE id = $3',
-        [status || null, txHash || null, req.params.id]
+        'UPDATE escrow_transactions SET status = COALESCE($1, status), tx_hash = COALESCE($2, tx_hash), metadata = COALESCE($3, metadata) WHERE id = $4',
+        [status || null, txHash || null, updatedMetadata, req.params.id]
     );
 
     const result = await query('SELECT * FROM escrow_transactions WHERE id = $1', [req.params.id]);

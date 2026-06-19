@@ -1,28 +1,19 @@
-# ── Stage 1: Build the React/Vite app ──
-FROM node:20-alpine AS builder
-
+# Build Stage
+FROM node:20-alpine AS build
 WORKDIR /app
-
 COPY package*.json ./
-RUN npm install
-
+RUN npm ci
 COPY . .
-
-# Pass the Blockfrost API key at build time
-ARG VITE_BLOCKFROST_PROJECT_ID
-ENV VITE_BLOCKFROST_PROJECT_ID=$VITE_BLOCKFROST_PROJECT_ID
-
+# We need to build the Vite app. Ensure VITE_API_URL is injected correctly
 RUN npm run build
 
-# ── Stage 2: Serve with Nginx ──
+# Production Stage
 FROM nginx:alpine
+# Copy built files
+COPY --from=build /app/dist /usr/share/nginx/html
 
-# Remove default Nginx config and replace with ours
+# Add a custom nginx configuration to handle React router Fallback
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copy the built static files from Stage 1
-COPY --from=builder /app/dist /usr/share/nginx/html
-
 EXPOSE 80
-
 CMD ["nginx", "-g", "daemon off;"]

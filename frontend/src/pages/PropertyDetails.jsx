@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { api } from '../api';
+import { api, BASE_URL } from '../api';
 import { useAuth } from '../context/AuthContext';
 
 export default function PropertyDetails() {
@@ -250,7 +250,7 @@ export default function PropertyDetails() {
                                 {images.length > 0 ? images.map((img, i) => (
                                     <img
                                         key={i}
-                                        src={`http://localhost:5000${img}`}
+                                        src={`${BASE_URL}${img}`}
                                         alt={`Asset ${i}`}
                                         style={{ width: '100%', aspectRatio: '16/9', objectFit: 'cover', borderRadius: '4px' }}
                                     />

@@ -66,7 +66,7 @@ export default function Payments() {
 
             // Resolve the true Plutus contract address dynamically using Mesh SDK logic
             const escrowBlueprint = {
-                code: '4e4d01000033222220051200120011', // Compiled Aiken CBOR hex
+                code: '4d01000033222220051200120011', // Compiled Aiken CBOR hex
                 version: 'V2',
             };
             const escrowAddress = resolvePlutusScriptAddress(escrowBlueprint, 0); // Testnet

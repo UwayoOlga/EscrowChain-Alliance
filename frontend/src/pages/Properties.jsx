@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { api } from '../api';
+import { api, BASE_URL } from '../api';
 import { useAuth } from '../context/AuthContext';
 
 export default function Properties() {
@@ -234,9 +234,9 @@ export default function Properties() {
                                 <tr key={p.id}>
                                     <td>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                            {p.images && JSON.parse(p.images).length > 0 ? (
+                                            {p.primary_image || (p.images && JSON.parse(p.images).length > 0) ? (
                                                 <img
-                                                    src={`http://localhost:5000${JSON.parse(p.images)[0]}`}
+                                                    src={`${BASE_URL}${p.primary_image || JSON.parse(p.images)[0]}`}
                                                     alt="Prop"
                                                     style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '4px' }}
                                                 />

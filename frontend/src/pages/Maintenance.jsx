@@ -18,10 +18,25 @@ export default function Maintenance() {
 
     const loadData = () => {
         setLoading(true);
-        Promise.all([api.getMaintenanceRequests(), api.getProperties()])
-            .then(([mData, pData]) => {
+        Promise.all([api.getMaintenanceRequests(), api.getLeases()])
+            .then(([mData, lData]) => {
                 setRequests(Array.isArray(mData) ? mData : []);
-                setProperties(Array.isArray(pData) ? pData : []);
+
+                if (!isLandlord) {
+                    const activeLeases = (Array.isArray(lData) ? lData : [])
+                        .filter(l => l.status === 'active' && l.tenant_id === user.id);
+
+                    // Deduplicate properties from active leases
+                    const propsMap = new Map();
+                    activeLeases.forEach(l => {
+                        propsMap.set(l.property_id, {
+                            id: l.property_id,
+                            title: l.property_title,
+                            address: l.property_address
+                        });
+                    });
+                    setProperties(Array.from(propsMap.values()));
+                }
             })
             .catch(err => console.error(err))
             .finally(() => setLoading(false));

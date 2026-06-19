@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react';
-import { api } from '../api';
+import { api, BASE_URL } from '../api';
 import { useAuth } from '../context/AuthContext';
 
 export default function Documents() {
@@ -151,7 +151,7 @@ export default function Documents() {
                                     Added {new Date(doc.created_at).toLocaleDateString()}
                                 </div>
                             </div>
-                            <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm btn-square">
+                            <a href={`${BASE_URL}${doc.file_url}`} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm btn-square">
                                 Download File
                             </a>
                         </div>

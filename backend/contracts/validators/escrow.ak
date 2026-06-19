@@ -7,6 +7,7 @@ type VerificationKeyHash =
   Hash<Blake2b_224, VerificationKey>
 
 type Datum {
+  lease_id: ByteArray,
   landlord: VerificationKeyHash,
   tenant: VerificationKeyHash,
   arbitrator: VerificationKeyHash,

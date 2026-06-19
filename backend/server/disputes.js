@@ -29,19 +29,35 @@ router.use((req, res, next) => {
 
 // GET disputes visible to user
 router.get('/', asyncHandler(async (req, res) => {
-    const result = await query(`
-        SELECT d.*, 
-                u.name as raised_by_name,
-                l.id as lease_uid, 
-                p.address as property_address,
-                p.title as property_title
-            FROM disputes d
-            JOIN leases l ON d.lease_id = l.id
-            JOIN properties p ON l.property_id = p.id
-            JOIN users u ON d.raised_by = u.id
-            WHERE l.landlord_id = $1 OR l.tenant_id = $1
-            ORDER BY d.created_at DESC
-    `, [req.user.id]);
+    let result;
+    if (req.user.role === 'arbitrator') {
+        result = await query(`
+            SELECT d.*, 
+                    u.name as raised_by_name,
+                    l.id as lease_uid, 
+                    p.address as property_address,
+                    p.title as property_title
+                FROM disputes d
+                JOIN leases l ON d.lease_id = l.id
+                JOIN properties p ON l.property_id = p.id
+                JOIN users u ON d.raised_by = u.id
+                ORDER BY d.created_at DESC
+        `);
+    } else {
+        result = await query(`
+            SELECT d.*, 
+                    u.name as raised_by_name,
+                    l.id as lease_uid, 
+                    p.address as property_address,
+                    p.title as property_title
+                FROM disputes d
+                JOIN leases l ON d.lease_id = l.id
+                JOIN properties p ON l.property_id = p.id
+                JOIN users u ON d.raised_by = u.id
+                WHERE l.landlord_id = $1 OR l.tenant_id = $1
+                ORDER BY d.created_at DESC
+        `, [req.user.id]);
+    }
     res.json(result.rows);
 }));
 

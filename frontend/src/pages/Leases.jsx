@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 import { useWallet } from '@meshsdk/react';
-import { Transaction, resolvePlutusScriptAddress, BlockfrostProvider, deserializeAddress } from '@meshsdk/core';
+import { Transaction, resolvePlutusScriptAddress, BlockfrostProvider, deserializeAddress, resolveDataHash } from '@meshsdk/core';
 import { generateEscrowCertificate } from '../utils/pdfGenerator';
 
 async function awaitTransactionConfirmation(txHash) {
@@ -86,9 +86,12 @@ export default function Leases() {
             const ARBITRATOR_WALLET = 'addr_test1vpmzvpzvpzvpzvpzvpzvpzvpzvpzvpzvpzvpzvpzvpzvpzvsq3z0v5';
             const arbitratorPkh = deserializeAddress(ARBITRATOR_WALLET).pubKeyHash;
 
+            const leaseIdHex = Array.from(lease.id).map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
+
             const datum = {
                 alternative: 0,
                 fields: [
+                    leaseIdHex,
                     landlordPkh,
                     tenantPkh,
                     arbitratorPkh,
@@ -154,12 +157,32 @@ export default function Leases() {
             };
             const escrowAddress = resolvePlutusScriptAddress(escrowBlueprint, 0);
 
-            // 2. Find the UTXO on-chain that contains this lease's deposit
+            // 2. Find the UTXO on-chain that contains this lease's deposit exactly
             const utxos = await provider.fetchAddressUtxos(escrowAddress);
-            // In a production app, we would match by leaseId in the datum. 
-            // Here we pick the one matching the locked amount for demo.
-            const totalLovelace = (Number(lease.rent_amount) + Number(lease.deposit_amount)) * 1000000;
-            const targetUtxo = utxos.find(u => u.output.amount.find(a => a.unit === 'lovelace' && a.quantity === totalLovelace.toString()));
+
+            // Build the expected datum so we can reliably match the correct UTXO
+            // preventing the flaw where multiple identical rent amounts collide
+            const leaseIdHex = Array.from(lease.id).map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
+            const landlordPkh = deserializeAddress(lease.landlord_wallet).pubKeyHash;
+            const tenantPkh = deserializeAddress(lease.tenant_wallet).pubKeyHash;
+            const arbitratorPkh = deserializeAddress('addr_test1vpmzvpzvpzvpzvpzvpzvpzvpzvpzvpzvpzvpzvpzvpzvpzvsq3z0v5').pubKeyHash;
+
+            const expectedDatum = {
+                alternative: 0,
+                fields: [
+                    leaseIdHex,
+                    landlordPkh,
+                    tenantPkh,
+                    arbitratorPkh,
+                    Number(lease.rent_amount),
+                    Number(lease.deposit_amount)
+                ],
+            };
+
+            const expectedDatumHash = resolveDataHash(expectedDatum);
+
+            // Locate exactly the contract tied to THIS lease
+            const targetUtxo = utxos.find(u => u.output.dataHash === expectedDatumHash);
 
             if (!targetUtxo) throw new Error('Escrow UTXO not found on-chain. It may have already been released.');
 
@@ -184,16 +207,18 @@ export default function Leases() {
             tx.setRequiredSigners([lease.landlord_wallet, lease.tenant_wallet]);
 
             const unsignedTx = await tx.build();
-            const signedTx = await wallet.signTx(unsignedTx, true); // Partial sign
+            const signedTx = await wallet.signTx(unsignedTx, true); // Partial sign natively supported by MeshSDK
 
-            // NOTE: In a full multi-sig, we would send this signedTx to the other party to co-sign.
-            // For this flow, we'll demonstrate the submission for the initiator.
-            const txHash = await wallet.submitTx(signedTx);
+            // Multisig Coordination: Store the partially signed Tx in backend so tenant can fetch and co-sign
+            await api.createEscrow({
+                leaseId: lease.id,
+                amount: (Number(lease.rent_amount) + Number(lease.deposit_amount)).toString(),
+                action: 'release',
+                metadata: { partiallySignedTx: signedTx }
+            });
 
-            await awaitTransactionConfirmation(txHash);
-
-            await api.updateLeaseStatus(lease.id, 'completed');
-            alert('Financial Consensus Reached. Funds have been distributed to both parties.');
+            await api.updateLeaseStatus(lease.id, 'release_requested');
+            alert('Step 1 Complete: Landlord signature secured. Awaiting Tenant co-signature to complete distribution.');
             load();
         } catch (err) {
             console.error('Release failed:', err);
@@ -203,6 +228,37 @@ export default function Leases() {
         }
     };
 
+    const handleCoSignRelease = async (lease) => {
+        try {
+            setProcessing(lease.id);
+            // 1. Recover the partially signed transaction from the database
+            const txns = await api.getEscrowByLease(lease.id);
+            const pendingTx = txns.find(t => t.action === 'release' && t.status === 'pending');
+            if (!pendingTx) throw new Error('No pending release process found on the backend ledger.');
+
+            let meta = pendingTx.metadata;
+            try { meta = typeof meta === 'string' ? JSON.parse(meta) : meta; } catch { }
+            if (!meta || !meta.partiallySignedTx) throw new Error('Stored smart contract state is missing the initiator signature.');
+
+            // 2. Request tenant's missing cryptographic signature
+            const fullySignedTx = await wallet.signTx(meta.partiallySignedTx, true);
+
+            // 3. Dispatch to the blockchain nodes
+            const txHash = await wallet.submitTx(fullySignedTx);
+            await awaitTransactionConfirmation(txHash);
+
+            await api.updateEscrow(pendingTx.id, { status: 'released', txHash });
+            await api.updateLeaseStatus(lease.id, 'completed');
+
+            alert('Financial Consensus Reached! Both signatures validated on-chain and funds have been distributed.');
+            load();
+        } catch (err) {
+            console.error('Co-Sign failed:', err);
+            alert('Consensus failure: ' + err.message);
+        } finally {
+            setProcessing(null);
+        }
+    };
     const updateStatus = async (id, status) => {
         try {
             await api.updateLeaseStatus(id, status);
@@ -218,6 +274,7 @@ export default function Leases() {
             approved: 'badge-success',
             requested: 'badge-warning',
             pending: 'badge-warning',
+            release_requested: 'badge-warning',
             completed: 'badge-info',
             cancelled: 'badge-danger'
         };
@@ -330,6 +387,18 @@ export default function Leases() {
                                                         File Dispute
                                                     </Link>
                                                 </>
+                                            )}
+                                            {l.status === 'release_requested' && !isLandlord && (
+                                                <button
+                                                    className="btn btn-dark btn-sm btn-square"
+                                                    disabled={processing === l.id}
+                                                    onClick={() => handleCoSignRelease(l)}
+                                                >
+                                                    {processing === l.id ? 'Securing Consensus...' : 'Co-Sign & Release Funds'}
+                                                </button>
+                                            )}
+                                            {l.status === 'release_requested' && isLandlord && (
+                                                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Awaiting Tenant Signature</span>
                                             )}
                                             {(l.status === 'completed' || l.status === 'cancelled') && (
                                                 <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Contract Terminated</span>

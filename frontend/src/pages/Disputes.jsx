@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { api } from '../api';
+import { api, BASE_URL } from '../api';
 
 const STATUS_STYLES = {
     pending: { badge: 'badge-warning', label: 'OPEN' },
@@ -14,14 +14,14 @@ function EvidenceGrid({ paths }) {
     return (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>
             {paths.map((p, i) => (
-                <a key={i} href={`http://localhost:5000${p}`} target="_blank" rel="noreferrer">
+                <a key={i} href={`${BASE_URL}${p}`} target="_blank" rel="noreferrer">
                     {p.endsWith('.pdf') ? (
                         <div style={{ padding: '8px 14px', background: 'var(--bg-secondary)', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 700, color: 'var(--accent)' }}>
                             📄 PDF {i + 1}
                         </div>
                     ) : (
                         <img
-                            src={`http://localhost:5000${p}`}
+                            src={`${BASE_URL}${p}`}
                             alt={`Evidence ${i + 1}`}
                             style={{ width: '72px', height: '72px', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--border)' }}
                         />
@@ -35,6 +35,7 @@ function EvidenceGrid({ paths }) {
 export default function Disputes() {
     const { user } = useAuth();
     const isLandlord = user?.role?.toLowerCase() === 'landlord';
+    const isArbitrator = user?.role?.toLowerCase() === 'arbitrator';
 
     const [disputes, setDisputes] = useState([]);
     const [leases, setLeases] = useState([]);
@@ -253,9 +254,32 @@ export default function Disputes() {
                                             </div>
                                         )}
 
-                                        {!isLandlord && d.status === 'pending' && (
+                                        {/* ── Arbitrator Resolution Actions ── */}
+                                        {isArbitrator && (d.status === 'pending' || d.status === 'arbitration') && (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '180px' }}>
+                                                <button
+                                                    className="btn btn-dark btn-sm btn-square"
+                                                    onClick={() => handleStatusUpdate(d.id, 'resolved')}
+                                                >
+                                                    Favor Tenant (Refund Escrow)
+                                                </button>
+                                                <button
+                                                    className="btn btn-secondary btn-sm btn-square"
+                                                    onClick={() => handleStatusUpdate(d.id, 'dismissed')}
+                                                >
+                                                    Favor Landlord (Release Escrow)
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {!isLandlord && !isArbitrator && d.status === 'pending' && (
                                             <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic', alignSelf: 'center' }}>
                                                 Awaiting landlord review
+                                            </div>
+                                        )}
+                                        {!isLandlord && !isArbitrator && d.status === 'arbitration' && (
+                                            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic', alignSelf: 'center' }}>
+                                                Under review by Legal Arbitration
                                             </div>
                                         )}
                                     </div>

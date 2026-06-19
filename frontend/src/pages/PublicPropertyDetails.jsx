@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { api } from '../api';
+import { api, BASE_URL } from '../api';
 
 export default function PublicPropertyDetails() {
     const { id } = useParams();
@@ -23,7 +23,7 @@ export default function PublicPropertyDetails() {
                 setLoading(true);
                 // We use the direct fetch since api.getProperty might have auth attached in some versions, 
                 // but our GET /api/properties/:id is public.
-                const res = await fetch(`http://localhost:5000/api/properties/${id}`);
+                const res = await fetch(`${BASE_URL}/api/properties/${id}`);
                 if (!res.ok) throw new Error('Property not found');
                 const data = await res.json();
                 setProperty(data);
@@ -68,7 +68,7 @@ export default function PublicPropertyDetails() {
     );
 
     const images = property.images ? JSON.parse(property.images) : [];
-    const mainImage = images.length > 0 ? `http://localhost:5000${images[0]}` : null;
+    const mainImage = images.length > 0 ? `${BASE_URL}${images[0]}` : null;
 
     return (
         <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#1E293B', background: '#fff', minHeight: '100vh' }}>
@@ -127,7 +127,7 @@ export default function PublicPropertyDetails() {
                         {!isMobile && [1, 2, 3, 4].map(idx => (
                             <div key={idx} style={{ background: '#F1F5F9', position: 'relative', overflow: 'hidden' }}>
                                 {images[idx] ? (
-                                    <img src={`http://localhost:5000${images[idx]}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={`View ${idx}`} />
+                                    <img src={`${BASE_URL}${images[idx]}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={`View ${idx}`} />
                                 ) : (
                                     <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F8FAFC', color: '#E2E8F0' }}>
                                         <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>

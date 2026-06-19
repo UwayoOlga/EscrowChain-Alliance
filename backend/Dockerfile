@@ -1,21 +1,16 @@
-# ── Stage: Production Backend ──
 FROM node:20-alpine
 
-# Set working directory
 WORKDIR /app
 
-# Install dependencies first (cached layer)
+# Install dependencies
 COPY package*.json ./
-RUN npm install --omit=dev
+RUN npm ci --only=production
 
 # Copy source code
 COPY . .
 
-# Ensure uploads directory exists
-RUN mkdir -p uploads/properties
-
 # Expose API port
 EXPOSE 5000
 
-# Start the server
-CMD ["node", "server/index.js"]
+# Start with PM2 via npx or directly with node
+CMD ["npx", "pm2-runtime", "ecosystem.config.cjs"]

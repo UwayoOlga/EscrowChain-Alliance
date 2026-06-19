@@ -1,5 +1,6 @@
 ﻿import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { BASE_URL } from '../api';
 import heroImage from '../assets/hero_modern.png';
 
 const FILTERS = ['All', 'Available', 'Apartments', 'Houses', 'Studios'];
@@ -7,7 +8,7 @@ const FILTERS = ['All', 'Available', 'Apartments', 'Houses', 'Studios'];
 function PropertyCard({ p, onAction }) {
     let images = [];
     try { images = JSON.parse(p.images || '[]'); } catch { }
-    const cover = images.length > 0 ? `http://localhost:5000${images[0]}` : null;
+    const cover = images.length > 0 ? `${BASE_URL}${images[0]}` : null;
 
     return (
         <div
@@ -108,7 +109,7 @@ export default function Landing() {
     }, []);
 
     useEffect(() => {
-        fetch('http://localhost:5000/api/properties')
+        fetch(`${BASE_URL}/api/properties`)
             .then(r => r.json())
             .then(data => setProperties(Array.isArray(data) ? data : []))
             .catch(() => setProperties([]))
