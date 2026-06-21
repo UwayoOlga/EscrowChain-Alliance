@@ -76,7 +76,7 @@ router.post('/', asyncHandler(async (req, res) => {
     const relationship = await query(`
         SELECT 1 FROM leases 
         WHERE ((landlord_id = $1 AND tenant_id = $2) OR (landlord_id = $2 AND tenant_id = $1))
-          AND status = 'active'
+          AND status IN ('active', 'release_requested', 'pending', 'approved')
     `, [req.user.id, receiverId]);
 
     if (relationship.rows.length === 0) {
