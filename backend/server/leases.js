@@ -106,7 +106,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
 // Update lease status
 router.patch('/:id/status', asyncHandler(async (req, res) => {
     const { status } = req.body;
-    const validStatuses = ['approved', 'active', 'completed', 'cancelled'];
+    const validStatuses = ['approved', 'active', 'completed', 'cancelled', 'release_requested', 'under dispute'];
     if (!validStatuses.includes(status)) return res.status(400).json({ error: 'Invalid status' });
 
     const leaseRes = await query('SELECT * FROM leases WHERE id = $1', [req.params.id]);

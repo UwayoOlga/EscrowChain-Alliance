@@ -1,26 +1,14 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 import { useWallet } from '@meshsdk/react';
-import { Transaction, resolvePlutusScriptAddress, BlockfrostProvider } from '@meshsdk/core';
-
-async function awaitTransactionConfirmation(txHash) {
-    const apiKey = import.meta.env.VITE_BLOCKFROST_PROJECT_ID;
-    if (!apiKey) {
-        console.warn('VITE_BLOCKFROST_PROJECT_ID not set. Using fallback mempool delay.');
-        return new Promise(resolve => setTimeout(resolve, 6000));
-    }
-
-    try {
-        const provider = new BlockfrostProvider(apiKey);
-        return new Promise((resolve) => {
-            provider.onTxConfirmed(txHash, () => resolve(true));
-        });
-    } catch (error) {
-        console.error('Provider indexing failed:', error);
-        return new Promise(resolve => setTimeout(resolve, 6000));
-    }
-}
+import { Transaction } from '@meshsdk/core';
+import {
+    ESCROW_BLUEPRINT, REDEEMER, ARBITRATOR_WALLET,
+    getEscrowAddress, buildDatum, getDatumHash,
+    awaitTxConfirmation, assertNetwork,
+} from '../utils/escrow';
+import { deserializeAddress, BlockfrostProvider } from '@meshsdk/core';
 
 export default function Payments() {
     const { user } = useAuth();
@@ -58,42 +46,60 @@ export default function Payments() {
 
         setProcessing(true);
         try {
-            console.log('Building rent payment transaction for lease:', lease.id);
+            await assertNetwork(wallet);
+
+            if (!lease.landlord_wallet || !lease.tenant_wallet) {
+                throw new Error('Both parties must connect their Cardano wallets before making payments.');
+            }
+
+            // Resolve PKHs to build the datum matching what was locked at contract signing
+            const landlordPkh   = deserializeAddress(lease.landlord_wallet).pubKeyHash;
+            const tenantPkh     = deserializeAddress(lease.tenant_wallet).pubKeyHash;
+
+            const apiKey = import.meta.env.VITE_BLOCKFROST_PROJECT_ID;
+            if (!apiKey) throw new Error('VITE_BLOCKFROST_PROJECT_ID is required to locate the escrow UTXO.');
+
+            // Find the specific UTXO locked for this lease
+            const arbitratorPkh  = deserializeAddress(ARBITRATOR_WALLET).pubKeyHash;
+            const expectedHash   = getDatumHash(lease, landlordPkh, tenantPkh, arbitratorPkh);
+            const escrowAddress  = getEscrowAddress();
+
+            const provider = new BlockfrostProvider(apiKey);
+            const utxos    = await provider.fetchAddressUtxos(escrowAddress);
+            const targetUtxo = utxos.find(u => u.output.dataHash === expectedHash);
+
+            if (!targetUtxo) throw new Error('Escrow UTXO not found. The contract may not have been signed yet.');
+
+            // Spend the UTXO using CollectRent redeemer — landlord receives rent_amount
+            const rentLovelace = (Number(lease.rent_amount) * 1_000_000).toString();
+
             const tx = new Transaction({ initiator: wallet });
+            tx.redeemValue({
+                value: targetUtxo,
+                script: ESCROW_BLUEPRINT,
+                datum: targetUtxo.output.plutusData,
+                redeemer: { data: REDEEMER.CollectRent },
+            });
+            tx.sendLovelace(lease.landlord_wallet, rentLovelace);
 
-            // Convert ADA to Lovelace (ADA * 1,000,000)
-            const lovelace = (Number(lease.rent_amount) * 1000000).toString();
-
-            // Resolve the true Plutus contract address dynamically using Mesh SDK logic
-            const escrowBlueprint = {
-                code: '4d01000033222220051200120011', // Compiled Aiken CBOR hex
-                version: 'V2',
-            };
-            const escrowAddress = resolvePlutusScriptAddress(escrowBlueprint, 0); // Testnet
-
-            console.log('Resolved Target Smart Contract:', escrowAddress);
-            tx.sendLovelace(escrowAddress, lovelace);
-
-            // 1. Submit to Mempool
             const unsignedTx = await tx.build();
-            const signedTx = await wallet.signTx(unsignedTx);
-            const txHash = await wallet.submitTx(signedTx);
-            console.log('Transaction submitted to mempool. Hash:', txHash);
+            const signedTx   = await wallet.signTx(unsignedTx);
+            const txHash     = await wallet.submitTx(signedTx);
 
-            // 2. Register Escrow as Pending
+            console.log('CollectRent tx submitted:', txHash);
+
+            // Record as pending first so UI updates immediately
             const escrowRecord = await api.createEscrow({
                 leaseId: lease.id,
                 action: 'CollectRent',
                 amount: Number(lease.rent_amount),
-                txHash: txHash
+                txHash,
             });
-            loadData(); // Update UI to show Pending status
+            loadData();
 
-            // 3. Await cryptographically verified block minting
-            await awaitTransactionConfirmation(txHash);
-
-            // 4. Finalize Ledger Record
-            await api.updateEscrow(escrowRecord.id, { status: 'confirmed' });
+            // Wait for block confirmation then finalize
+            await awaitTxConfirmation(txHash);
+            await api.updateEscrow(escrowRecord.id, { status: 'released' });
             loadData();
 
         } catch (err) {

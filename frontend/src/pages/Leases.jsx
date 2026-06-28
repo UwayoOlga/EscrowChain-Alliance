@@ -1,26 +1,15 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 import { useWallet } from '@meshsdk/react';
-import { Transaction, resolvePlutusScriptAddress, BlockfrostProvider, deserializeAddress, resolveDataHash } from '@meshsdk/core';
+import { Transaction, deserializeAddress, BlockfrostProvider } from '@meshsdk/core';
 import { generateEscrowCertificate } from '../utils/pdfGenerator';
-
-async function awaitTransactionConfirmation(txHash) {
-    const apiKey = import.meta.env.VITE_BLOCKFROST_PROJECT_ID;
-    if (!apiKey) {
-        return new Promise(resolve => setTimeout(resolve, 6000));
-    }
-    try {
-        const provider = new BlockfrostProvider(apiKey);
-        return new Promise((resolve) => {
-            provider.onTxConfirmed(txHash, () => resolve(true));
-        });
-    } catch (error) {
-        console.error('Provider indexing failed:', error);
-        return new Promise(resolve => setTimeout(resolve, 6000));
-    }
-}
+import {
+    ESCROW_BLUEPRINT, ARBITRATOR_WALLET, REDEEMER,
+    getEscrowAddress, buildDatum, getDatumHash,
+    awaitTxConfirmation, assertNetwork,
+} from '../utils/escrow';
 
 export default function Leases() {
     const { user } = useAuth();
@@ -29,12 +18,7 @@ export default function Leases() {
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState(null);
 
-    const checkNetwork = async () => {
-        const networkId = await wallet.getNetworkId();
-        if (networkId !== 0) { // 0 = Testnet/Preprod, 1 = Mainnet
-            throw new Error('Please switch your wallet network to "Preprod" or "Testnet" in your settings.');
-        }
-    };
+
 
     const load = () => {
         api.getLeases()
@@ -63,70 +47,52 @@ export default function Leases() {
 
         setProcessing(lease.id);
         try {
-            await checkNetwork();
-            const tx = new Transaction({ initiator: wallet });
-
-            const totalAda = Number(lease.rent_amount) + Number(lease.deposit_amount);
-            const lovelace = (totalAda * 1000000).toString();
-
-            const escrowBlueprint = {
-                code: '4d01000033222220051200120011',
-                version: 'V2',
-            };
-            const escrowAddress = resolvePlutusScriptAddress(escrowBlueprint, 0);
+            await assertNetwork(wallet);
 
             if (!lease.landlord_wallet || !lease.tenant_wallet) {
-                throw new Error('Landlord or Tenant identity not verified on-chain. Both parties must connect wallets first.');
+                throw new Error('Both parties must connect their Cardano wallets first.');
             }
 
-            const landlordPkh = deserializeAddress(lease.landlord_wallet).pubKeyHash;
-            const tenantPkh = deserializeAddress(lease.tenant_wallet).pubKeyHash;
+            const landlordPkh    = deserializeAddress(lease.landlord_wallet).pubKeyHash;
+            const tenantPkh      = deserializeAddress(lease.tenant_wallet).pubKeyHash;
+            const arbitratorPkh  = deserializeAddress(ARBITRATOR_WALLET).pubKeyHash;
 
-            // Platform Arbitrator (Default EscrowChain wallet for dispute resolution)
-            const ARBITRATOR_WALLET = 'addr_test1vpmzvpzvpzvpzvpzvpzvpzvpzvpzvpzvpzvpzvpzvpzvpzvsq3z0v5';
-            const arbitratorPkh = deserializeAddress(ARBITRATOR_WALLET).pubKeyHash;
+            const datum          = buildDatum(lease, landlordPkh, tenantPkh, arbitratorPkh);
+            const escrowAddress  = getEscrowAddress();
 
-            const leaseIdHex = Array.from(lease.id).map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
+            // Lock rent + deposit into the script as a single UTXO with inline datum
+            const totalLovelace = (
+                (Number(lease.rent_amount) + Number(lease.deposit_amount)) * 1_000_000
+            ).toString();
 
-            const datum = {
-                alternative: 0,
-                fields: [
-                    leaseIdHex,
-                    landlordPkh,
-                    tenantPkh,
-                    arbitratorPkh,
-                    Number(lease.rent_amount),
-                    Number(lease.deposit_amount)
-                ],
-            };
-
+            const tx = new Transaction({ initiator: wallet });
             tx.sendLovelace(
                 { address: escrowAddress, datum: { value: datum, inline: true } },
-                lovelace
+                totalLovelace
             );
 
-            // Transaction submission
             const unsignedTx = await tx.build();
-            const signedTx = await wallet.signTx(unsignedTx);
-            const txHash = await wallet.submitTx(signedTx);
+            const signedTx   = await wallet.signTx(unsignedTx);
+            const txHash     = await wallet.submitTx(signedTx);
 
+            // Record escrow as pending while we wait for block confirmation
             const escrowRecord = await api.createEscrow({
                 leaseId: lease.id,
                 action: 'ContractSigned',
-                amount: totalAda,
-                txHash: txHash
+                amount: Number(lease.rent_amount) + Number(lease.deposit_amount),
+                txHash,
             });
 
-            await awaitTransactionConfirmation(txHash);
+            await awaitTxConfirmation(txHash);
 
-            await api.updateEscrow(escrowRecord.id, { status: 'confirmed' });
+            // Finalize: mark locked on-chain, activate lease
+            await api.updateEscrow(escrowRecord.id, { status: 'locked' });
             await api.updateLeaseStatus(lease.id, 'active');
 
-            // Auto-generate the signed lease document for both parties
             await api.createDocument({
                 title: `Lease Contract CT-${lease.id.substring(0, 8).toUpperCase()}`,
                 fileUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-                type: 'lease'
+                type: 'lease',
             });
 
             load();
@@ -146,79 +112,55 @@ export default function Leases() {
 
         setProcessing(lease.id);
         try {
-            await checkNetwork();
+            await assertNetwork(wallet);
+
             const apiKey = import.meta.env.VITE_BLOCKFROST_PROJECT_ID;
-            const provider = new BlockfrostProvider(apiKey);
+            if (!apiKey) throw new Error('VITE_BLOCKFROST_PROJECT_ID is required to locate the on-chain UTXO.');
 
-            // 1. Resolve the script address again
-            const escrowBlueprint = {
-                code: '4d01000033222220051200120011',
-                version: 'V2',
-            };
-            const escrowAddress = resolvePlutusScriptAddress(escrowBlueprint, 0);
+            const provider      = new BlockfrostProvider(apiKey);
+            const escrowAddress = getEscrowAddress();
 
-            // 2. Find the UTXO on-chain that contains this lease's deposit exactly
-            const utxos = await provider.fetchAddressUtxos(escrowAddress);
+            // Find the exact UTXO for this lease by matching the datum hash
+            const utxos          = await provider.fetchAddressUtxos(escrowAddress);
+            const landlordPkh    = deserializeAddress(lease.landlord_wallet).pubKeyHash;
+            const tenantPkh      = deserializeAddress(lease.tenant_wallet).pubKeyHash;
+            const arbitratorPkh  = deserializeAddress(ARBITRATOR_WALLET).pubKeyHash;
+            const expectedHash   = getDatumHash(lease, landlordPkh, tenantPkh, arbitratorPkh);
+            const targetUtxo     = utxos.find(u => u.output.dataHash === expectedHash);
 
-            // Build the expected datum so we can reliably match the correct UTXO
-            // preventing the flaw where multiple identical rent amounts collide
-            const leaseIdHex = Array.from(lease.id).map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
-            const landlordPkh = deserializeAddress(lease.landlord_wallet).pubKeyHash;
-            const tenantPkh = deserializeAddress(lease.tenant_wallet).pubKeyHash;
-            const arbitratorPkh = deserializeAddress('addr_test1vpmzvpzvpzvpzvpzvpzvpzvpzvpzvpzvpzvpzvpzvpzvpzvsq3z0v5').pubKeyHash;
+            if (!targetUtxo) throw new Error('Escrow UTXO not found on-chain. It may already have been released.');
 
-            const expectedDatum = {
-                alternative: 0,
-                fields: [
-                    leaseIdHex,
-                    landlordPkh,
-                    tenantPkh,
-                    arbitratorPkh,
-                    Number(lease.rent_amount),
-                    Number(lease.deposit_amount)
-                ],
-            };
-
-            const expectedDatumHash = resolveDataHash(expectedDatum);
-
-            // Locate exactly the contract tied to THIS lease
-            const targetUtxo = utxos.find(u => u.output.dataHash === expectedDatumHash);
-
-            if (!targetUtxo) throw new Error('Escrow UTXO not found on-chain. It may have already been released.');
-
-            // 3. Build the "Spending" Transaction
+            // Build CompleteLease spending tx — landlord signs first (partial multisig)
             const tx = new Transaction({ initiator: wallet });
-
-            // Prepare the Redeemer (Index 2 in our Aiken enum is CompleteLease)
-            const redeemer = {
-                data: { alternative: 2, fields: [] },
-            };
-
-            // Distribute funds: Rent to Landlord, Deposit back to Tenant
             tx.redeemValue({
                 value: targetUtxo,
-                script: escrowBlueprint,
-                datum: targetUtxo.output.plutusData, // Use the inline datum already on-chain
-                redeemer: redeemer,
+                script: ESCROW_BLUEPRINT,
+                datum: targetUtxo.output.plutusData,
+                redeemer: { data: REDEEMER.CompleteLease },
             });
-
-            tx.sendLovelace(lease.landlord_wallet, (Number(lease.rent_amount) * 1000000).toString());
-            tx.sendLovelace(lease.tenant_wallet, (Number(lease.deposit_amount) * 1000000).toString());
+            tx.sendLovelace(
+                lease.landlord_wallet,
+                (Number(lease.rent_amount) * 1_000_000).toString()
+            );
+            tx.sendLovelace(
+                lease.tenant_wallet,
+                (Number(lease.deposit_amount) * 1_000_000).toString()
+            );
             tx.setRequiredSigners([lease.landlord_wallet, lease.tenant_wallet]);
 
             const unsignedTx = await tx.build();
-            const signedTx = await wallet.signTx(unsignedTx, true); // Partial sign natively supported by MeshSDK
+            const signedTx   = await wallet.signTx(unsignedTx, true); // partial sign
 
-            // Multisig Coordination: Store the partially signed Tx in backend so tenant can fetch and co-sign
+            // Store partially-signed tx so tenant can co-sign
             await api.createEscrow({
                 leaseId: lease.id,
-                amount: (Number(lease.rent_amount) + Number(lease.deposit_amount)).toString(),
-                action: 'release',
-                metadata: { partiallySignedTx: signedTx }
+                amount: Number(lease.rent_amount) + Number(lease.deposit_amount),
+                action: 'CompleteLease',
+                metadata: { partiallySignedTx: signedTx },
             });
 
             await api.updateLeaseStatus(lease.id, 'release_requested');
-            alert('Step 1 Complete: Landlord signature secured. Awaiting Tenant co-signature to complete distribution.');
+            alert('Step 1 Complete: Landlord signature secured. Awaiting Tenant co-signature.');
             load();
         } catch (err) {
             console.error('Release failed:', err);
@@ -228,29 +170,92 @@ export default function Leases() {
         }
     };
 
-    const handleCoSignRelease = async (lease) => {
+    const handleDisputeOnChain = async (lease) => {
+        if (!connected) {
+            alert('Please connect your Cardano wallet to raise a dispute.');
+            return;
+        }
+        setProcessing(lease.id + '-dispute');
         try {
-            setProcessing(lease.id);
-            // 1. Recover the partially signed transaction from the database
-            const txns = await api.getEscrowByLease(lease.id);
-            const pendingTx = txns.find(t => t.action === 'release' && t.status === 'pending');
-            if (!pendingTx) throw new Error('No pending release process found on the backend ledger.');
+            await assertNetwork(wallet);
+
+            const apiKey = import.meta.env.VITE_BLOCKFROST_PROJECT_ID;
+            if (!apiKey) throw new Error('VITE_BLOCKFROST_PROJECT_ID is required.');
+
+            const provider      = new BlockfrostProvider(apiKey);
+            const escrowAddress = getEscrowAddress();
+
+            const utxos          = await provider.fetchAddressUtxos(escrowAddress);
+            const landlordPkh    = deserializeAddress(lease.landlord_wallet).pubKeyHash;
+            const tenantPkh      = deserializeAddress(lease.tenant_wallet).pubKeyHash;
+            const arbitratorPkh  = deserializeAddress(ARBITRATOR_WALLET).pubKeyHash;
+            const expectedHash   = getDatumHash(lease, landlordPkh, tenantPkh, arbitratorPkh);
+            const targetUtxo     = utxos.find(u => u.output.dataHash === expectedHash);
+
+            if (!targetUtxo) throw new Error('Escrow UTXO not found on-chain.');
+
+            // Route ALL funds to arbitrator using Dispute redeemer
+            const totalLovelace = (
+                (Number(lease.rent_amount) + Number(lease.deposit_amount)) * 1_000_000
+            ).toString();
+
+            const tx = new Transaction({ initiator: wallet });
+            tx.redeemValue({
+                value: targetUtxo,
+                script: ESCROW_BLUEPRINT,
+                datum: targetUtxo.output.plutusData,
+                redeemer: { data: REDEEMER.Dispute },
+            });
+            tx.sendLovelace(ARBITRATOR_WALLET, totalLovelace);
+
+            const unsignedTx = await tx.build();
+            const signedTx   = await wallet.signTx(unsignedTx);
+            const txHash     = await wallet.submitTx(signedTx);
+
+            await awaitTxConfirmation(txHash);
+
+            // Record dispute tx and freeze lease in DB
+            await api.createEscrow({
+                leaseId: lease.id,
+                action: 'Dispute',
+                amount: Number(lease.rent_amount) + Number(lease.deposit_amount),
+                txHash,
+                metadata: { disputedBy: user.id },
+            });
+
+            alert('Dispute submitted on-chain. Funds are now held by the arbitrator.');
+            load();
+        } catch (err) {
+            console.error('Dispute failed:', err);
+            alert('Dispute transaction failed: ' + err.message);
+        } finally {
+            setProcessing(null);
+        }
+    };
+
+    const handleCoSignRelease = async (lease) => {
+        setProcessing(lease.id);
+        try {
+            // Recover the partially-signed tx stored by the landlord
+            const txns     = await api.getEscrowByLease(lease.id);
+            const pendingTx = txns.find(t => t.action === 'CompleteLease' && t.status === 'pending');
+            if (!pendingTx) throw new Error('No pending release found. Ask the landlord to initiate first.');
 
             let meta = pendingTx.metadata;
-            try { meta = typeof meta === 'string' ? JSON.parse(meta) : meta; } catch { }
-            if (!meta || !meta.partiallySignedTx) throw new Error('Stored smart contract state is missing the initiator signature.');
+            try { meta = typeof meta === 'string' ? JSON.parse(meta) : meta; } catch { /**/ }
+            if (!meta?.partiallySignedTx) throw new Error('Landlord signature missing from stored tx.');
 
-            // 2. Request tenant's missing cryptographic signature
+            // Tenant adds their signature and submits
             const fullySignedTx = await wallet.signTx(meta.partiallySignedTx, true);
+            const txHash        = await wallet.submitTx(fullySignedTx);
 
-            // 3. Dispatch to the blockchain nodes
-            const txHash = await wallet.submitTx(fullySignedTx);
-            await awaitTransactionConfirmation(txHash);
+            await awaitTxConfirmation(txHash);
 
+            // Mark released and close lease
             await api.updateEscrow(pendingTx.id, { status: 'released', txHash });
             await api.updateLeaseStatus(lease.id, 'completed');
 
-            alert('Financial Consensus Reached! Both signatures validated on-chain and funds have been distributed.');
+            alert('Funds distributed on-chain! Both signatures confirmed.');
             load();
         } catch (err) {
             console.error('Co-Sign failed:', err);
@@ -275,8 +280,9 @@ export default function Leases() {
             requested: 'badge-warning',
             pending: 'badge-warning',
             release_requested: 'badge-warning',
+            'under dispute': 'badge-danger',
             completed: 'badge-info',
-            cancelled: 'badge-danger'
+            cancelled: 'badge-danger',
         };
         return map[status] || 'badge-info';
     };
@@ -370,22 +376,32 @@ export default function Leases() {
                                                 <>
                                                     <button
                                                         className="btn btn-secondary btn-sm btn-square"
-                                                        disabled={processing === l.id}
+                                                        disabled={!!processing}
                                                         onClick={() => handleRelease(l)}
                                                     >
                                                         {processing === l.id ? 'Releasing...' : 'Consensus Release'}
                                                     </button>
-                                                    <button className="btn btn-danger btn-sm btn-square" onClick={() => updateStatus(l.id, 'cancelled')} style={{ backgroundColor: 'transparent', color: 'var(--danger)', border: '1px solid var(--danger)' }}>
-                                                        Dispute
+                                                    <button
+                                                        className="btn btn-danger btn-sm btn-square"
+                                                        style={{ backgroundColor: 'transparent', color: 'var(--danger)', border: '1px solid var(--danger)' }}
+                                                        disabled={!!processing}
+                                                        onClick={() => handleDisputeOnChain(l)}
+                                                    >
+                                                        {processing === l.id + '-dispute' ? 'Submitting...' : 'Dispute'}
                                                     </button>
                                                 </>
                                             )}
                                             {l.status === 'active' && !isLandlord && (
                                                 <>
                                                     <Link to="/payments" className="btn btn-secondary btn-sm btn-square">Pay Next Installment</Link>
-                                                    <Link to="/disputes" className="btn btn-danger btn-sm btn-square" style={{ backgroundColor: 'transparent', color: 'var(--danger)', border: '1px solid var(--danger)' }}>
-                                                        File Dispute
-                                                    </Link>
+                                                    <button
+                                                        className="btn btn-danger btn-sm btn-square"
+                                                        style={{ backgroundColor: 'transparent', color: 'var(--danger)', border: '1px solid var(--danger)' }}
+                                                        disabled={!!processing}
+                                                        onClick={() => handleDisputeOnChain(l)}
+                                                    >
+                                                        {processing === l.id + '-dispute' ? 'Submitting...' : 'File Dispute'}
+                                                    </button>
                                                 </>
                                             )}
                                             {l.status === 'release_requested' && !isLandlord && (

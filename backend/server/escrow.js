@@ -35,7 +35,7 @@ router.get('/lease/:leaseId', asyncHandler(async (req, res) => {
 // POST a new escrow transaction
 router.post('/', asyncHandler(async (req, res) => {
     const { leaseId, action, amount, txHash, metadata } = req.body;
-    const validActions = ['CollectRent', 'RefundDeposit', 'CompleteLease', 'ContractSigned'];
+    const validActions = ['CollectRent', 'RefundDeposit', 'CompleteLease', 'ContractSigned', 'Dispute'];
 
     if (!leaseId || !action || amount === undefined) {
         return res.status(400).json({ error: 'leaseId, action, and amount required' });
@@ -68,7 +68,7 @@ router.post('/', asyncHandler(async (req, res) => {
 // PATCH update status (Admin or participants only)
 router.patch('/:id', asyncHandler(async (req, res) => {
     const { status, txHash, metadata } = req.body;
-    const validStatuses = ['pending', 'locked', 'released', 'refunded', 'disputed'];
+    const validStatuses = ['pending', 'locked', 'released', 'refunded', 'disputed', 'confirmed'];
 
     if (status && !validStatuses.includes(status)) {
         return res.status(400).json({ error: 'Invalid status' });

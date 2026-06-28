@@ -30,4 +30,7 @@ export default defineConfig({
     "process.argv": "[]",
     Buffer: 'globalThis.Buffer',
   },
+  build: {
+    target: 'es2022'
+  }
 })
