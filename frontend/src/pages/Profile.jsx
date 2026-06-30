@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 import { CardanoWallet } from "@meshsdk/react";
@@ -8,6 +8,23 @@ export default function Profile() {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [generating, setGenerating] = useState(false);
+    const [manualWallet, setManualWallet] = useState('');
+    const [savingWallet, setSavingWallet] = useState(false);
+
+    const handleSaveWallet = async () => {
+        if (!manualWallet.trim()) return alert('Please paste a valid wallet address.');
+        setSavingWallet(true);
+        try {
+            const updated = await api.updateProfile({ walletAddress: manualWallet.trim() });
+            setProfile(prev => ({ ...prev, wallet_address: updated.wallet_address || manualWallet.trim() }));
+            setManualWallet('');
+            alert('Wallet address saved successfully!');
+        } catch (err) {
+            alert('Failed to save wallet: ' + err.message);
+        } finally {
+            setSavingWallet(false);
+        }
+    };
 
     const generatePdfReport = async () => {
         try {
@@ -141,6 +158,28 @@ export default function Profile() {
                             Your browser-based wallet handles all smart contract authorizations.
                         </p>
                         <CardanoWallet />
+                        <div style={{ marginTop: '24px', borderTop: '1px solid var(--border)', paddingTop: '24px' }}>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', fontWeight: 700 }}>
+                                Or Paste Wallet Address Manually
+                            </div>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                <input
+                                    className="input"
+                                    placeholder="addr_test1..."
+                                    value={manualWallet}
+                                    onChange={e => setManualWallet(e.target.value)}
+                                    style={{ flex: 1, fontFamily: 'monospace', fontSize: '0.85rem' }}
+                                />
+                                <button
+                                    className="btn btn-dark btn-square"
+                                    onClick={handleSaveWallet}
+                                    disabled={savingWallet}
+                                    style={{ whiteSpace: 'nowrap' }}
+                                >
+                                    {savingWallet ? 'Saving...' : 'Save'}
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="card" style={{ marginTop: '32px', padding: '32px', backgroundColor: 'var(--bg-secondary)' }}>
