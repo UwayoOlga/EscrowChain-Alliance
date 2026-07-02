@@ -68,4 +68,145 @@ router.get('/prospects', asyncHandler(async (req, res) => {
     res.json(result.rows);
 }));
 
+// GET global search results
+router.get('/search', asyncHandler(async (req, res) => {
+    const { q } = req.query;
+    if (!q || q.trim() === '') return res.json([]);
+    const queryStr = `%${q.trim()}%`;
+    const results = [];
+
+    // Search properties
+    let propResult;
+    if (req.user.role === 'landlord') {
+        propResult = await query(
+            'SELECT id, title, address FROM properties WHERE landlord_id = $1 AND (title LIKE $2 OR address LIKE $2)',
+            [req.user.id, queryStr]
+        );
+    } else {
+        propResult = await query(
+            'SELECT id, title, address FROM properties WHERE title LIKE $1 OR address LIKE $1',
+            [queryStr]
+        );
+    }
+    for (const row of propResult.rows) {
+        results.push({
+            type: 'property',
+            id: row.id,
+            title: row.title || 'Residential Property',
+            subtitle: row.address,
+            link: `/properties/${row.id}`
+        });
+    }
+
+    // Search leases
+    let leaseResult;
+    if (req.user.role === 'landlord') {
+        leaseResult = await query(`
+            SELECT l.id, p.title as property_title, u.name as tenant_name, l.status 
+            FROM leases l
+            JOIN properties p ON l.property_id = p.id
+            JOIN users u ON l.tenant_id = u.id
+            WHERE l.landlord_id = $1 AND (l.id LIKE $2 OR p.title LIKE $2 OR u.name LIKE $2)
+        `, [req.user.id, queryStr]);
+    } else {
+        leaseResult = await query(`
+            SELECT l.id, p.title as property_title, u.name as landlord_name, l.status 
+            FROM leases l
+            JOIN properties p ON l.property_id = p.id
+            JOIN users u ON l.landlord_id = u.id
+            WHERE l.tenant_id = $1 AND (l.id LIKE $2 OR p.title LIKE $2 OR u.name LIKE $2)
+        `, [req.user.id, queryStr]);
+    }
+    for (const row of leaseResult.rows) {
+        results.push({
+            type: 'lease',
+            id: row.id,
+            title: `Lease CT-${row.id.substring(0, 8).toUpperCase()}`,
+            subtitle: `${row.property_title} (${row.status})`,
+            link: `/leases`
+        });
+    }
+
+    res.json(results);
+}));
+
+// GET pending alerts/notifications
+router.get('/alerts', asyncHandler(async (req, res) => {
+    const alerts = [];
+
+    // 1. Check leases requiring actions
+    if (req.user.role === 'landlord') {
+        // Pending lease applications
+        const pendingLeases = await query(`
+            SELECT l.id, p.title, u.name as tenant_name 
+            FROM leases l
+            JOIN properties p ON l.property_id = p.id
+            JOIN users u ON l.tenant_id = u.id
+            WHERE l.landlord_id = $1 AND l.status = 'requested'
+        `, [req.user.id]);
+        
+        for (const row of pendingLeases.rows) {
+            alerts.push({
+                id: `lease-req-${row.id}`,
+                message: `New lease request for "${row.title}" from ${row.tenant_name}`,
+                link: `/leases`,
+                type: 'info'
+            });
+        }
+    } else {
+        // Leases approved but not locked/signed yet
+        const approvedLeases = await query(`
+            SELECT l.id, p.title 
+            FROM leases l
+            JOIN properties p ON l.property_id = p.id
+            WHERE l.tenant_id = $1 AND l.status = 'approved'
+        `, [req.user.id]);
+
+        for (const row of approvedLeases.rows) {
+            alerts.push({
+                id: `lease-appr-${row.id}`,
+                message: `Lease for "${row.title}" approved! Click to sign contract.`,
+                link: `/leases`,
+                type: 'warning'
+            });
+        }
+
+        // Leases where release is requested (needs co-signature)
+        const releaseRequested = await query(`
+            SELECT l.id, p.title 
+            FROM leases l
+            JOIN properties p ON l.property_id = p.id
+            WHERE l.tenant_id = $1 AND l.status = 'release_requested'
+        `, [req.user.id]);
+
+        for (const row of releaseRequested.rows) {
+            alerts.push({
+                id: `lease-release-${row.id}`,
+                message: `Landlord requested release. Co-signature required to unlock.`,
+                link: `/leases`,
+                type: 'danger'
+            });
+        }
+    }
+
+    // 2. Active disputes
+    const activeDisputes = await query(`
+        SELECT d.id, d.lease_id, d.status 
+        FROM disputes d
+        JOIN leases l ON d.lease_id = l.id
+        WHERE (l.landlord_id = $1 OR l.tenant_id = $1) AND d.status IN ('pending', 'arbitration')
+    `, [req.user.id]);
+
+    for (const row of activeDisputes.rows) {
+        alerts.push({
+            id: `dispute-${row.id}`,
+            message: `Dispute on lease CT-${row.lease_id.substring(0,8).toUpperCase()} is currently in ${row.status.toUpperCase()}.`,
+            link: `/disputes`,
+            type: 'danger'
+        });
+    }
+
+    res.json(alerts);
+}));
+
 export default router;

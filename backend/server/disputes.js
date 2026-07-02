@@ -35,12 +35,18 @@ router.get('/', asyncHandler(async (req, res) => {
             SELECT d.*, 
                     u.name as raised_by_name,
                     l.id as lease_uid, 
+                    l.rent_amount,
+                    l.deposit_amount,
                     p.address as property_address,
-                    p.title as property_title
+                    p.title as property_title,
+                    ul.wallet_address as landlord_wallet,
+                    ut.wallet_address as tenant_wallet
                 FROM disputes d
                 JOIN leases l ON d.lease_id = l.id
                 JOIN properties p ON l.property_id = p.id
                 JOIN users u ON d.raised_by = u.id
+                JOIN users ul ON l.landlord_id = ul.id
+                JOIN users ut ON l.tenant_id = ut.id
                 ORDER BY d.created_at DESC
         `);
     } else {
@@ -48,12 +54,18 @@ router.get('/', asyncHandler(async (req, res) => {
             SELECT d.*, 
                     u.name as raised_by_name,
                     l.id as lease_uid, 
+                    l.rent_amount,
+                    l.deposit_amount,
                     p.address as property_address,
-                    p.title as property_title
+                    p.title as property_title,
+                    ul.wallet_address as landlord_wallet,
+                    ut.wallet_address as tenant_wallet
                 FROM disputes d
                 JOIN leases l ON d.lease_id = l.id
                 JOIN properties p ON l.property_id = p.id
                 JOIN users u ON d.raised_by = u.id
+                JOIN users ul ON l.landlord_id = ul.id
+                JOIN users ut ON l.tenant_id = ut.id
                 WHERE l.landlord_id = $1 OR l.tenant_id = $1
                 ORDER BY d.created_at DESC
         `, [req.user.id]);

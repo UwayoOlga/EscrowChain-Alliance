@@ -1,4 +1,4 @@
-﻿export const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5000';
+export const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5000';
 const API = BASE_URL;
 
 async function request(path, options = {}) {
@@ -82,4 +82,8 @@ export const api = {
     getMessageContacts: () => request('/api/messages/contacts'),
     getMessages: (userId) => request(`/api/messages/${userId}`),
     sendMessage: (body) => request('/api/messages', { method: 'POST', body }),
+
+    // Search and Alerts
+    globalSearch: (q) => request(`/api/users/search?q=${encodeURIComponent(q)}`),
+    getAlerts: () => request('/api/users/alerts'),
 };
