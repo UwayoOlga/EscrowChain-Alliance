@@ -1,7 +1,8 @@
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { getEscrowAddress } from './escrow';
 
-export const generateEscrowCertificate = (lease, property) => {
+const buildCertificateDoc = (lease, property) => {
     const doc = new jsPDF();
     const primaryColor = '#2563EB';
     const darkColor = '#1E293B';
@@ -60,7 +61,7 @@ export const generateEscrowCertificate = (lease, property) => {
         body: [
             ['Validator Script', 'Escrow_V3_Arbitrated'],
             ['Network', 'Cardano Preprod Testnet'],
-            ['Vault Address', 'addr1_escrow_v2_...'], // Mocked for display
+            ['Vault Address', getEscrowAddress()],
             ['Transaction Hash', lease.tx_hash || 'PENDING_MINTING'],
             ['Escrow Status', 'LOCKED_AND_VERIFIED']
         ],
@@ -80,6 +81,16 @@ export const generateEscrowCertificate = (lease, property) => {
     doc.text('VERIFIED BY ESCROWCHAIN NODE', 105, 270, { align: 'center' });
     doc.text(`${new Date().toLocaleString()}`, 105, 275, { align: 'center' });
 
+    return doc;
+};
+
+export const generateEscrowCertificate = (lease, property) => {
+    const doc = buildCertificateDoc(lease, property);
     // Download PDF
     doc.save(`Escrow_Certificate_${lease.id.substring(0, 8)}.pdf`);
+};
+
+export const generateEscrowCertificateBlob = (lease, property) => {
+    const doc = buildCertificateDoc(lease, property);
+    return doc.output('blob');
 };

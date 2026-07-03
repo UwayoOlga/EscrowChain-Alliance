@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 import { useWallet } from '@meshsdk/react';
 import { Transaction, deserializeAddress, BlockfrostProvider } from '@meshsdk/core';
-import { generateEscrowCertificate } from '../utils/pdfGenerator';
+import { generateEscrowCertificateBlob } from '../utils/pdfGenerator';
 import {
     ESCROW_BLUEPRINT, ARBITRATOR_WALLET, REDEEMER,
     getEscrowAddress, buildDatum, getDatumHash,
@@ -89,11 +89,14 @@ export default function Leases() {
             await api.updateEscrow(escrowRecord.id, { status: 'locked' });
             await api.updateLeaseStatus(lease.id, 'active');
 
-            await api.createDocument({
-                title: `Lease Contract CT-${lease.id.substring(0, 8).toUpperCase()}`,
-                fileUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-                type: 'lease',
-            });
+            // Generate real certificate PDF and upload it
+            const pdfBlob = generateEscrowCertificateBlob({ ...lease, tx_hash: txHash }, property);
+            const formData = new FormData();
+            formData.append('title', `Lease Contract CT-${lease.id.substring(0, 8).toUpperCase()}`);
+            formData.append('leaseId', lease.id);
+            formData.append('file', pdfBlob, `contract-${lease.id}.pdf`);
+            
+            await api.createDocument(formData);
 
             load();
         } catch (err) {

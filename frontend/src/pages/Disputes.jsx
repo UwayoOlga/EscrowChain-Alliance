@@ -1,6 +1,9 @@
-﻿import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api, BASE_URL } from '../api';
+import { useWallet } from '@meshsdk/react';
+import { Transaction } from '@meshsdk/core';
+import { awaitTxConfirmation } from '../utils/escrow';
 
 const STATUS_STYLES = {
     pending: { badge: 'badge-warning', label: 'OPEN' },
@@ -45,6 +48,9 @@ export default function Disputes() {
     const [selectedFiles, setSelectedFiles] = useState([]);
     const [form, setForm] = useState({ leaseId: '', reason: '' });
     const fileInputRef = useRef(null);
+
+    const { connected, wallet } = useWallet();
+    const [resolvingId, setResolvingId] = useState(null);
 
     const loadData = () => {
         setLoading(true);
@@ -100,6 +106,49 @@ export default function Disputes() {
             loadData();
         } catch (err) {
             alert(err.message);
+        }
+    };
+
+    const handleArbitratorResolve = async (dispute, favorTenant) => {
+        if (!connected) {
+            alert('Arbitrator must connect wallet to resolve on-chain.');
+            return;
+        }
+
+        const totalAmount = dispute.rent_amount + dispute.deposit_amount;
+        const targetAddress = favorTenant ? dispute.tenant_wallet : dispute.landlord_wallet;
+
+        if (!targetAddress) {
+            alert('Cannot resolve: target party has not linked their wallet address.');
+            return;
+        }
+
+        setResolvingId(dispute.id);
+        try {
+            // Send funds from Arbitrator wallet to the winner
+            const tx = new Transaction({ initiator: wallet })
+                .sendLovelace(
+                    targetAddress,
+                    (totalAmount * 1000000).toString()
+                );
+
+            const unsignedTx = await tx.build();
+            const signedTx = await wallet.signTx(unsignedTx);
+            const txHash = await wallet.submitTx(signedTx);
+
+            alert(`Transaction submitted! Hash: ${txHash}. Waiting for confirmation...`);
+
+            await awaitTxConfirmation(txHash);
+
+            // Update database status
+            await api.updateDisputeStatus(dispute.id, favorTenant ? 'resolved' : 'dismissed');
+            alert('Dispute fully resolved and funds transferred.');
+            loadData();
+        } catch (err) {
+            console.error(err);
+            alert('Resolution failed: ' + err.message);
+        } finally {
+            setResolvingId(null);
         }
     };
 
@@ -259,15 +308,17 @@ export default function Disputes() {
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '180px' }}>
                                                 <button
                                                     className="btn btn-dark btn-sm btn-square"
-                                                    onClick={() => handleStatusUpdate(d.id, 'resolved')}
+                                                    onClick={() => handleArbitratorResolve(d, true)}
+                                                    disabled={resolvingId === d.id}
                                                 >
-                                                    Favor Tenant (Refund Escrow)
+                                                    {resolvingId === d.id ? 'Processing...' : 'Favor Tenant (Refund)'}
                                                 </button>
                                                 <button
                                                     className="btn btn-secondary btn-sm btn-square"
-                                                    onClick={() => handleStatusUpdate(d.id, 'dismissed')}
+                                                    onClick={() => handleArbitratorResolve(d, false)}
+                                                    disabled={resolvingId === d.id}
                                                 >
-                                                    Favor Landlord (Release Escrow)
+                                                    {resolvingId === d.id ? 'Processing...' : 'Favor Landlord (Release)'}
                                                 </button>
                                             </div>
                                         )}
