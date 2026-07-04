@@ -1,6 +1,6 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { api } from '../api';
+import { api, BASE_URL } from '../api';
 
 export default function Maintenance() {
     const { user } = useAuth();
@@ -12,6 +12,7 @@ export default function Maintenance() {
     const [selectedProperty, setSelectedProperty] = useState('');
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
+    const [imageFile, setImageFile] = useState(null);
     const [submitting, setSubmitting] = useState(false);
 
     const isLandlord = user?.role?.toLowerCase() === 'landlord';
@@ -48,15 +49,21 @@ export default function Maintenance() {
         e.preventDefault();
         setSubmitting(true);
         try {
-            await api.createMaintenanceRequest({
-                propertyId: selectedProperty,
-                title,
-                description
-            });
+            const formData = new FormData();
+            formData.append('propertyId', selectedProperty);
+            formData.append('title', title);
+            formData.append('description', description);
+            if (imageFile) {
+                formData.append('image', imageFile);
+            }
+
+            await api.createMaintenanceRequest(formData);
+            
             setIsCreating(false);
             setTitle('');
             setDescription('');
             setSelectedProperty('');
+            setImageFile(null);
             loadData();
         } catch (err) {
             alert(err.message);
@@ -142,6 +149,15 @@ export default function Maintenance() {
                                         onChange={(e) => setDescription(e.target.value)}
                                     ></textarea>
                                 </div>
+                                <div className="form-group">
+                                    <label>Attach Image (Optional)</label>
+                                    <input
+                                        type="file"
+                                        className="input"
+                                        accept="image/*"
+                                        onChange={(e) => setImageFile(e.target.files[0])}
+                                    />
+                                </div>
                                 <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
                                     <button type="button" className="btn btn-secondary btn-square" onClick={() => setIsCreating(false)}>Cancel</button>
                                     <button type="submit" className="btn btn-dark btn-square" disabled={submitting}>
@@ -178,6 +194,17 @@ export default function Maintenance() {
                                     <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{r.property_address}</div>
                                     {r.description && (
                                         <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginTop: '8px', marginBottom: 0 }}>{r.description}</p>
+                                    )}
+                                    {r.image_url && (
+                                        <div style={{ marginTop: '16px' }}>
+                                            <a href={`${BASE_URL}${r.image_url}`} target="_blank" rel="noreferrer">
+                                                <img 
+                                                    src={`${BASE_URL}${r.image_url}`} 
+                                                    alt="Maintenance Request" 
+                                                    style={{ maxWidth: '200px', maxHeight: '150px', borderRadius: '4px', border: '1px solid var(--border)', objectFit: 'cover' }}
+                                                />
+                                            </a>
+                                        </div>
                                     )}
                                 </div>
                                 <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '24px' }}>
