@@ -209,7 +209,7 @@ export default function Payments() {
                                         </td>
                                         <td>
                                             <div style={{ fontWeight: 600 }}>{t.property_address || 'Property Deleted'}</div>
-                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Lease Ref: {t.lease_uid?.substring(0, 8)}</div>
+                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Lease Ref: {t.lease_id?.substring(0, 8).toUpperCase()}</div>
                                         </td>
                                         <td>
                                             <span style={{ fontWeight: 500 }}>{t.action}</span>

@@ -121,7 +121,7 @@ const initDb = async () => {
             amount REAL NOT NULL,
             currency TEXT DEFAULT 'RWF',
             tx_hash TEXT,
-            status TEXT CHECK(status IN ('pending', 'locked', 'released', 'refunded', 'disputed')) DEFAULT 'pending',
+            status TEXT CHECK(status IN ('pending', 'locked', 'released', 'refunded', 'disputed', 'confirmed')) DEFAULT 'pending',
             action TEXT NOT NULL,
             metadata TEXT,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
@@ -155,6 +155,7 @@ const initDb = async () => {
             title TEXT NOT NULL,
             description TEXT,
             status TEXT DEFAULT 'pending',
+            image_url TEXT,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (property_id) REFERENCES properties(id),
             FOREIGN KEY (tenant_id) REFERENCES users(id)
@@ -235,7 +236,8 @@ const initDb = async () => {
         ['documents', 'uploader_id', 'TEXT'],
         ['documents', 'property_id', 'TEXT'],
         ['documents', 'lease_id', 'TEXT'],
-        ['documents', 'file_type', 'TEXT']
+        ['documents', 'file_type', 'TEXT'],
+        ['maintenance_requests', 'image_url', 'TEXT']
     ];
 
     for (const [table, col, type] of alterTables) {
