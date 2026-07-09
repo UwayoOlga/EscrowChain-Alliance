@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api, BASE_URL } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -103,7 +103,9 @@ export default function PropertyDetails() {
         { id: 'escrow', label: 'Escrow State' }
     ];
 
-    const images = property.images ? JSON.parse(property.images) : [];
+    const images = Array.isArray(property.images) 
+        ? property.images.map(img => img.image_url) 
+        : (property.images ? JSON.parse(property.images) : []);
 
     return (
         <div className="page-dashboard fade-in" style={{ paddingBottom: '100px' }}>

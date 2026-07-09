@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { api, BASE_URL } from '../api';
 import { useAuth } from '../context/AuthContext';
 
@@ -139,13 +139,13 @@ export default function Documents() {
                         <div key={doc.id} className="card" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px' }}>
                             <div style={{ width: '48px', height: '48px', borderRadius: '8px', background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d={typeIcon(doc.type)}></path>
+                                    <path d={typeIcon(doc.document_type)}></path>
                                 </svg>
                             </div>
                             <div style={{ flex: 1 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
                                     <span style={{ fontWeight: 700 }}>{doc.title}</span>
-                                    <span className={`badge ${typeBadge(doc.type)}`}>{doc.type}</span>
+                                    <span className={`badge ${typeBadge(doc.document_type)}`}>{doc.document_type}</span>
                                 </div>
                                 <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                                     Added {new Date(doc.created_at).toLocaleDateString()}

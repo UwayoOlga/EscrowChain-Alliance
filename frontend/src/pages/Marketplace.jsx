@@ -42,8 +42,7 @@ export default function Marketplace() {
             ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '32px' }}>
                     {properties.map(p => {
-                        const images = p.images ? JSON.parse(p.images) : [];
-                        const coverImage = images.length > 0 ? `${BASE_URL}${images[0]}` : null;
+                        const coverImage = p.primary_image ? `${BASE_URL}${p.primary_image}` : null;
 
                         return (
                             <Link to={`/properties/${p.id}`} key={p.id} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>

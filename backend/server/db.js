@@ -171,6 +171,7 @@ const initDb = async () => {
             title TEXT NOT NULL,
             file_url TEXT NOT NULL,
             file_type TEXT DEFAULT 'pdf',
+            document_type TEXT DEFAULT 'document',
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (uploader_id) REFERENCES users(id),
             FOREIGN KEY (property_id) REFERENCES properties(id),
@@ -237,6 +238,7 @@ const initDb = async () => {
         ['documents', 'property_id', 'TEXT'],
         ['documents', 'lease_id', 'TEXT'],
         ['documents', 'file_type', 'TEXT'],
+        ['documents', 'document_type', 'TEXT'],
         ['maintenance_requests', 'image_url', 'TEXT']
     ];
 

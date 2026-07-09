@@ -50,7 +50,7 @@ router.get('/', asyncHandler(async (req, res) => {
 
 // POST a new document
 router.post('/', upload.single('file'), asyncHandler(async (req, res) => {
-    const { title, propertyId, leaseId, fileUrl: manualUrl } = req.body;
+    const { title, propertyId, leaseId, fileUrl: manualUrl, type } = req.body;
     const file = req.file;
 
     if (!title) return res.status(400).json({ error: 'Document title is required' });
@@ -61,12 +61,12 @@ router.post('/', upload.single('file'), asyncHandler(async (req, res) => {
     const id = uuidv4();
 
     await query(
-        `INSERT INTO documents (id, uploader_id, property_id, lease_id, title, file_url, file_type) 
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [id, req.user.id, propertyId || null, leaseId || null, title, finalUrl, fileType]
+        `INSERT INTO documents (id, uploader_id, property_id, lease_id, title, file_url, file_type, document_type) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [id, req.user.id, propertyId || null, leaseId || null, title, finalUrl, fileType, type || 'document']
     );
 
-    res.json({ id, title, fileUrl: finalUrl });
+    res.json({ id, title, fileUrl: finalUrl, documentType: type || 'document' });
 }));
 
 export default router;
