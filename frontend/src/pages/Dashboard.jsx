@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
@@ -40,7 +40,7 @@ export default function Dashboard() {
         // ── DASHBOARD SYNC: Refresh all metrics every 10s ──
         const interval = setInterval(loadDashboard, 10000);
 
-        // Turn off loading once initial data is likely processed (handled in the Promise inside loadDashboard for the first run if we want, but let's keep it simple)
+        // Turn off loading once initial data is processed
         const initialTimer = setTimeout(() => setLoading(false), 800);
 
         return () => {
@@ -49,7 +49,7 @@ export default function Dashboard() {
         };
     }, [user]);
 
-    if (loading) return <div className="page container"><p>Loading Portfolio Data...</p></div>;
+    if (loading) return <div className="page container"><p>Syncing ledger details...</p></div>;
 
     const isLandlord = user?.role?.toLowerCase() === 'landlord';
 
@@ -80,6 +80,15 @@ export default function Dashboard() {
     const pendingMaintenance = maintenanceRequests.filter(m => m.status === 'pending');
     const inProgressMaintenance = maintenanceRequests.filter(m => m.status === 'in-progress');
 
+    const getGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return 'Good morning';
+        if (hour < 18) return 'Good afternoon';
+        return 'Good evening';
+    };
+
+    const firstName = user?.name?.split(' ')[0] || 'there';
+
     // ══════════════════════════════════════════════════
     //  LANDLORD DASHBOARD
     // ══════════════════════════════════════════════════
@@ -94,69 +103,98 @@ export default function Dashboard() {
 
         return (
             <div className="dashboard-enterprise fade-in">
-                <div className="dashboard-intro" style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                {/* Header Greeting */}
+                <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
                     <div>
-                        <h1 style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--dark-slate)', letterSpacing: '-0.03em' }}>Portfolio Performance</h1>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem' }}>Institutional audit of realestate assets and smart contract liquidity.</p>
+                        <h1 className="dashboard-greeting-title">{getGreeting()}, {firstName}</h1>
+                        <p className="dashboard-greeting-subtitle">Here's a human look at your rental portfolio and smart contracts.</p>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase' }}>Network Status</div>
-                        <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>Cardano Preprod Active</div>
+                    <div style={{ background: 'rgba(255, 255, 255, 0.7)', padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '0.85rem', fontWeight: 600 }}>
+                        <span className="pulse-dot"></span>
+                        Cardano Preprod Live
                     </div>
                 </div>
 
+                {/* DeFi Style Metric Cards */}
                 <div className="grid grid-4" style={{ marginBottom: '32px' }}>
-                    <div className="card metric-card" style={{ borderTop: '4px solid var(--accent)' }}>
-                        <span className="metric-label">Occupancy Rate</span>
+                    <div className="metric-card metric-card--accent fade-in stagger-1">
+                        <span className="metric-label">
+                            🔑 Occupancy Rate
+                        </span>
                         <div className="metric-value">{occupancyRate.toFixed(1)}%</div>
-                        <div className="metric-sub">{occupiedCount} of {totalProperties} units generating yield</div>
+                        <div className="metric-sub">{occupiedCount} of {totalProperties} units currently leased</div>
                     </div>
-                    <div className="card metric-card" style={{ borderLeft: '1px solid var(--border)' }}>
-                        <span className="metric-label">Monthly Run Rate</span>
+                    <div className="metric-card metric-card--success fade-in stagger-2">
+                        <span className="metric-label">
+                            📈 Monthly Revenue
+                        </span>
                         <div className="metric-value">RWF {monthlyRunRate.toLocaleString()}</div>
-                        <div className="metric-sub">Projected incoming lease revenue</div>
+                        <div className="metric-sub">Expected monthly incoming rent</div>
                     </div>
-                    <div className="card metric-card" style={{ borderLeft: '1px solid var(--border)' }}>
-                        <span className="metric-label">Total Escrow Vault</span>
+                    <div className="metric-card metric-card--warning fade-in stagger-3">
+                        <span className="metric-label">
+                            🛡️ Locked Escrow
+                        </span>
                         <div className="metric-value">RWF {escrowBalance.toLocaleString()}</div>
-                        <div className="metric-sub">Deposits locked in protocol</div>
+                        <div className="metric-sub">Deposit values secured in smart contracts</div>
                     </div>
-                    <div className="card metric-card" style={{ borderLeft: activeDisputes.length > 0 ? '4px solid var(--danger)' : '1px solid var(--border)' }}>
-                        <span className="metric-label">Critical Disputes</span>
-                        <div className="metric-value" style={{ color: activeDisputes.length > 0 ? 'var(--danger)' : '' }}>{activeDisputes.length}</div>
-                        <div className="metric-sub">{resolvedDisputes.length} cases successfully mediated</div>
+                    <div className="metric-card fade-in stagger-4" style={{ borderLeft: activeDisputes.length > 0 ? '4px solid var(--danger)' : '' }}>
+                        <span className="metric-label">
+                            ⚠️ Active Disputes
+                        </span>
+                        <div className="metric-value" style={{ color: activeDisputes.length > 0 ? 'var(--danger)' : '' }}>
+                            {activeDisputes.length}
+                        </div>
+                        <div className="metric-sub">{resolvedDisputes.length} conflicts resolved so far</div>
                     </div>
                 </div>
 
-                <div className="dashboard-row" style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr', gap: '32px' }}>
+                {/* Main Content Area */}
+                <div className="dashboard-row" style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.2fr', gap: '32px' }}>
                     <div className="dashboard-main-col">
-                        <div className="card" style={{ marginBottom: '32px', height: '300px', display: 'flex', flexDirection: 'column' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
-                                <h3 style={{ fontSize: '1rem', fontWeight: 700 }}>Revenue Performance</h3>
-                                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Last 6 Months (RWF)</span>
+                        {/* Revenue Performance card */}
+                        <div className="dash-card fade-in stagger-2" style={{ marginBottom: '32px' }}>
+                            <div className="dash-card-header">
+                                <h3>Revenue Performance</h3>
+                                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>Last 6 Months (RWF)</span>
                             </div>
-                            <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: '12px', padding: '0 12px' }}>
-                                {[40, 65, 45, 80, 55, 90].map((h, i) => (
-                                    <div key={i} style={{ flex: 1, background: i === 5 ? 'var(--dark-slate)' : 'var(--bg-secondary)', height: `${h}%`, borderRadius: '2px', position: 'relative', transition: 'height 0.6s ease' }}>
-                                        <div style={{ position: 'absolute', bottom: '-24px', left: '50%', transform: 'translateX(-50%)', fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                                            {['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN'][i]}
+                            <div className="dash-card-body" style={{ height: '240px', display: 'flex', flexDirection: 'column' }}>
+                                <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', gap: '16px', padding: '0 8px 12px 8px' }}>
+                                    {[40, 65, 45, 80, 55, 90].map((h, i) => (
+                                        <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
+                                            <div style={{ 
+                                                width: '100%', 
+                                                maxWidth: '42px',
+                                                background: i === 5 
+                                                    ? 'linear-gradient(180deg, var(--accent) 0%, #3B82F6 100%)' 
+                                                    : 'linear-gradient(180deg, #CBD5E1 0%, #94A3B8 100%)', 
+                                                height: `${h}%`, 
+                                                borderRadius: '6px 6px 0 0', 
+                                                position: 'relative', 
+                                                transition: 'height 0.6s ease',
+                                                boxShadow: i === 5 ? '0 4px 12px rgba(37, 99, 235, 0.2)' : 'none'
+                                            }} />
+                                            <div style={{ marginTop: '8px', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
+                                                {['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN'][i]}
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
                             </div>
                         </div>
 
-                        <div className="card" style={{ padding: 0 }}>
-                            <div style={{ padding: '24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Recent Ledger Activity</h3>
-                                <Link to="/payments" className="link-arrow dark" style={{ fontSize: '0.85rem' }}>Full History &rarr;</Link>
+                        {/* Recent Ledger activity */}
+                        <div className="dash-card fade-in stagger-3">
+                            <div className="dash-card-header">
+                                <h3>Recent Ledger Transactions</h3>
+                                <Link to="/payments" className="link-arrow dark" style={{ fontSize: '0.85rem' }}>View full history &rarr;</Link>
                             </div>
                             <div className="table-wrap">
                                 <table style={{ border: 'none' }}>
                                     <thead>
                                         <tr>
                                             <th>Date</th>
-                                            <th>Asset</th>
+                                            <th>Property / Lease</th>
                                             <th>Action</th>
                                             <th>Amount</th>
                                             <th>Status</th>
@@ -166,14 +204,14 @@ export default function Dashboard() {
                                         {recentPayments.map(t => (
                                             <tr key={t.id}>
                                                 <td style={{ fontSize: '0.85rem' }}>{new Date(t.created_at).toLocaleDateString()}</td>
-                                                <td style={{ fontWeight: 600 }}>{t.property_address || 'Ref: ' + t.lease_id?.substring(0, 8)}</td>
+                                                <td style={{ fontWeight: 600 }}>{t.property_address || 'Ref: ' + t.lease_id?.substring(0, 8).toUpperCase()}</td>
                                                 <td>{t.action}</td>
-                                                <td style={{ fontWeight: 700 }}>RWF {t.amount}</td>
+                                                <td style={{ fontWeight: 700 }}>RWF {t.amount.toLocaleString()}</td>
                                                 <td><span className={`badge ${t.status === 'confirmed' ? 'badge-success' : 'badge-warning'}`}>{t.status}</span></td>
                                             </tr>
                                         ))}
                                         {recentPayments.length === 0 && (
-                                            <tr><td colSpan="5" style={{ textAlign: 'center', padding: '60px' }}>No recent financial events.</td></tr>
+                                            <tr><td colSpan="5" style={{ textAlign: 'center', padding: '60px', color: 'var(--text-muted)' }}>No recent financial events.</td></tr>
                                         )}
                                     </tbody>
                                 </table>
@@ -182,52 +220,60 @@ export default function Dashboard() {
                     </div>
 
                     <div className="dashboard-side-col">
-                        <div className="card" style={{ marginBottom: '32px' }}>
-                            <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '20px' }}>Priority Alerts</h3>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        {/* Priority Alerts */}
+                        <div className="dash-card fade-in stagger-2" style={{ marginBottom: '32px' }}>
+                            <div className="dash-card-header">
+                                <h3>Action Items</h3>
+                            </div>
+                            <div className="dash-card-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                 {activeDisputes.length > 0 && (
-                                    <div className="card" style={{ padding: '16px', background: 'var(--danger-bg)', border: 'none', boxShadow: 'none' }}>
-                                        <div style={{ fontWeight: 700, color: 'var(--danger)', fontSize: '0.85rem' }}>Conflict Management Required</div>
-                                        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Case-{activeDisputes[0].id.substring(0, 8)} awaiting your response.</p>
+                                    <div className="alert-card alert-card--danger">
+                                        <div className="alert-card-title" style={{ color: 'var(--danger)' }}>Dispute Awaiting Response</div>
+                                        <div className="alert-card-desc">Case-{activeDisputes[0].id.substring(0, 8).toUpperCase()} requires immediate arbitrator submission.</div>
                                     </div>
                                 )}
                                 {pendingLeases.length > 0 && (
-                                    <div className="card" style={{ padding: '16px', background: 'var(--warning-bg)', border: 'none', boxShadow: 'none' }}>
-                                        <div style={{ fontWeight: 700, color: 'var(--warning)', fontSize: '0.85rem' }}>Lease Proposal Status</div>
-                                        <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{pendingLeases.length} proposals pending tenant signature.</p>
+                                    <div className="alert-card alert-card--warning">
+                                        <div className="alert-card-title" style={{ color: 'var(--warning)' }}>Pending Lease Approvals</div>
+                                        <div className="alert-card-desc">{pendingLeases.length} proposals waiting on tenant signatures.</div>
                                     </div>
                                 )}
                                 {pendingMaintenance.length > 0 && (
                                     <Link to="/maintenance" style={{ textDecoration: 'none' }}>
-                                        <div className="card" style={{ padding: '16px', background: 'var(--bg-secondary)', border: 'none', boxShadow: 'none' }}>
-                                            <div style={{ fontWeight: 700, color: 'var(--dark-slate)', fontSize: '0.85rem' }}>Maintenance Requests</div>
-                                            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{pendingMaintenance.length} pending tenant request(s) need review.</p>
+                                        <div className="alert-card alert-card--info">
+                                            <div className="alert-card-title" style={{ color: 'var(--accent)' }}>Maintenance Request Filed</div>
+                                            <div className="alert-card-desc">{pendingMaintenance.length} tenant reports need reviewing.</div>
                                         </div>
                                     </Link>
                                 )}
                                 {activeDisputes.length === 0 && pendingLeases.length === 0 && pendingMaintenance.length === 0 && (
                                     <div style={{ textAlign: 'center', padding: '24px 0' }}>
-                                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--border-hover)" strokeWidth="1.5" style={{ marginBottom: '12px' }}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                                        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Protocol state: Stable.</p>
+                                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="2" style={{ marginBottom: '12px' }}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500 }}>All caught up! Portfolio is running smoothly.</p>
                                     </div>
                                 )}
                             </div>
                         </div>
 
-                        <div className="card">
-                            <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '20px' }}>Asset Summary</h3>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                                    <span style={{ color: 'var(--text-secondary)' }}>Portfolio Occupancy</span>
-                                    <span style={{ fontWeight: 700 }}>{occupiedCount} / {totalProperties}</span>
-                                </div>
-                                <div className="progress-bar" style={{ height: '6px', background: 'var(--bg-secondary)', borderRadius: '3px', overflow: 'hidden' }}>
-                                    <div style={{ height: '100%', background: 'var(--dark-slate)', width: `${occupancyRate}%`, transition: 'width 0.8s ease' }}></div>
-                                </div>
+                        {/* Portfolio Occupancy summary */}
+                        <div className="dash-card fade-in stagger-3">
+                            <div className="dash-card-header">
+                                <h3>Occupancy Summary</h3>
                             </div>
-                            <Link to="/properties" className="btn btn-secondary btn-sm btn-square" style={{ width: '100%', marginTop: '24px' }}>
-                                Manage Properties
-                            </Link>
+                            <div className="dash-card-body">
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', marginBottom: '12px', fontWeight: 600 }}>
+                                    <span style={{ color: 'var(--text-secondary)' }}>Portfolio Leased</span>
+                                    <span style={{ color: 'var(--dark-slate)' }}>{occupiedCount} / {totalProperties} Units</span>
+                                </div>
+                                <div className="progress-track" style={{ marginBottom: '24px' }}>
+                                    <div className="progress-fill" style={{ width: `${occupancyRate}%` }} />
+                                </div>
+                                <Link to="/properties" className="btn btn-secondary btn-sm btn-square" style={{ width: '100%' }}>
+                                    Manage Properties
+                                </Link>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -261,91 +307,102 @@ export default function Dashboard() {
 
     return (
         <div className="dashboard-enterprise fade-in">
-            <div className="dashboard-intro" style={{ marginBottom: '32px' }}>
-                <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--dark-slate)' }}>
-                    Welcome back, {user?.name?.split(' ')[0] || 'Tenant'}
-                </h1>
-                <p style={{ color: 'var(--text-secondary)' }}>Your rental overview and upcoming obligations.</p>
+            {/* Header Greeting */}
+            <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+                <div>
+                    <h1 className="dashboard-greeting-title">{getGreeting()}, {firstName}</h1>
+                    <p className="dashboard-greeting-subtitle">Your tenant panel, upcoming payments, and lease agreements.</p>
+                </div>
+                <div style={{ background: 'rgba(255, 255, 255, 0.7)', padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border)', fontSize: '0.85rem', fontWeight: 600 }}>
+                    <span className="pulse-dot"></span>
+                    Cardano Preprod Active
+                </div>
             </div>
 
-            {/* METRIC CARDS */}
+            {/* DeFi Style Metric Cards */}
             <div className="grid grid-4" style={{ marginBottom: '32px' }}>
-                <div className="card metric-card" style={{ borderTop: 'none' }}>
-                    <span className="metric-label">Rental Status</span>
-                    <div className="metric-value" style={{ fontSize: '1.2rem', color: activeLease ? 'var(--success)' : 'var(--text-muted)' }}>
-                        {activeLease ? 'LEASE ACTIVE' : 'NO ACTIVE LEASE'}
+                <div className="metric-card metric-card--accent fade-in stagger-1">
+                    <span className="metric-label">🏠 Lease Status</span>
+                    <div className="metric-value" style={{ fontSize: '1.25rem', color: activeLease ? 'var(--success)' : 'var(--text-muted)' }}>
+                        {activeLease ? 'ACTIVE' : 'NO LEASE'}
                     </div>
-                    <div className="metric-sub">{activeLease ? `${daysRemaining} days remaining` : 'Available to rent'}</div>
+                    <div className="metric-sub">{activeLease ? `${daysRemaining} days left on contract` : 'Browse properties to lease'}</div>
                 </div>
-                <div className="card metric-card" style={{ borderTop: 'none' }}>
-                    <span className="metric-label">Next Payment Due</span>
-                    <div className="metric-value" style={{ color: daysUntilPayment !== null && daysUntilPayment <= 5 ? 'var(--danger)' : '' }}>
-                        {daysUntilPayment !== null ? `${daysUntilPayment}d` : '—'}
+                <div className="metric-card fade-in stagger-2" style={{ borderLeft: daysUntilPayment !== null && daysUntilPayment <= 5 ? '4px solid var(--danger)' : '' }}>
+                    <span className="metric-label">📅 Next Rent Payment</span>
+                    <div className="metric-value" style={{ color: daysUntilPayment !== null && daysUntilPayment <= 5 ? 'var(--danger)' : 'var(--dark-slate)' }}>
+                        {daysUntilPayment !== null ? `${daysUntilPayment} days` : '—'}
                     </div>
-                    <div className="metric-sub">{nextPaymentDate ? nextPaymentDate.toLocaleDateString() : 'No upcoming'}</div>
+                    <div className="metric-sub">{nextPaymentDate ? nextPaymentDate.toLocaleDateString() : 'No payments scheduled'}</div>
                 </div>
-                <div className="card metric-card" style={{ borderTop: 'none' }}>
-                    <span className="metric-label">Locked Deposit</span>
-                    <div className="metric-value">RWF {activeLease?.deposit_amount || 0}</div>
-                    <div className="metric-sub">Held in Escrow Contract</div>
+                <div className="metric-card metric-card--warning fade-in stagger-3">
+                    <span className="metric-label">🔒 Escrow Deposit</span>
+                    <div className="metric-value">RWF {(activeLease?.deposit_amount || 0).toLocaleString()}</div>
+                    <div className="metric-sub">Secured in smart contract</div>
                 </div>
-                <div className="card metric-card" style={{ borderTop: 'none' }}>
-                    <span className="metric-label">Total Paid</span>
+                <div className="metric-card metric-card--success fade-in stagger-4">
+                    <span className="metric-label">💸 Total Paid</span>
                     <div className="metric-value">RWF {totalPaid.toLocaleString()}</div>
-                    <div className="metric-sub">Verified On-Chain</div>
+                    <div className="metric-sub">All rent payments processed</div>
                 </div>
             </div>
 
-            <div className="dashboard-row" style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr', gap: '32px' }}>
+            <div className="dashboard-row" style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.2fr', gap: '32px' }}>
                 <div className="dashboard-main-col">
-                    {/* MY ACTIVE HOME */}
-                    <div className="card" style={{ marginBottom: '32px', padding: '40px' }}>
-                        <h3 style={{ marginBottom: '24px', fontWeight: 800 }}>My Active Home</h3>
-                        {activeLease ? (
-                            <div className="grid grid-2" style={{ gap: '32px' }}>
-                                <div>
-                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '8px' }}>Property</div>
-                                    <div style={{ fontSize: '1.2rem', fontWeight: 700 }}>{myProperty?.title || 'Untitled'}</div>
-                                    <p style={{ color: 'var(--text-secondary)', marginTop: '4px' }}>{myProperty?.address}</p>
+                    {/* Active home info */}
+                    <div className="dash-card fade-in stagger-2" style={{ marginBottom: '32px' }}>
+                        <div className="dash-card-header">
+                            <h3>My Home</h3>
+                        </div>
+                        <div className="dash-card-body">
+                            {activeLease ? (
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '32px' }}>
+                                    <div>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '8px' }}>Property</div>
+                                        <div style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '6px' }}>{myProperty?.title || 'Home'}</div>
+                                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '20px' }}>{myProperty?.address}</p>
 
-                                    <div style={{ display: 'flex', gap: '24px', marginTop: '24px' }}>
-                                        <div>
-                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Bedrooms</div>
-                                            <div style={{ fontWeight: 600 }}>{myProperty?.bedrooms || '—'}</div>
+                                        <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+                                            <div>
+                                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Bedrooms</div>
+                                                <div style={{ fontWeight: 600 }}>🛏️ {myProperty?.bedrooms || '—'}</div>
+                                            </div>
+                                            <div>
+                                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Bathrooms</div>
+                                                <div style={{ fontWeight: 600 }}>🚿 {myProperty?.bathrooms || '—'}</div>
+                                            </div>
+                                            <div>
+                                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Expires On</div>
+                                                <div style={{ fontWeight: 600 }}>📅 {new Date(activeLease.end_date).toLocaleDateString()}</div>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Bathrooms</div>
-                                            <div style={{ fontWeight: 600 }}>{myProperty?.bathrooms || '—'}</div>
-                                        </div>
-                                        <div>
-                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Lease Expiry</div>
-                                            <div style={{ fontWeight: 600 }}>{new Date(activeLease.end_date).toLocaleDateString()}</div>
+                                    </div>
+                                    <div style={{ borderLeft: '1px solid var(--border)', paddingLeft: '32px' }}>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '8px' }}>Monthly Rent</div>
+                                        <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--dark-slate)', marginBottom: '24px' }}>RWF {activeLease.rent_amount.toLocaleString()}</div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                            <Link to="/leases" className="btn btn-dark btn-square" style={{ width: '100%', textAlign: 'center' }}>Pay Current Rent</Link>
+                                            <Link to={`/properties/${activeLease.property_id}`} className="btn btn-secondary btn-square" style={{ width: '100%', textAlign: 'center' }}>View Details</Link>
                                         </div>
                                     </div>
                                 </div>
-                                <div style={{ borderLeft: '1px solid var(--border)', paddingLeft: '32px' }}>
-                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '8px' }}>Monthly Rent</div>
-                                    <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--dark-slate)' }}>RWF {activeLease.rent_amount}</div>
-                                    <Link to="/leases" className="btn btn-dark btn-square" style={{ width: '100%', marginTop: '24px', textDecoration: 'none', textAlign: 'center' }}>Pay Current Rent</Link>
-                                    <Link to={`/properties/${activeLease.property_id}`} className="btn btn-secondary btn-square" style={{ width: '100%', marginTop: '8px', textDecoration: 'none', textAlign: 'center' }}>View Property Details</Link>
+                            ) : (
+                                <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--border-hover)" strokeWidth="1.5" style={{ marginBottom: '16px' }}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                    </svg>
+                                    <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>You don't have any active lease agreements at the moment.</p>
+                                    <Link to="/marketplace" className="btn btn-primary btn-square">Browse Available Properties</Link>
                                 </div>
-                            </div>
-                        ) : (
-                            <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--border-hover)" strokeWidth="1.5" style={{ marginBottom: '16px' }}>
-                                    <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-                                </svg>
-                                <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>You do not have any active lease agreements at this time.</p>
-                                <Link to="/properties" className="btn btn-primary btn-square">Browse Verified Properties</Link>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
 
-                    {/* TRANSACTION LEDGER */}
-                    <div className="card" style={{ padding: 0 }}>
-                        <div style={{ padding: '24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>My Transaction Ledger</h3>
-                            <Link to="/leases" className="link-arrow dark" style={{ fontSize: '0.85rem', textDecoration: 'none' }}>Full History &rarr;</Link>
+                    {/* Transaction Ledger */}
+                    <div className="dash-card fade-in stagger-3">
+                        <div className="dash-card-header">
+                            <h3>Lease Transaction History</h3>
+                            <Link to="/leases" className="link-arrow dark" style={{ fontSize: '0.85rem' }}>View full history &rarr;</Link>
                         </div>
                         <div className="table-wrap">
                             <table>
@@ -363,8 +420,8 @@ export default function Dashboard() {
                                         <tr key={t.id}>
                                             <td>{new Date(t.created_at).toLocaleDateString()}</td>
                                             <td>{t.action}</td>
-                                            <td style={{ fontWeight: 700 }}>RWF {t.amount}</td>
-                                            <td style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>{t.tx_hash ? t.tx_hash.substring(0, 16) + '...' : '—'}</td>
+                                            <td style={{ fontWeight: 700 }}>RWF {t.amount.toLocaleString()}</td>
+                                            <td className="mono" style={{ fontSize: '0.8rem' }}>{t.tx_hash ? t.tx_hash.substring(0, 16) + '...' : '—'}</td>
                                             <td><span className={`badge ${t.status === 'confirmed' ? 'badge-success' : 'badge-warning'}`}>{t.status}</span></td>
                                         </tr>
                                     )) : (
@@ -377,95 +434,92 @@ export default function Dashboard() {
                 </div>
 
                 <div className="dashboard-side-col">
-                    {/* UPCOMING PAYMENT CARD */}
-                    <div className="card" style={{ marginBottom: '32px', borderTop: daysUntilPayment !== null && daysUntilPayment <= 5 ? '4px solid var(--danger)' : '4px solid var(--dark-slate)' }}>
-                        <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '20px' }}>Upcoming Payment</h3>
-                        {activeLease ? (
-                            <div>
+                    {/* Upcoming payment card */}
+                    {activeLease && (
+                        <div className="dash-card fade-in stagger-2" style={{ marginBottom: '32px' }}>
+                            <div className="dash-card-header">
+                                <h3>Rent Due</h3>
+                            </div>
+                            <div className="dash-card-body">
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                                     <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Amount Due</span>
-                                    <span style={{ fontSize: '1.25rem', fontWeight: 800 }}>RWF {activeLease.rent_amount}</span>
+                                    <span style={{ fontSize: '1.25rem', fontWeight: 800 }}>RWF {activeLease.rent_amount.toLocaleString()}</span>
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                                     <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Due Date</span>
                                     <span style={{ fontWeight: 600 }}>{nextPaymentDate?.toLocaleDateString()}</span>
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                                    <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Days Left</span>
+                                    <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Time Left</span>
                                     <span style={{ fontWeight: 700, color: daysUntilPayment <= 5 ? 'var(--danger)' : 'var(--dark-slate)' }}>
                                         {daysUntilPayment} {daysUntilPayment === 1 ? 'day' : 'days'}
                                     </span>
                                 </div>
-                                <Link to="/leases" className="btn btn-dark btn-square" style={{ width: '100%', textDecoration: 'none', textAlign: 'center' }}>
+                                <Link to="/leases" className="btn btn-dark btn-square" style={{ width: '100%', textAlign: 'center' }}>
                                     Pay Now
                                 </Link>
                             </div>
-                        ) : (
-                            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center', padding: '16px 0' }}>No upcoming payments.</p>
-                        )}
-                    </div>
-
-                    {/* MAINTENANCE STATUS */}
-                    <div className="card" style={{ marginBottom: '32px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                            <h3 style={{ fontSize: '1rem', fontWeight: 700 }}>Maintenance Status</h3>
-                            <Link to="/maintenance" style={{ fontSize: '0.8rem', color: 'var(--accent)', textDecoration: 'none' }}>View All &rarr;</Link>
                         </div>
-                        {maintenanceRequests.length > 0 ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                {maintenanceRequests.slice(0, 3).map(m => (
-                                    <div key={m.id} style={{ padding: '12px 16px', background: 'var(--bg-secondary)', borderRadius: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <div>
-                                            <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{m.title}</div>
-                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(m.created_at).toLocaleDateString()}</div>
+                    )}
+
+                    {/* Maintenance requests status */}
+                    <div className="dash-card fade-in stagger-3" style={{ marginBottom: '32px' }}>
+                        <div className="dash-card-header">
+                            <h3>Maintenance</h3>
+                            <Link to="/maintenance" style={{ fontSize: '0.8rem', color: 'var(--accent)', textDecoration: 'none', fontWeight: 600 }}>View all &rarr;</Link>
+                        </div>
+                        <div className="dash-card-body" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            {maintenanceRequests.length > 0 ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    {maintenanceRequests.slice(0, 3).map(m => (
+                                        <div key={m.id} style={{ padding: '12px 16px', background: 'var(--bg-secondary)', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <div>
+                                                <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{m.title}</div>
+                                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(m.created_at).toLocaleDateString()}</div>
+                                            </div>
+                                            <span className={`badge ${m.status === 'pending' ? 'badge-warning' : m.status === 'in-progress' ? 'badge-info' : m.status === 'resolved' ? 'badge-success' : 'badge-danger'}`}>
+                                                {m.status}
+                                            </span>
                                         </div>
-                                        <span className={`badge ${m.status === 'pending' ? 'badge-warning' : m.status === 'in-progress' ? 'badge-info' : m.status === 'resolved' ? 'badge-success' : 'badge-danger'}`}>
-                                            {m.status}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div style={{ textAlign: 'center', padding: '16px 0' }}>
-                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--border-hover)" strokeWidth="1.5" style={{ marginBottom: '8px' }}>
-                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                                </svg>
-                                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>All systems operational.</p>
-                            </div>
-                        )}
-                        <Link to="/maintenance" className="btn btn-secondary btn-sm btn-square" style={{ width: '100%', marginTop: '16px', textDecoration: 'none', textAlign: 'center' }}>
-                            File New Request
-                        </Link>
-                    </div>
-
-                    {/* SECURITY & ESCROW */}
-                    <div className="card" style={{ marginBottom: '32px' }}>
-                        <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '20px' }}>Security & Escrow</h3>
-                        <div style={{ padding: '20px', background: 'var(--bg-secondary)', borderRadius: '4px', marginBottom: '16px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Deposit Locked</span>
-                                <span style={{ fontWeight: 700 }}>RWF {activeLease?.deposit_amount || 0}</span>
-                            </div>
-                            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>
-                                Secured by multi-sig smart contract on Cardano. Released upon mutual agreement.
-                            </p>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div style={{ textAlign: 'center', padding: '16px 0' }}>
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="2" style={{ marginBottom: '8px' }}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500 }}>No active maintenance issues.</p>
+                                </div>
+                            )}
+                            <Link to="/maintenance" className="btn btn-secondary btn-sm btn-square" style={{ width: '100%', marginTop: '8px', textAlign: 'center' }}>
+                                File New Request
+                            </Link>
                         </div>
-                        <Link to="/leases" className="btn btn-secondary btn-sm btn-square" style={{ width: '100%', textDecoration: 'none', textAlign: 'center' }}>
-                            View Contract Protocol
-                        </Link>
                     </div>
 
-                    {/* QUICK ACTIONS */}
-                    <div className="card">
-                        <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '20px' }}>Quick Actions</h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <Link to="/documents" className="btn btn-secondary btn-sm btn-square" style={{ textDecoration: 'none', textAlign: 'center' }}>
-                                View Documents
-                            </Link>
-                            <Link to="/disputes" className="btn btn-danger btn-sm btn-square" style={{ textDecoration: 'none', textAlign: 'center' }}>
-                                Initiate Dispute Resolution
-                            </Link>
+                    {/* Quick actions & Escrow */}
+                    <div className="dash-card fade-in stagger-4">
+                        <div className="dash-card-header">
+                            <h3>Security & Vault</h3>
+                        </div>
+                        <div className="dash-card-body">
+                            <div style={{ padding: '16px', background: 'var(--bg-secondary)', borderRadius: '8px', marginBottom: '20px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontWeight: 600, fontSize: '0.9rem' }}>
+                                    <span style={{ color: 'var(--text-secondary)' }}>Locked Deposit</span>
+                                    <span style={{ color: 'var(--dark-slate)' }}>RWF {(activeLease?.deposit_amount || 0).toLocaleString()}</span>
+                                </div>
+                                <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: '1.4', margin: 0 }}>
+                                    Secured by a programmatic multi-sig escrow script on the Cardano ledger.
+                                </p>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <Link to="/documents" className="btn btn-secondary btn-sm btn-square" style={{ textAlign: 'center' }}>
+                                    My Documents Vault
+                                </Link>
+                                <Link to="/disputes" className="btn btn-danger btn-sm btn-square" style={{ textAlign: 'center' }}>
+                                    File Dispute
+                                </Link>
+                            </div>
                         </div>
                     </div>
                 </div>
