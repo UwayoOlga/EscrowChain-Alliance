@@ -1,1 +1,1 @@
-smart contract
+smart contract with escrow chain
