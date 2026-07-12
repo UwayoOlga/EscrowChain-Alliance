@@ -1,4 +1,4 @@
-﻿import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { BASE_URL } from '../api';
 import heroImage from '../assets/hero_modern.png';
@@ -15,77 +15,93 @@ function PropertyCard({ p, onAction }) {
             className="hover-lift"
             style={{
                 background: '#fff',
-                borderRadius: '16px',
+                borderRadius: '12px',
                 overflow: 'hidden',
-                border: '1px solid #E2E8F0',
+                border: '1px solid rgba(226, 232, 240, 0.8)',
                 cursor: 'pointer',
                 display: 'flex',
-                flexDirection: 'column'
+                flexDirection: 'column',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.01)'
             }}
             onClick={() => onAction(p)}
         >
-            <div style={{ position: 'relative', height: '210px', backgroundColor: '#EFF6FF', overflow: 'hidden' }}>
+            <div style={{ position: 'relative', height: '220px', backgroundColor: '#EFF6FF', overflow: 'hidden' }}>
                 {cover ? (
-                    <img src={cover} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s' }} />
+                    <img src={cover} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
                     <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '8px', color: '#94A3B8' }}>
-                        <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-                        <span style={{ fontSize: '0.78rem' }}>No photo yet</span>
+                        <svg width="36" height="36" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375 0 11-.75 0 .375 0 01.75 0z" />
+                        </svg>
+                        <span style={{ fontSize: '0.78rem', fontWeight: 600 }}>No Image Available</span>
                     </div>
                 )}
+                
+                {/* Status Badges */}
                 <div style={{
                     position: 'absolute', top: '12px', left: '12px',
-                    background: p.status === 'available' ? 'rgba(5,150,105,0.92)' : 'rgba(217,119,6,0.92)',
-                    backdropFilter: 'blur(4px)',
-                    color: '#fff', padding: '4px 10px', borderRadius: '20px',
-                    fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em'
+                    background: p.status === 'available' ? 'rgba(5, 150, 105, 0.95)' : 'rgba(217, 119, 6, 0.95)',
+                    backdropFilter: 'blur(8px)',
+                    color: '#fff', padding: '5px 12px', borderRadius: '6px',
+                    fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em'
                 }}>
                     {p.status === 'available' ? 'Available' : p.status}
                 </div>
+                
                 <div style={{
                     position: 'absolute', bottom: '12px', right: '12px',
-                    background: 'rgba(255, 255, 255, 0.9)', backdropFilter: 'blur(6px)',
-                    border: '1px solid #BFDBFE',
-                    color: '#2563EB', padding: '4px 10px', borderRadius: '20px',
-                    fontSize: '0.68rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '5px'
+                    background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(8px)',
+                    border: '1px solid rgba(191, 219, 254, 0.8)',
+                    color: 'var(--accent)', padding: '5px 12px', borderRadius: '6px',
+                    fontSize: '0.7rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
                 }}>
-                    <svg width="10" height="10" fill="none" stroke="#2563EB" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                    <span className="pulse-dot" style={{ margin: 0 }}></span>
                     Escrow Protected
                 </div>
             </div>
 
-            <div style={{ padding: '18px 20px 20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
-                    <h3 style={{ fontSize: '1rem', fontWeight: 800, color: '#1E293B', flex: 1, marginRight: '8px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {p.title || 'Unnamed Property'}
+            <div style={{ padding: '20px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                    <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--dark-slate)', marginBottom: '6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {p.title || 'Untitled Rental'}
                     </h3>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 500 }}>
+                        {p.address}
+                    </p>
+                    
+                    <div style={{ display: 'flex', gap: '16px', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '18px', fontWeight: 600 }}>
+                        {p.bedrooms > 0 && <span>🛏️ {p.bedrooms} Beds</span>}
+                        {p.bathrooms > 0 && <span>🚿 {p.bathrooms} Baths</span>}
+                        {p.size && <span>📐 {p.size}</span>}
+                    </div>
                 </div>
-                <p style={{ fontSize: '0.83rem', color: '#94A3B8', marginBottom: '12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {p.address}
-                </p>
-                <div style={{ display: 'flex', gap: '12px', fontSize: '0.8rem', color: '#475569', marginBottom: '16px' }}>
-                    {p.bedrooms > 0 && <span>{p.bedrooms} bed</span>}
-                    {p.bathrooms > 0 && <span>{p.bathrooms} bath</span>}
-                    {p.size && <span>{p.size}</span>}
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #F1F5F9', paddingTop: '14px' }}>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
                     <div>
-                        <span style={{ fontSize: '1.15rem', fontWeight: 800, color: '#1E293B' }}>
+                        <span style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--dark-slate)' }}>
                             RWF {Number(p.rent_amount || 0).toLocaleString()}
                         </span>
-                        <span style={{ fontSize: '0.8rem', color: '#94A3B8' }}>/mo</span>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 500 }}>/month</span>
                     </div>
                     <button
                         onClick={() => onAction(p)}
+                        className="btn btn-primary"
                         style={{
-                            background: p.status === 'available' ? '#2563EB' : '#E2E8F0',
-                            color: p.status === 'available' ? '#fff' : '#94A3B8',
-                            border: 'none', borderRadius: '8px', padding: '8px 16px',
-                            fontWeight: 700, fontSize: '0.82rem', cursor: p.status === 'available' ? 'pointer' : 'default',
-                            transition: 'background 0.15s'
+                            borderRadius: '8px', 
+                            padding: '8px 16px',
+                            fontWeight: 700, 
+                            fontSize: '0.82rem',
+                            cursor: 'pointer',
+                            background: p.status === 'available' ? 'var(--accent)' : 'var(--bg-secondary)',
+                            color: p.status === 'available' ? '#fff' : 'var(--text-muted)',
+                            border: p.status === 'available' ? 'none' : '1px solid var(--border)',
+                            boxShadow: 'none'
                         }}
+                        disabled={p.status !== 'available'}
                     >
-                        {p.status === 'available' ? 'View & Rent' : 'Occupied'}
+                        {p.status === 'available' ? 'View Details' : 'Occupied'}
                     </button>
                 </div>
             </div>
@@ -131,112 +147,193 @@ export default function Landing() {
     });
 
     return (
-        <div style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif", color: '#1E293B', background: '#F8FAFC', minHeight: '100vh' }}>
-
+        <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", color: 'var(--text-primary)', background: 'var(--bg-primary)', minHeight: '100vh' }}>
+            
+            {/* Header Navigation */}
             <nav style={{
                 position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
-                background: scrolled ? 'rgba(255,255,255,0.97)' : '#fff',
-                backdropFilter: 'blur(12px)',
-                borderBottom: '1px solid #E2E8F0',
-                padding: isMobile ? '0 16px' : '0 5%', height: '68px',
+                background: scrolled ? 'rgba(255, 255, 255, 0.95)' : '#ffffff',
+                backdropFilter: scrolled ? 'blur(12px)' : 'none',
+                WebkitBackdropFilter: scrolled ? 'blur(12px)' : 'none',
+                borderBottom: '1px solid var(--border)',
+                padding: isMobile ? '0 16px' : '0 5%', height: '72px',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                transition: 'box-shadow 0.2s',
-                boxShadow: scrolled ? '0 2px 16px rgba(0,0,0,0.07)' : 'none'
+                transition: 'all 0.3s ease',
+                boxShadow: scrolled ? '0 4px 20px rgba(0, 0, 0, 0.05)' : 'none'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ width: '34px', height: '34px', background: '#2563EB', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#fff', fontSize: '1.1rem' }}>E</div>
-                    <span style={{ fontSize: '1.15rem', fontWeight: 800, letterSpacing: '-0.03em', color: '#1E293B', display: isMobile ? 'none' : 'block' }}>EscrowChain</span>
+                    <div style={{ width: '36px', height: '36px', background: 'var(--accent)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#fff', fontSize: '1.2rem' }}>E</div>
+                    <span style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.03em', color: 'var(--dark-slate)', display: isMobile ? 'none' : 'block' }}>EscrowChain</span>
                 </div>
 
                 <div style={{ flex: 1, maxWidth: '420px', margin: isMobile ? '0 12px' : '0 32px' }}>
                     <div style={{ position: 'relative' }}>
-                        <svg style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                        <svg style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
                         <input
                             type="text"
-                            placeholder="Find assets..."
+                            placeholder="Search rentals by title or location..."
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                             style={{
-                                width: '100%', padding: '10px 14px 10px 40px', borderRadius: '24px',
-                                border: '1.5px solid #E2E8F0', background: '#F8FAFC',
-                                fontSize: '0.875rem', outline: 'none', color: '#1E293B'
+                                width: '100%', padding: '12px 16px 12px 42px', borderRadius: '24px',
+                                border: '1px solid var(--border)', background: 'var(--bg-secondary)',
+                                fontSize: '0.88rem', outline: 'none', color: 'var(--text-primary)',
+                                transition: 'all 0.2s ease'
                             }}
                         />
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <Link to="/login" style={{ color: '#475569', fontWeight: 600, fontSize: '0.8rem', textDecoration: 'none', padding: '8px 12px', borderRadius: '8px', border: '1.5px solid #E2E8F0' }}>{isMobile ? 'Login' : 'Sign in'}</Link>
-                    {!isMobile && <Link to="/register" style={{ background: '#2563EB', color: '#fff', fontWeight: 700, fontSize: '0.875rem', textDecoration: 'none', padding: '9px 20px', borderRadius: '8px' }}>Join</Link>}
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <Link to="/login" className="btn btn-secondary btn-sm" style={{ borderRadius: '8px', fontWeight: 700 }}>
+                        {isMobile ? 'Sign In' : 'Sign In'}
+                    </Link>
+                    {!isMobile && (
+                        <Link to="/register" className="btn btn-primary btn-sm" style={{ borderRadius: '8px', fontWeight: 700 }}>
+                            Get Started
+                        </Link>
+                    )}
                 </div>
             </nav>
 
+            {/* Hero Section */}
             <section style={{
-                paddingTop: '68px',
+                paddingTop: '72px',
                 position: 'relative',
-                minHeight: '520px',
+                minHeight: '540px',
                 display: 'flex',
                 alignItems: 'center',
-                backgroundImage: `linear-gradient(rgba(0, 4, 8, 0.7), rgba(0, 4, 8, 0.7)), url(${heroImage})`,
+                backgroundImage: `linear-gradient(rgba(15, 23, 42, 0.75), rgba(15, 23, 42, 0.85)), url(${heroImage})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
-                backgroundColor: '#1E293B',
-                borderBottom: '1px solid #E2E8F0'
+                backgroundColor: 'var(--dark-slate)',
+                borderBottom: '1px solid var(--border)'
             }}>
-                <div style={{ maxWidth: '1200px', margin: '0 auto', padding: isMobile ? '40px 20px' : '60px 5% 48px', width: '100%', textAlign: isMobile ? 'center' : 'left' }}>
-                    <div style={{ maxWidth: isMobile ? '100%' : '650px', margin: isMobile ? '0 auto' : '0' }}>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', background: 'rgba(37,99,235,0.1)', border: '1px solid rgba(37,99,235,0.2)', borderRadius: '32px', padding: '5px 14px', marginBottom: '24px', fontSize: '0.75rem', fontWeight: 700, color: '#60A5FA' }}>
-                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} />
-                            SECURED ASSETS · KIGALI
+                <div style={{ maxWidth: '1200px', margin: '0 auto', padding: isMobile ? '60px 20px' : '80px 5% 60px', width: '100%', textAlign: isMobile ? 'center' : 'left' }}>
+                    <div style={{ maxWidth: isMobile ? '100%' : '680px', margin: isMobile ? '0 auto' : '0' }}>
+                        <div style={{ 
+                            display: 'inline-flex', 
+                            alignItems: 'center', 
+                            gap: '8px', 
+                            background: 'rgba(37, 99, 235, 0.15)', 
+                            border: '1px solid rgba(59, 130, 246, 0.3)', 
+                            borderRadius: '30px', 
+                            padding: '6px 14px', 
+                            marginBottom: '24px', 
+                            fontSize: '0.75rem', 
+                            fontWeight: 700, 
+                            color: '#60A5FA',
+                            letterSpacing: '0.04em'
+                        }}>
+                            <span className="pulse-dot" style={{ margin: 0 }}></span>
+                            VERIFIED ESCROW LEDGERS · RWANDA
                         </div>
-                        <h1 style={{ fontSize: isMobile ? '2.1rem' : 'clamp(2.2rem, 5vw, 3.5rem)', fontWeight: 800, letterSpacing: '-0.04em', color: '#fff', lineHeight: 1.1, marginBottom: '16px' }}>
-                            Trustless rentals in Rwanda.
+                        
+                        <h1 style={{ 
+                            fontSize: isMobile ? '2.25rem' : 'clamp(2.5rem, 6vw, 3.75rem)', 
+                            fontWeight: 800, 
+                            letterSpacing: '-0.04em', 
+                            color: '#ffffff', 
+                            lineHeight: 1.15, 
+                            marginBottom: '20px' 
+                        }}>
+                            Programmatic Trust for Home Rentals.
                         </h1>
-                        <p style={{ fontSize: '1.1rem', color: '#CBD5E1', maxWidth: '540px', marginBottom: '40px', lineHeight: 1.7 }}>
-                            Browse verified properties across Kigali. Your security deposit is locked in a smart contract and not with the landlord.
+                        
+                        <p style={{ 
+                            fontSize: '1.15rem', 
+                            color: '#CBD5E1', 
+                            maxWidth: '560px', 
+                            marginBottom: '40px', 
+                            lineHeight: 1.7,
+                            fontWeight: 500
+                        }}>
+                            Rent secure homes around Kigali. Your safety deposit is held programmatically in a smart contract escrow vault—not by landlords.
                         </p>
-                        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: isMobile ? 'center' : 'flex-start' }}>
-                            <Link to="/register" style={{ background: '#2563EB', color: '#fff', fontWeight: 700, fontSize: '1rem', textDecoration: 'none', padding: '14px 32px', borderRadius: '10px', boxShadow: '0 4px 16px rgba(37,99,235,0.3)' }}>
-                                Browse rentals &rarr;
+                        
+                        <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', justifyContent: isMobile ? 'center' : 'flex-start' }}>
+                            <Link to="/register" className="btn btn-primary btn-lg" style={{ borderRadius: '8px', padding: '14px 32px' }}>
+                                Find a Home &rarr;
                             </Link>
-                            <Link to="/register" style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', fontWeight: 700, fontSize: '1rem', textDecoration: 'none', padding: '14px 28px', borderRadius: '10px', border: '1.5px solid rgba(255,255,255,0.2)', backdropFilter: 'blur(8px)' }}>
-                                List a property
+                            <Link to="/register" className="btn btn-secondary btn-lg" style={{ 
+                                borderRadius: '8px', 
+                                padding: '14px 28px',
+                                background: 'rgba(255, 255, 255, 0.08)',
+                                border: '1.5px solid rgba(255, 255, 255, 0.2)',
+                                color: '#ffffff',
+                                backdropFilter: 'blur(8px)',
+                                WebkitBackdropFilter: 'blur(8px)'
+                            }}>
+                                List Your Property
                             </Link>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <div style={{ maxWidth: '1200px', margin: '-30px auto 48px', position: 'relative', zIndex: 10, background: '#fff', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', display: 'flex', gap: '40px', justifyContent: 'center', padding: '24px', flexWrap: 'wrap', border: '1px solid #E2E8F0' }}>
-                {[['1,200+', 'Properties listed'], ['840+', 'Active tenants'], ['98%', 'Disputes resolved'], ['RWF 4.5B+', 'Escrow secured']].map(([val, lbl], i) => (
-                    <div key={i} style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#1E293B' }}>{val}</div>
-                        <div style={{ fontSize: '0.75rem', color: '#94A3B8', marginTop: '2px', textTransform: 'uppercase', fontWeight: 700 }}>{lbl}</div>
+            {/* Metrics Ribbon */}
+            <div style={{ 
+                maxWidth: '1200px', 
+                margin: '-40px auto 48px', 
+                position: 'relative', 
+                zIndex: 10, 
+                background: '#ffffff', 
+                borderRadius: '12px', 
+                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05)', 
+                display: 'flex', 
+                gap: '24px', 
+                justifyContent: 'space-around', 
+                padding: '28px 24px', 
+                flexWrap: 'wrap', 
+                border: '1px solid rgba(226, 232, 240, 0.8)' 
+            }}>
+                {[
+                    ['1,200+', 'Properties Managed'], 
+                    ['840+', 'Active Tenants'], 
+                    ['98%', 'Successful Mediations'], 
+                    ['RWF 4.5B+', 'Escrow Protected']
+                ].map(([val, lbl], i) => (
+                    <div key={i} style={{ textAlign: 'center', flex: '1 1 200px' }}>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--dark-slate)', letterSpacing: '-0.02em' }}>{val}</div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>{lbl}</div>
                     </div>
                 ))}
             </div>
 
-            <div style={{ position: 'sticky', top: '68px', zIndex: 50, background: '#fff', borderBottom: '1px solid #E2E8F0', padding: '0 5%' }}>
-                <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', gap: '4px', overflowX: 'auto', padding: '14px 0', scrollbarWidth: 'none' }}>
+            {/* Segment control categories */}
+            <div style={{ position: 'sticky', top: '72px', zIndex: 50, background: '#ffffff', borderBottom: '1px solid var(--border)', padding: '0 5%' }}>
+                <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', gap: '8px', overflowX: 'auto', padding: '16px 0', scrollbarWidth: 'none' }}>
                     {FILTERS.map((f, i) => (
-                        <button key={i} onClick={() => setActiveFilter(f)} style={{
-                            padding: '8px 20px', borderRadius: '24px', border: 'none', cursor: 'pointer',
-                            background: activeFilter === f ? '#2563EB' : 'transparent',
-                            color: activeFilter === f ? '#fff' : '#64748B',
-                            fontWeight: 600, fontSize: '0.875rem'
-                        }}>
+                        <button 
+                            key={i} 
+                            onClick={() => setActiveFilter(f)} 
+                            style={{
+                                padding: '8px 20px', 
+                                borderRadius: '20px', 
+                                border: 'none', 
+                                cursor: 'pointer',
+                                background: activeFilter === f ? 'var(--accent)' : 'transparent',
+                                color: activeFilter === f ? '#ffffff' : 'var(--text-secondary)',
+                                fontWeight: 700, 
+                                fontSize: '0.85rem',
+                                transition: 'all 0.2s ease'
+                            }}
+                        >
                             {f}
                         </button>
                     ))}
                 </div>
             </div>
 
-            <section style={{ padding: '40px 5% 80px' }}>
+            {/* Property Grid Section */}
+            <section style={{ padding: '48px 5% 96px' }}>
                 <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
                     {loading ? (
-                        <div style={{ textAlign: 'center', padding: '80px', color: '#94A3B8' }}>Loading portfolio...</div>
+                        <div style={{ textAlign: 'center', padding: '80px', color: 'var(--text-muted)', fontWeight: 600 }}>Syncing rental listings...</div>
                     ) : (
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: '24px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: '32px' }}>
                             {filtered.map(p => (
                                 <PropertyCard key={p.id} p={p} onAction={handleAction} />
                             ))}
@@ -245,13 +342,16 @@ export default function Landing() {
                 </div>
             </section>
 
-            <footer style={{ background: '#1E293B', padding: '60px 5% 40px', color: '#fff' }}>
-                <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '24px' }}>
+            {/* Footer */}
+            <footer style={{ background: 'var(--dark-slate)', padding: '64px 5% 48px', color: '#ffffff', borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '32px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{ width: '30px', height: '30px', background: '#2563EB', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>E</div>
-                        <span style={{ fontWeight: 800 }}>EscrowChain Alliance</span>
+                        <div style={{ width: '32px', height: '32px', background: 'var(--accent)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.1rem' }}>E</div>
+                        <span style={{ fontWeight: 800, fontSize: '1.15rem', letterSpacing: '-0.02em' }}>EscrowChain Alliance</span>
                     </div>
-                    <p style={{ fontSize: '0.85rem', color: '#94A3B8' }}>© 2026 Blockchain-secured rentals in Rwanda. Built for the Decentralized Future.</p>
+                    <p style={{ fontSize: '0.88rem', color: '#94A3B8', margin: 0, fontWeight: 500 }}>
+                        &copy; 2026 Programmatic trust infrastructure. Built for Cardano.
+                    </p>
                 </div>
             </footer>
         </div>
