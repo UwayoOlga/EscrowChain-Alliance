@@ -15,18 +15,33 @@ const STATUS_STYLES = {
 function EvidenceGrid({ paths }) {
     if (!paths || paths.length === 0) return null;
     return (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '14px' }}>
             {paths.map((p, i) => (
-                <a key={i} href={`${BASE_URL}${p}`} target="_blank" rel="noreferrer">
+                <a key={i} href={`${BASE_URL}${p}`} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
                     {p.endsWith('.pdf') ? (
-                        <div style={{ padding: '8px 14px', background: 'var(--bg-secondary)', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 700, color: 'var(--accent)' }}>
-                            📄 PDF {i + 1}
+                        <div style={{ 
+                            padding: '10px 16px', 
+                            background: 'var(--bg-secondary)', 
+                            borderRadius: '8px', 
+                            fontSize: '0.8rem', 
+                            fontWeight: 700, 
+                            color: 'var(--accent)',
+                            border: '1px solid var(--border)'
+                        }}>
+                            📄 Attachment PDF {i + 1}
                         </div>
                     ) : (
                         <img
                             src={`${BASE_URL}${p}`}
                             alt={`Evidence ${i + 1}`}
-                            style={{ width: '72px', height: '72px', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--border)' }}
+                            style={{ 
+                                width: '80px', 
+                                height: '80px', 
+                                objectFit: 'cover', 
+                                borderRadius: '8px', 
+                                border: '1px solid var(--border)',
+                                boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
+                            }}
                         />
                     )}
                 </a>
@@ -152,102 +167,111 @@ export default function Disputes() {
         }
     };
 
-    if (loading) return <div className="page container"><p>Loading Resolution Center...</p></div>;
+    if (loading) return <div className="page container"><p>Loading conflict reports...</p></div>;
 
     return (
-        <div className="page-dashboard fade-in">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '48px' }}>
+        <div className="page container fade-in" style={{ padding: '16px 24px' }}>
+            {/* Header description */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', borderBottom: '1px solid var(--border)', paddingBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
                 <div>
-                    <span className="text-overline">Mediation & Governance</span>
-                    <h1 style={{ fontSize: '2.2rem', fontWeight: 800, marginBottom: '8px' }}>Dispute Resolution Vault</h1>
+                    <span className="text-overline">Mediation</span>
+                    <h1 style={{ fontSize: '2.25rem', fontWeight: 800, color: 'var(--dark-slate)', letterSpacing: '-0.02em', marginBottom: '8px' }}>
+                        Disputes & Arbitration
+                    </h1>
                     <p style={{ color: 'var(--text-secondary)' }}>
-                        Report lease conflicts, upload photographic evidence and freeze escrow funds pending arbitration.
+                        Report rental issues, attach photo evidence, and manage escrow freezes.
                     </p>
                 </div>
                 {!isCreating && (
-                    <button className="btn btn-primary btn-square" onClick={() => setIsCreating(true)}>
-                        Open Case +
+                    <button className="btn btn-primary" style={{ borderRadius: '8px' }} onClick={() => setIsCreating(true)}>
+                        Create New Case
                     </button>
                 )}
             </div>
 
+            {/* Create Case Block */}
             {isCreating && (
-                <div className="card" style={{ padding: '40px', marginBottom: '48px', borderTop: '4px solid var(--accent)' }}>
-                    <h3 style={{ fontWeight: 800, marginBottom: '8px' }}>File a Dispute Case</h3>
-                    <p style={{ color: 'var(--text-secondary)', marginBottom: '32px', fontSize: '0.9rem' }}>
-                        Submitting this form will immediately freeze the lease's escrow balance until the case is resolved.
-                    </p>
+                <div className="dash-card" style={{ marginBottom: '40px' }}>
+                    <div className="dash-card-header">
+                        <h3>Report Rental Conflict</h3>
+                    </div>
+                    <div className="dash-card-body">
+                        <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '0.9rem', lineHeight: '1.5' }}>
+                            Filing a dispute case will temporarily lock all active escrow balances associated with the lease contract until an agreement is reached or arbitrated.
+                        </p>
 
-                    {leases.length === 0 ? (
-                        <div style={{ padding: '32px', background: 'var(--bg-secondary)', borderRadius: '8px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                            You have no active leases eligible for dispute.
-                        </div>
-                    ) : (
-                        <form onSubmit={handleSubmit} className="grid grid-2" style={{ gap: '24px' }}>
-                            <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                                <label>Select Lease Contract</label>
-                                <select className="input" required value={form.leaseId} onChange={e => setForm({ ...form, leaseId: e.target.value })}>
-                                    <option value="" disabled>-- Select Active Lease --</option>
-                                    {leases.map(l => (
-                                        <option key={l.id} value={l.id}>
-                                            CT-{l.id.substring(0, 8).toUpperCase()} · RWF {l.rent_amount}/mo
-                                        </option>
-                                    ))}
-                                </select>
+                        {leases.length === 0 ? (
+                            <div style={{ padding: '32px', background: 'var(--bg-secondary)', borderRadius: '8px', textAlign: 'center', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.9rem' }}>
+                                No active lease agreements are currently eligible for dispute resolution.
                             </div>
+                        ) : (
+                            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                <div className="form-group">
+                                    <label>Select Lease Agreement</label>
+                                    <select className="select" required value={form.leaseId} onChange={e => setForm({ ...form, leaseId: e.target.value })} style={{ borderRadius: '8px' }}>
+                                        <option value="" disabled>-- Select Lease Reference --</option>
+                                        {leases.map(l => (
+                                            <option key={l.id} value={l.id}>
+                                                CT-{l.id.substring(0, 8).toUpperCase()} · RWF {l.rent_amount.toLocaleString()}/month
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
 
-                            <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                                <label>Detailed Reason for Dispute</label>
-                                <textarea
-                                    className="input"
-                                    rows="5"
-                                    required
-                                    placeholder="Describe the conflict clearly (e.g., landlord withheld deposit, property damage not disclosed, unpaid rent)..."
-                                    value={form.reason}
-                                    onChange={e => setForm({ ...form, reason: e.target.value })}
-                                />
-                            </div>
+                                <div className="form-group">
+                                    <label>Describe the Issue</label>
+                                    <textarea
+                                        className="input"
+                                        rows="5"
+                                        required
+                                        placeholder="Provide a detailed explanation of the issue (e.g. key retrieval failed, property maintenance neglected, rent discrepancy)..."
+                                        value={form.reason}
+                                        onChange={e => setForm({ ...form, reason: e.target.value })}
+                                        style={{ borderRadius: '8px', resize: 'vertical' }}
+                                    />
+                                </div>
 
-                            <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                                <label>Evidence Files (Photos or PDF, up to 5 files)</label>
-                                <input
-                                    type="file"
-                                    className="input"
-                                    multiple
-                                    accept="image/*,application/pdf"
-                                    ref={fileInputRef}
-                                    onChange={e => setSelectedFiles(Array.from(e.target.files))}
-                                />
-                                {selectedFiles.length > 0 && (
-                                    <div style={{ fontSize: '0.8rem', color: 'var(--accent)', marginTop: '6px' }}>
-                                        {selectedFiles.length} file(s) selected.
-                                    </div>
-                                )}
-                            </div>
+                                <div className="form-group">
+                                    <label>Evidence Attachments (Images or PDFs)</label>
+                                    <input
+                                        type="file"
+                                        className="input"
+                                        multiple
+                                        accept="image/*,application/pdf"
+                                        ref={fileInputRef}
+                                        onChange={e => setSelectedFiles(Array.from(e.target.files))}
+                                        style={{ padding: '10px', fontSize: '0.85rem', borderRadius: '8px' }}
+                                    />
+                                    {selectedFiles.length > 0 && (
+                                        <div style={{ fontSize: '0.82rem', color: 'var(--accent)', marginTop: '6px', fontWeight: 600 }}>
+                                            {selectedFiles.length} file(s) ready to upload.
+                                        </div>
+                                    )}
+                                </div>
 
-                            <div style={{ gridColumn: 'span 2', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                                <button type="button" className="btn btn-secondary btn-square" onClick={resetForm}>Cancel</button>
-                                <button type="submit" className="btn btn-dark btn-lg btn-square" disabled={submitting}>
-                                    {submitting ? 'Submitting to Arbitration...' : 'Submit Dispute Case'}
-                                </button>
-                            </div>
-                        </form>
-                    )}
+                                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '12px' }}>
+                                    <button type="button" className="btn btn-secondary" style={{ borderRadius: '8px' }} onClick={resetForm}>Cancel</button>
+                                    <button type="submit" className="btn btn-dark" style={{ borderRadius: '8px' }} disabled={submitting}>
+                                        {submitting ? 'Submitting case...' : 'Submit Case'}
+                                    </button>
+                                </div>
+                            </form>
+                        )}
+                    </div>
                 </div>
             )}
 
+            {/* Active disputes lists */}
             <div>
-                <h2 style={{ fontSize: '1.1rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '24px' }}>
-                    Active Cases — {disputes.length}
+                <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '24px' }}>
+                    Active Mediation Cases ({disputes.length})
                 </h2>
 
                 {disputes.length === 0 ? (
-                    <div style={{ padding: '80px 20px', textAlign: 'center', border: '1px dashed var(--border)', borderRadius: '12px' }}>
-                        <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--text-muted)', marginBottom: '16px' }}>
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <p style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>No active dispute cases on the ledger.</p>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>All smart contracts are operating within normal parameters.</p>
+                    <div className="dash-card" style={{ padding: '60px 40px', textAlign: 'center', borderStyle: 'dashed' }}>
+                        <div style={{ fontSize: '2rem', marginBottom: '12px' }}>🛡️</div>
+                        <h3 style={{ fontSize: '1.15rem', marginBottom: '6px', fontWeight: 700 }}>No Disputes Filed</h3>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>All active contracts are running smoothly without active conflicts.</p>
                     </div>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -257,45 +281,47 @@ export default function Disputes() {
                             try { evidence = JSON.parse(d.evidence || '[]'); } catch { evidence = []; }
 
                             return (
-                                <div key={d.id} className="card" style={{ padding: '32px', borderLeft: d.status === 'pending' ? '4px solid var(--accent)' : '4px solid var(--border)' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
-                                        <div style={{ flex: 1 }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                                                <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--dark-slate)' }}>
+                                <div key={d.id} className="dash-card" style={{ borderLeft: d.status === 'pending' ? '4px solid var(--accent)' : '4px solid var(--border)' }}>
+                                    <div className="dash-card-body" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px' }}>
+                                        <div style={{ flex: 1, minWidth: '240px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                                                <span className="mono" style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--dark-slate)' }}>
                                                     CASE-{d.id.substring(0, 8).toUpperCase()}
                                                 </span>
-                                                <span className={`badge ${statusStyle.badge}`}>{statusStyle.label}</span>
+                                                <span className={`badge ${statusStyle.badge}`} style={{ fontWeight: 700 }}>{statusStyle.label}</span>
                                             </div>
-                                            <div style={{ fontWeight: 700, marginBottom: '4px' }}>
+                                            <div style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--dark-slate)', marginBottom: '4px' }}>
                                                 {d.property_title || d.property_address}
                                             </div>
-                                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
-                                                Raised by <strong>{d.raised_by_name}</strong> · {new Date(d.created_at).toLocaleDateString('en-RW', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '14px', fontWeight: 500 }}>
+                                                Filed by <strong>{d.raised_by_name}</strong> on {new Date(d.created_at).toLocaleDateString()}
                                             </div>
-                                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.7, maxWidth: '600px' }}>
+                                            <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', lineHeight: '1.6', maxWidth: '640px', margin: 0 }}>
                                                 {d.reason}
                                             </p>
                                             <EvidenceGrid paths={evidence} />
                                         </div>
 
-                                        {/* ── Landlord Resolution Actions ── */}
+                                        {/* Landlord Action controls */}
                                         {isLandlord && d.status === 'pending' && (
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '180px' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '180px', flexShrink: 0 }}>
                                                 <button
-                                                    className="btn btn-dark btn-sm btn-square"
+                                                    className="btn btn-dark btn-sm"
+                                                    style={{ borderRadius: '6px' }}
                                                     onClick={() => handleStatusUpdate(d.id, 'arbitration')}
                                                 >
                                                     Escalate to Arbitration
                                                 </button>
                                                 <button
-                                                    className="btn btn-secondary btn-sm btn-square"
+                                                    className="btn btn-secondary btn-sm"
+                                                    style={{ borderRadius: '6px' }}
                                                     onClick={() => handleStatusUpdate(d.id, 'resolved')}
                                                 >
                                                     Mark as Resolved
                                                 </button>
                                                 <button
-                                                    className="btn btn-danger btn-sm btn-square"
-                                                    style={{ background: 'transparent', color: 'var(--danger)', border: '1px solid var(--danger)' }}
+                                                    className="btn btn-danger btn-sm"
+                                                    style={{ background: 'transparent', color: 'var(--danger)', border: '1px solid var(--danger)', borderRadius: '6px' }}
                                                     onClick={() => handleStatusUpdate(d.id, 'dismissed')}
                                                 >
                                                     Dismiss Case
@@ -303,18 +329,20 @@ export default function Disputes() {
                                             </div>
                                         )}
 
-                                        {/* ── Arbitrator Resolution Actions ── */}
+                                        {/* Arbitrator Actions */}
                                         {isArbitrator && (d.status === 'pending' || d.status === 'arbitration') && (
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '180px' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '180px', flexShrink: 0 }}>
                                                 <button
-                                                    className="btn btn-dark btn-sm btn-square"
+                                                    className="btn btn-dark btn-sm"
+                                                    style={{ borderRadius: '6px' }}
                                                     onClick={() => handleArbitratorResolve(d, true)}
                                                     disabled={resolvingId === d.id}
                                                 >
                                                     {resolvingId === d.id ? 'Processing...' : 'Favor Tenant (Refund)'}
                                                 </button>
                                                 <button
-                                                    className="btn btn-secondary btn-sm btn-square"
+                                                    className="btn btn-secondary btn-sm"
+                                                    style={{ borderRadius: '6px' }}
                                                     onClick={() => handleArbitratorResolve(d, false)}
                                                     disabled={resolvingId === d.id}
                                                 >
@@ -324,13 +352,13 @@ export default function Disputes() {
                                         )}
 
                                         {!isLandlord && !isArbitrator && d.status === 'pending' && (
-                                            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic', alignSelf: 'center' }}>
-                                                Awaiting landlord review
+                                            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic', alignSelf: 'center', fontWeight: 600 }}>
+                                                Awaiting review by landlord
                                             </div>
                                         )}
                                         {!isLandlord && !isArbitrator && d.status === 'arbitration' && (
-                                            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic', alignSelf: 'center' }}>
-                                                Under review by Legal Arbitration
+                                            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontStyle: 'italic', alignSelf: 'center', fontWeight: 600 }}>
+                                                Under legal arbitration review
                                             </div>
                                         )}
                                     </div>
