@@ -110,7 +110,7 @@ export default function Payments() {
         }
     };
 
-    if (loading) return <div className="page container"><p>Loading Financial Ledger & Mesh SDK context...</p></div>;
+    if (loading) return <div className="page container"><p>Syncing financial ledgers...</p></div>;
 
     const isLandlord = user?.role?.toLowerCase() === 'landlord';
 
@@ -123,58 +123,74 @@ export default function Payments() {
         .reduce((sum, t) => sum + t.amount, 0);
 
     return (
-        <div className="page container fade-in" style={{ maxWidth: '1000px' }}>
-            <div className="page-header text-center" style={{ marginBottom: '64px' }}>
-                <span className="text-overline">Financial Governance</span>
-                <h1 style={{ fontSize: '2.5rem', marginBottom: '12px' }}>Asset Transaction Ledger</h1>
-                <p style={{ maxWidth: '600px', margin: '0 auto', color: 'var(--text-secondary)' }}>
+        <div className="page container fade-in" style={{ maxWidth: '1000px', padding: '16px 24px' }}>
+            {/* Header Intro */}
+            <div style={{ marginBottom: '40px', borderBottom: '1px solid var(--border)', paddingBottom: '24px' }}>
+                <span className="text-overline">Payments</span>
+                <h1 style={{ fontSize: '2.25rem', fontWeight: 800, color: 'var(--dark-slate)', letterSpacing: '-0.02em', marginBottom: '8px' }}>
+                    Rent Payments & Ledger
+                </h1>
+                <p style={{ color: 'var(--text-secondary)' }}>
                     {isLandlord
-                        ? 'Track automated escrow distributions and rental income across your property portfolio.'
-                        : 'Submit your rental obligations via smart contract and review historical payment logs.'}
+                        ? 'Track rent payments, active deposits, and escrow logs across your property portfolio.'
+                        : 'Submit lease payments to smart contract escrows and review your historical ledger.'}
                 </p>
             </div>
 
+            {/* DeFi metrics section */}
             <div className="grid grid-3" style={{ marginBottom: '48px' }}>
-                <div className="card metric-card" style={{ borderTop: '4px solid var(--success)' }}>
-                    <span className="metric-label">{isLandlord ? 'Total Realized Yield' : 'Total Cumulative Payments'}</span>
+                <div className="metric-card metric-card--success">
+                    <span className="metric-label">
+                        💰 {isLandlord ? 'Total Revenue' : 'Total Paid'}
+                    </span>
                     <div className="metric-value">RWF {totalVolume.toLocaleString()}</div>
-                    <div className="metric-sub">Verified On-Chain Transfers</div>
+                    <div className="metric-sub">Verified on-chain transfers</div>
                 </div>
-                <div className="card metric-card" style={{ borderTop: '4px solid var(--warning)' }}>
-                    <span className="metric-label">{isLandlord ? 'Funds in Transit' : 'In Escrow (Pre-Lock)'}</span>
+                <div className="metric-card metric-card--warning">
+                    <span className="metric-label">
+                        ⏳ Funds in Escrow
+                    </span>
                     <div className="metric-value">RWF {pendingEscrow.toLocaleString()}</div>
-                    <div className="metric-sub">Held within Smart Contract</div>
+                    <div className="metric-sub">Held securely in smart contract</div>
                 </div>
-                <div className="card metric-card" style={{ borderTop: '4px solid var(--dark-slate)' }}>
-                    <span className="metric-label">Total Smart Events</span>
+                <div className="metric-card">
+                    <span className="metric-label">
+                        📝 Ledger Events
+                    </span>
                     <div className="metric-value">{transactions.length}</div>
-                    <div className="metric-sub">Local Escrow Reference</div>
+                    <div className="metric-sub">Total verified contract audits</div>
                 </div>
             </div>
 
             {/* TENANT RENT PAYMENT PORTAL */}
             {!isLandlord && activeLeases.length > 0 && (
                 <div style={{ marginBottom: '48px' }}>
-                    <h2 style={{ fontSize: '1.25rem', marginBottom: '24px', fontWeight: 700 }}>Upcoming Rent Remittances</h2>
-                    <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' }}>
+                    <h2 style={{ fontSize: '1.25rem', marginBottom: '24px', fontWeight: 700, color: 'var(--dark-slate)' }}>Upcoming Rental Obligations</h2>
+                    <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px' }}>
                         {activeLeases.map(lease => (
-                            <div key={lease.id} className="card" style={{ padding: '32px', display: 'flex', flexDirection: 'column', borderTop: '4px solid var(--accent)' }}>
-                                <div style={{ marginBottom: '24px' }}>
-                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Active Contract</div>
-                                    <div style={{ fontWeight: 600, fontSize: '1.1rem' }}>CT-{lease.id.substring(0, 8).toUpperCase()}</div>
+                            <div key={lease.id} className="dash-card" style={{ borderTop: '4px solid var(--accent)' }}>
+                                <div className="dash-card-body" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                    <div>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Active Contract</div>
+                                        <div className="mono" style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--dark-slate)' }}>
+                                            CT-{lease.id.substring(0, 8).toUpperCase()}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Standard Rental Due</div>
+                                        <div style={{ fontWeight: 800, fontSize: '1.85rem', color: 'var(--dark-slate)', letterSpacing: '-0.02em' }}>
+                                            RWF {lease.rent_amount.toLocaleString()}
+                                        </div>
+                                    </div>
+                                    <button
+                                        className="btn btn-dark"
+                                        style={{ width: '100%', borderRadius: '8px', padding: '12px' }}
+                                        disabled={processing}
+                                        onClick={() => handlePayRent(lease)}
+                                    >
+                                        {processing ? 'Signing ledger transfer...' : 'Pay Rent Now'}
+                                    </button>
                                 </div>
-                                <div style={{ flex: 1, marginBottom: '32px' }}>
-                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Standard Rental Due</div>
-                                    <div style={{ fontWeight: 800, fontSize: '2rem', color: 'var(--dark-slate)' }}>RWF {lease.rent_amount}</div>
-                                </div>
-                                <button
-                                    className="btn btn-dark btn-square"
-                                    style={{ width: '100%', padding: '16px' }}
-                                    disabled={processing}
-                                    onClick={() => handlePayRent(lease)}
-                                >
-                                    {processing ? 'Signing Transaction...' : 'Pay Current Rent'}
-                                </button>
                             </div>
                         ))}
                     </div>
@@ -182,13 +198,14 @@ export default function Payments() {
             )}
 
             {/* FULL TRANSACTION LEDGER */}
-            <h2 style={{ fontSize: '1.25rem', marginBottom: '24px', fontWeight: 700 }}>Transaction History</h2>
+            <h2 style={{ fontSize: '1.25rem', marginBottom: '24px', fontWeight: 700, color: 'var(--dark-slate)' }}>Transaction History</h2>
             {transactions.length === 0 ? (
-                <div className="card" style={{ padding: '60px', textAlign: 'center', border: '1px dashed var(--border)' }}>
-                    <p style={{ color: 'var(--text-secondary)' }}>No financial ledger events recorded for this address yet.</p>
+                <div className="dash-card" style={{ padding: '60px 40px', textAlign: 'center', borderStyle: 'dashed' }}>
+                    <div style={{ fontSize: '2rem', marginBottom: '12px' }}>📊</div>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem' }}>No payment logs recorded on the ledger yet.</p>
                 </div>
             ) : (
-                <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+                <div className="dash-card" style={{ padding: 0 }}>
                     <div className="table-wrap">
                         <table style={{ border: 'none' }}>
                             <thead>
@@ -197,25 +214,27 @@ export default function Payments() {
                                     <th>Asset Source</th>
                                     <th>Action Type</th>
                                     <th>Amount (RWF)</th>
-                                    <th>Network Status</th>
+                                    <th>Status</th>
                                     <th>Audit Trace</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {transactions.map(t => (
                                     <tr key={t.id}>
-                                        <td style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                                        <td style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
                                             {new Date(t.created_at).toLocaleDateString()}
                                         </td>
                                         <td>
-                                            <div style={{ fontWeight: 600 }}>{t.property_address || 'Property Deleted'}</div>
-                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Lease Ref: {t.lease_id?.substring(0, 8).toUpperCase()}</div>
+                                            <div style={{ fontWeight: 700, color: 'var(--dark-slate)', fontSize: '0.92rem' }}>{t.property_address || 'Property Listing'}</div>
+                                            <div className="mono" style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                                                Lease Ref: {t.lease_id?.substring(0, 8).toUpperCase() || 'N/A'}
+                                            </div>
                                         </td>
-                                        <td>
-                                            <span style={{ fontWeight: 500 }}>{t.action}</span>
+                                        <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                                            {t.action}
                                         </td>
-                                        <td style={{ fontWeight: 700, color: t.action === 'CollectRent' ? 'var(--success)' : 'var(--text-primary)' }}>
-                                            {t.action === 'CollectRent' ? '+' : ''}RWF {t.amount}
+                                        <td style={{ fontWeight: 800, color: t.action === 'CollectRent' ? 'var(--success)' : 'var(--text-primary)' }}>
+                                            {t.action === 'CollectRent' ? '+' : ''}RWF {t.amount.toLocaleString()}
                                         </td>
                                         <td>
                                             <span className={`badge ${t.status === 'confirmed' ? 'badge-success' : 'badge-warning'}`}>
@@ -224,11 +243,11 @@ export default function Payments() {
                                         </td>
                                         <td>
                                             {t.tx_hash ? (
-                                                <a href={`https://preprod.cardanoscan.io/transaction/${t.tx_hash}`} target="_blank" rel="noreferrer" className="link-arrow dark" style={{ fontSize: '0.8rem' }}>
+                                                <a href={`https://preprod.cardanoscan.io/transaction/${t.tx_hash}`} target="_blank" rel="noreferrer" className="link-arrow dark" style={{ fontSize: '0.8rem', fontWeight: 700 }}>
                                                     Explorer &rarr;
                                                 </a>
                                             ) : (
-                                                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Local Cache</span>
+                                                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 500 }}>Local Cache</span>
                                             )}
                                         </td>
                                     </tr>
