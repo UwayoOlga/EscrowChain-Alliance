@@ -11,7 +11,7 @@
     position: sticky;
     top: 0;
     z-index: 90;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    box-shadow: none;
 }
 
 .topbar-search {
@@ -29,7 +29,7 @@
 .topbar-search:focus-within {
     background: #ffffff;
     border-color: var(--accent);
-    box-shadow: 0 0 0 4px var(--accent-glow);
+    box-shadow: none;
     width: 420px;
 }
 
@@ -138,7 +138,7 @@
     font-weight: 700;
     border-radius: 50%;
     font-size: 0.95rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    box-shadow: none;
     border: 2px solid #ffffff;
 }
 
@@ -156,14 +156,14 @@
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
     text-transform: uppercase !important;
     letter-spacing: 0.5px !important;
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+    box-shadow: none;
 }
 
 .topbar-actions [class*="mesh-inline-flex"]:hover,
 .topbar-actions button:hover {
     background-color: #1e293b !important;
     transform: translateY(-1px) !important;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+    box-shadow: none;
 }
 
 /* Dropdown Container Positioners */
@@ -196,7 +196,7 @@
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(226, 232, 240, 0.8);
     border-radius: 16px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    box-shadow: none;
     z-index: 100;
     overflow: hidden;
     animation: dropdownSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);

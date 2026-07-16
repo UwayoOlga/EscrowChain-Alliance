@@ -58,7 +58,7 @@ export default function PublicPropertyDetails() {
 
     if (error || !property) return (
         <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F8FAFC' }}>
-            <div style={{ textAlign: 'center', maxWidth: '400px', padding: '40px', background: '#fff', borderRadius: '16px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+            <div style={{ textAlign: 'center', maxWidth: '400px', padding: '40px', background: '#fff', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
                 <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🏘️</div>
                 <h2 style={{ fontWeight: 800, color: '#1E293B', marginBottom: '8px' }}>Asset not found</h2>
                 <p style={{ color: '#64748B', marginBottom: '24px' }}>The property you are looking for might have been unlisted or moved.</p>
@@ -84,11 +84,11 @@ export default function PublicPropertyDetails() {
             }}>
                 <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
                     <div style={{ width: '32px', height: '32px', background: '#2563EB', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800 }}>E</div>
-                    <span style={{ fontWeight: 800, fontSize: '1.1rem', color: scrolled ? '#1E293B' : '#fff', textShadow: scrolled ? 'none' : '0 2px 4px rgba(0,0,0,0.2)' }}>EscrowChain</span>
+                    <span style={{ fontWeight: 800, fontSize: '1.1rem', color: scrolled ? '#1E293B' : '#fff' }}>EscrowChain</span>
                 </Link>
                 <div style={{ display: 'flex', gap: '12px' }}>
                     <Link to="/login" style={{ background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(8px)', color: scrolled ? '#1E293B' : '#fff', textDecoration: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 700, fontSize: '0.9rem', border: scrolled ? '1px solid #E2E8F0' : '1px solid rgba(255,255,255,0.3)' }}>Sign in</Link>
-                    <Link to="/register" style={{ background: '#2563EB', color: '#fff', textDecoration: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 700, fontSize: '0.9rem', boxShadow: '0 4px 12px rgba(37,99,235,0.3)' }}>Get Started</Link>
+                    <Link to="/register" style={{ background: '#2563EB', color: '#fff', textDecoration: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 700, fontSize: '0.9rem' }}>Get Started</Link>
                 </div>
             </header>
 
@@ -195,7 +195,7 @@ export default function PublicPropertyDetails() {
                         <div style={{
                             position: 'sticky', top: '100px',
                             background: '#fff', border: '1px solid #E2E8F0', borderRadius: '16px', padding: '32px',
-                            boxShadow: '0 12px 32px rgba(0,0,0,0.08)'
+                            boxShadow: 'none'
                         }}>
                             <div style={{ marginBottom: '24px' }}>
                                 <span style={{ fontSize: '1.6rem', fontWeight: 800, color: '#1E293B' }}>RWF {Number(property.rent_amount).toLocaleString()}</span>
@@ -218,7 +218,7 @@ export default function PublicPropertyDetails() {
                                 style={{
                                     width: '100%', background: '#2563EB', color: '#fff', border: 'none',
                                     padding: '16px', borderRadius: '12px', fontWeight: 800, fontSize: '1rem',
-                                    cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(37,99,235,0.3)',
+                                    cursor: 'pointer', transition: 'all 0.2s',
                                     marginBottom: '16px'
                                 }}
                                 className="hover-lift"
@@ -235,7 +235,7 @@ export default function PublicPropertyDetails() {
                         background: '#fff', borderTop: '1px solid #E2E8F0',
                         padding: '16px 20px 32px', zIndex: 200,
                         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                        boxShadow: '0 -4px 16px rgba(0,0,0,0.06)'
+                        boxShadow: 'none'
                     }}>
                         <div>
                             <div style={{ fontWeight: 800, fontSize: '1.2rem' }}>RWF {Number(property.rent_amount).toLocaleString()}</div>

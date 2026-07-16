@@ -40,7 +40,7 @@ function EvidenceGrid({ paths }) {
                                 objectFit: 'cover', 
                                 borderRadius: '8px', 
                                 border: '1px solid var(--border)',
-                                boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
+                                boxShadow: 'none'
                             }}
                         />
                     )}

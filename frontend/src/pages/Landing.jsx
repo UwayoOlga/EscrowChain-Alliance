@@ -22,7 +22,7 @@ function PropertyCard({ p, onAction }) {
                 display: 'flex',
                 flexDirection: 'column',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.01)'
+                boxShadow: 'none'
             }}
             onClick={() => onAction(p)}
         >
@@ -55,7 +55,7 @@ function PropertyCard({ p, onAction }) {
                     border: '1px solid rgba(191, 219, 254, 0.8)',
                     color: 'var(--accent)', padding: '5px 12px', borderRadius: '6px',
                     fontSize: '0.7rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+                    boxShadow: 'none'
                 }}>
                     <span className="pulse-dot" style={{ margin: 0 }}></span>
                     Escrow Protected
@@ -159,7 +159,7 @@ export default function Landing() {
                 padding: isMobile ? '0 16px' : '0 5%', height: '72px',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 transition: 'all 0.3s ease',
-                boxShadow: scrolled ? '0 4px 20px rgba(0, 0, 0, 0.05)' : 'none'
+                boxShadow: 'none'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{ width: '36px', height: '36px', background: 'var(--accent)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#fff', fontSize: '1.2rem' }}>E</div>
@@ -281,7 +281,7 @@ export default function Landing() {
                 zIndex: 10, 
                 background: '#ffffff', 
                 borderRadius: '12px', 
-                boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05)', 
+                boxShadow: 'none',
                 display: 'flex', 
                 gap: '24px', 
                 justifyContent: 'space-around', 

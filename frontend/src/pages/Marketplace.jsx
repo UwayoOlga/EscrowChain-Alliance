@@ -50,17 +50,15 @@ export default function Marketplace() {
                                     backgroundColor: 'white',
                                     borderRadius: '16px',
                                     overflow: 'hidden',
-                                    boxShadow: '0 12px 32px rgba(0,0,0,0.06)',
-                                    transition: 'transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s',
+                                    transition: 'transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1)',
                                     border: '1px solid var(--border)'
                                 }}
                                     onMouseEnter={(e) => {
                                         e.currentTarget.style.transform = 'translateY(-6px)';
-                                        e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.12)';
                                     }}
                                     onMouseLeave={(e) => {
                                         e.currentTarget.style.transform = 'translateY(0)';
-                                        e.currentTarget.style.boxShadow = '0 12px 32px rgba(0,0,0,0.06)';
+                                        e.currentTarget.style.boxShadow = 'none';
                                     }}
                                 >
                                     <div style={{ width: '100%', height: '240px', backgroundColor: 'var(--bg-secondary)', position: 'relative' }}>

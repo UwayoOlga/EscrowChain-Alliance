@@ -202,7 +202,7 @@ export default function Messages() {
                                                     borderRadius: isMine ? '16px 16px 2px 16px' : '16px 16px 16px 2px',
                                                     background: isMine ? 'linear-gradient(135deg, var(--accent) 0%, #3B82F6 100%)' : '#fff',
                                                     color: isMine ? '#fff' : 'var(--text-primary)',
-                                                    boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+                                                    boxShadow: 'none',
                                                     fontSize: '0.92rem',
                                                     lineHeight: 1.5,
                                                     border: isMine ? 'none' : '1px solid rgba(226, 232, 240, 0.8)',

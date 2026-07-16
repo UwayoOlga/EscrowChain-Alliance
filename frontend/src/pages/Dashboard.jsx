@@ -172,7 +172,7 @@ export default function Dashboard() {
                                                 borderRadius: '6px 6px 0 0', 
                                                 position: 'relative', 
                                                 transition: 'height 0.6s ease',
-                                                boxShadow: i === 5 ? '0 4px 12px rgba(37, 99, 235, 0.2)' : 'none'
+                                                boxShadow: 'none'
                                             }} />
                                             <div style={{ marginTop: '8px', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
                                                 {['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN'][i]}

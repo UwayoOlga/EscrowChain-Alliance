@@ -46,8 +46,8 @@
   --radius-sm: 3px;
   --radius-lg: 8px;
 
-  --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 4px 12px -2px rgba(0, 0, 0, 0.08);
+  --shadow: none;
+  --shadow-lg: none;
 
   --transition: 0.15s ease-in-out;
 
@@ -129,17 +129,17 @@ a:hover {
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: none;
 }
 
 .btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
 }
 
 .btn:active {
   transform: translateY(0);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: none;
 }
 
 .btn-primary {
@@ -199,7 +199,7 @@ a:hover {
 .input:focus,
 .select:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-glow);
+  box-shadow: none;
   transform: translateY(-1px);
 }
 
@@ -225,12 +225,12 @@ a:hover {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 24px;
-  box-shadow: var(--shadow);
+  box-shadow: none;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card:hover {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+  box-shadow: none;
   border-color: var(--border-hover);
 }
 
@@ -240,7 +240,7 @@ a:hover {
 
 .hover-lift:hover {
   transform: translateY(-8px);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: none;
 }
 
 .glass {
@@ -250,7 +250,7 @@ a:hover {
 }
 
 .shadow-premium {
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
 }
 
 /* Badges */
@@ -539,7 +539,7 @@ tr:hover td {
 
 .card-minimal:hover {
   transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
+  box-shadow: none;
 }
 
 .card-minimal h3 {
@@ -742,7 +742,7 @@ tr:hover td {
   flex-direction: column;
   gap: 10px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01);
+  box-shadow: none;
 }
 
 .metric-card::before {
@@ -759,7 +759,7 @@ tr:hover td {
 
 .metric-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+  box-shadow: none;
   border-color: rgba(37, 99, 235, 0.2);
   background: rgba(255, 255, 255, 0.95);
 }
@@ -812,13 +812,13 @@ tr:hover td {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 12px;
-  box-shadow: var(--shadow);
+  box-shadow: none;
   transition: all 0.3s ease;
   overflow: hidden;
 }
 
 .dash-card:hover {
-  box-shadow: var(--shadow-lg);
+  box-shadow: none;
   border-color: var(--border-hover);
 }
 
@@ -1160,7 +1160,7 @@ small,
 }
 
 .card-minimal:hover {
-  box-shadow: var(--shadow-lg);
+  box-shadow: none;
 }
 
 /* Form labels — consistent weight */
