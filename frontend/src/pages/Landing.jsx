@@ -72,9 +72,9 @@ function PropertyCard({ p, onAction }) {
                     </p>
                     
                     <div style={{ display: 'flex', gap: '16px', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '18px', fontWeight: 600 }}>
-                        {p.bedrooms > 0 && <span>🛏️ {p.bedrooms} Beds</span>}
-                        {p.bathrooms > 0 && <span>🚿 {p.bathrooms} Baths</span>}
-                        {p.size && <span>📐 {p.size}</span>}
+                        {p.bedrooms > 0 && <span>{p.bedrooms} Bed</span>}
+                        {p.bathrooms > 0 && <span>{p.bathrooms} Bath</span>}
+                        {p.size && <span>{p.size}</span>}
                     </div>
                 </div>
 

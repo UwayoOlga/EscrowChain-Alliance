@@ -269,7 +269,9 @@ export default function Disputes() {
 
                 {disputes.length === 0 ? (
                     <div className="dash-card" style={{ padding: '60px 40px', textAlign: 'center', borderStyle: 'dashed' }}>
-                        <div style={{ fontSize: '2rem', marginBottom: '12px' }}>🛡️</div>
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '12px' }}>
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
+                        </svg>
                         <h3 style={{ fontSize: '1.15rem', marginBottom: '6px', fontWeight: 700 }}>No Disputes Filed</h3>
                         <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>All active contracts are running smoothly without active conflicts.</p>
                     </div>

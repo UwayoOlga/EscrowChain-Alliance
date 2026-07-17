@@ -141,21 +141,21 @@ export default function Payments() {
             <div className="grid grid-3" style={{ marginBottom: '48px' }}>
                 <div className="metric-card metric-card--success">
                     <span className="metric-label">
-                        💰 {isLandlord ? 'Total Revenue' : 'Total Paid'}
+                        {isLandlord ? 'Total Revenue' : 'Total Paid'}
                     </span>
                     <div className="metric-value">RWF {totalVolume.toLocaleString()}</div>
                     <div className="metric-sub">Verified on-chain transfers</div>
                 </div>
                 <div className="metric-card metric-card--warning">
                     <span className="metric-label">
-                        ⏳ Funds in Escrow
+                        Funds in Escrow
                     </span>
                     <div className="metric-value">RWF {pendingEscrow.toLocaleString()}</div>
                     <div className="metric-sub">Held securely in smart contract</div>
                 </div>
                 <div className="metric-card">
                     <span className="metric-label">
-                        📝 Ledger Events
+                        Ledger Events
                     </span>
                     <div className="metric-value">{transactions.length}</div>
                     <div className="metric-sub">Total verified contract audits</div>
@@ -201,7 +201,9 @@ export default function Payments() {
             <h2 style={{ fontSize: '1.25rem', marginBottom: '24px', fontWeight: 700, color: 'var(--dark-slate)' }}>Transaction History</h2>
             {transactions.length === 0 ? (
                 <div className="dash-card" style={{ padding: '60px 40px', textAlign: 'center', borderStyle: 'dashed' }}>
-                    <div style={{ fontSize: '2rem', marginBottom: '12px' }}>📊</div>
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '12px' }}>
+                        <path d="M9 17H5a2 2 0 01-2-2V5a2 2 0 012-2h14a2 2 0 012 2v5m-9 7v3m0-3h6m-6 0H9" />
+                    </svg>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem' }}>No payment logs recorded on the ledger yet.</p>
                 </div>
             ) : (

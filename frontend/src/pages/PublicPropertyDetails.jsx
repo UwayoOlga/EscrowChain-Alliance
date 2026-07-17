@@ -59,7 +59,9 @@ export default function PublicPropertyDetails() {
     if (error || !property) return (
         <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F8FAFC' }}>
             <div style={{ textAlign: 'center', maxWidth: '400px', padding: '40px', background: '#fff', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
-                <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🏘️</div>
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '16px' }}>
+                    <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z M9 22V12h6v10" />
+                </svg>
                 <h2 style={{ fontWeight: 800, color: '#1E293B', marginBottom: '8px' }}>Asset not found</h2>
                 <p style={{ color: '#64748B', marginBottom: '24px' }}>The property you are looking for might have been unlisted or moved.</p>
                 <Link to="/" style={{ background: '#2563EB', color: '#fff', textDecoration: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: 700 }}>Back to Marketplace</Link>
@@ -180,7 +182,9 @@ export default function PublicPropertyDetails() {
 
                     <section style={{ padding: '32px', background: '#F8FAFC', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
                         <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                            <div style={{ fontSize: '2rem' }}>🛡️</div>
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
+                            </svg>
                             <div>
                                 <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '6px' }}>Escrow Protection Enabled</h3>
                                 <p style={{ fontSize: '0.9rem', color: '#64748B', lineHeight: 1.6 }}>Your security deposit for this property will be guarded by a Cardano Smart Contract. Funds are only released when the lease ends or both parties agree.</p>
