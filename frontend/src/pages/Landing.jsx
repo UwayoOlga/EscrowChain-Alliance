@@ -213,23 +213,7 @@ export default function Landing() {
             }}>
                 <div style={{ maxWidth: '1200px', margin: '0 auto', padding: isMobile ? '60px 20px' : '80px 5% 60px', width: '100%', textAlign: isMobile ? 'center' : 'left' }}>
                     <div style={{ maxWidth: isMobile ? '100%' : '680px', margin: isMobile ? '0 auto' : '0' }}>
-                        <div style={{ 
-                            display: 'inline-flex', 
-                            alignItems: 'center', 
-                            gap: '8px', 
-                            background: 'rgba(37, 99, 235, 0.15)', 
-                            border: '1px solid rgba(59, 130, 246, 0.3)', 
-                            borderRadius: '30px', 
-                            padding: '6px 14px', 
-                            marginBottom: '24px', 
-                            fontSize: '0.75rem', 
-                            fontWeight: 700, 
-                            color: '#60A5FA',
-                            letterSpacing: '0.04em'
-                        }}>
-                            <span className="pulse-dot" style={{ margin: 0 }}></span>
-                            VERIFIED ESCROW LEDGERS · RWANDA
-                        </div>
+
                         
                         <h1 style={{ 
                             fontSize: isMobile ? '2.25rem' : 'clamp(2.5rem, 6vw, 3.75rem)', 
