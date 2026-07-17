@@ -2,6 +2,19 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api, BASE_URL } from '../api';
 
+const Icon = ({ d, size = 16, color = 'currentColor', strokeWidth = 1.75 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round">
+        <path d={d} />
+    </svg>
+);
+
+const ICONS = {
+    home: 'M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z',
+    bed: 'M3 7v11m0-7h18m0 0v7m0-7a2 2 0 00-2-2H9a2 2 0 00-2 2',
+    bath: 'M4 12h16M4 12a2 2 0 01-2-2V8a2 2 0 012-2h16a2 2 0 012 2v2a2 2 0 01-2 2M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7',
+    shield: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10',
+};
+
 export default function Marketplace() {
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -9,7 +22,6 @@ export default function Marketplace() {
     useEffect(() => {
         api.getProperties()
             .then(data => {
-                // Filter to only show properties that are strictly available
                 const available = (Array.isArray(data) ? data : []).filter(p => p.status === 'available');
                 setProperties(available);
             })
@@ -17,27 +29,25 @@ export default function Marketplace() {
             .finally(() => setLoading(false));
     }, []);
 
-    if (loading) return <div className="page container fade-in"><p>Loading Global Asset Market...</p></div>;
+    if (loading) return <div className="page container fade-in"><p>Syncing Cardano ledger assets...</p></div>;
 
     return (
         <div className="page container fade-in" style={{ padding: '0 40px' }}>
             <div style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '1px solid var(--border)', paddingBottom: '24px' }}>
                 <div>
-                    <span className="text-overline" style={{ color: 'var(--accent)', fontWeight: 800 }}>Global Marketplace</span>
-                    <h1 style={{ fontSize: '2.5rem', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '8px' }}>Properties for Rent</h1>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem' }}>
-                        Discover verified EscrowChain assets and lock in your next home on the blockchain.
+                    <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--accent)', fontWeight: 800 }}>On-Chain Registry</span>
+                    <h1 style={{ fontSize: '2.2rem', fontWeight: 800, letterSpacing: '-0.03em', marginTop: '6px', marginBottom: '8px' }}>Available Assets</h1>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.98rem' }}>
+                        Browse verified properties backed by programmatic Cardano multi-sig escrow contracts.
                     </p>
                 </div>
             </div>
 
             {properties.length === 0 ? (
-                <div style={{ padding: '100px 20px', textAlign: 'center', backgroundColor: 'var(--bg-secondary)', borderRadius: '16px' }}>
-                    <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--text-muted)', marginBottom: '16px' }}>
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-                    </svg>
-                    <h3 style={{ fontSize: '1.5rem', fontWeight: 800 }}>No Available Assets</h3>
-                    <p style={{ color: 'var(--text-secondary)' }}>Check back soon as landlords register more properties onto the chain.</p>
+                <div style={{ padding: '80px 20px', textAlign: 'center', backgroundColor: '#fff', border: '1px dashed var(--border)', borderRadius: '6px' }}>
+                    <Icon d={ICONS.home} size={40} color="var(--text-muted)" />
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginTop: '16px', marginBottom: '8px' }}>No Listed Assets</h3>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Check back soon as landlords register more properties onto the protocol.</p>
                 </div>
             ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '32px' }}>
@@ -48,53 +58,63 @@ export default function Marketplace() {
                             <Link to={`/properties/${p.id}`} key={p.id} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
                                 <div style={{
                                     backgroundColor: 'white',
-                                    borderRadius: '16px',
+                                    borderRadius: '6px',
                                     overflow: 'hidden',
-                                    transition: 'transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                                    transition: 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
                                     border: '1px solid var(--border)'
                                 }}
                                     onMouseEnter={(e) => {
-                                        e.currentTarget.style.transform = 'translateY(-6px)';
+                                        e.currentTarget.style.transform = 'translateY(-4px)';
                                     }}
                                     onMouseLeave={(e) => {
                                         e.currentTarget.style.transform = 'translateY(0)';
-                                        e.currentTarget.style.boxShadow = 'none';
                                     }}
                                 >
-                                    <div style={{ width: '100%', height: '240px', backgroundColor: 'var(--bg-secondary)', position: 'relative' }}>
+                                    <div style={{ width: '100%', height: '220px', backgroundColor: 'var(--bg-secondary)', position: 'relative' }}>
                                         {coverImage ? (
                                             <img src={coverImage} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                         ) : (
-                                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
-                                                No Physical Image Uploaded
+                                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                                                No Physical Media Available
                                             </div>
                                         )}
-                                        <div style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(4px)', color: 'white', padding: '6px 12px', borderRadius: '32px', fontSize: '0.75rem', fontWeight: 800, letterSpacing: '1px' }}>
-                                            AVAILABLE
+                                        <div style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(30, 41, 59, 0.95)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: '4px 10px', borderRadius: '4px', fontSize: '0.68rem', fontWeight: 800, letterSpacing: '0.06em' }}>
+                                            VERIFIED
                                         </div>
                                     </div>
-                                    <div style={{ padding: '24px' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                                            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '75%' }}>
+                                    <div style={{ padding: '20px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
+                                            <h3 style={{ fontSize: '1.15rem', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '75%', color: 'var(--dark-slate)' }}>
                                                 {p.title || 'Untitled Asset'}
                                             </h3>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.85rem', fontWeight: 800 }}>
-                                                <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
-                                                NEW
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem', fontWeight: 800, color: 'var(--success)' }}>
+                                                <span className="pulse-dot" style={{ width: '6px', height: '6px', margin: 0 }}></span>
+                                                ACTIVE
                                             </div>
                                         </div>
-                                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '16px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                             {p.address}
                                         </p>
-                                        <div style={{ display: 'flex', gap: '8px', color: 'var(--text-muted)', fontSize: '0.8rem', marginBottom: '16px' }}>
-                                            {p.bedrooms > 0 && <span>{p.bedrooms} Beds &bull;</span>}
-                                            {p.bathrooms > 0 && <span>{p.bathrooms} Baths &bull;</span>}
-                                            {p.size && <span>{p.size} &bull;</span>}
-                                            <span>Smart Escrow</span>
+                                        <div style={{ display: 'flex', gap: '14px', color: 'var(--text-muted)', fontSize: '0.78rem', marginBottom: '16px', fontWeight: 600 }}>
+                                            {p.bedrooms > 0 && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                <Icon d={ICONS.bed} size={12} /> {p.bedrooms} Bed
+                                            </span>}
+                                            {p.bathrooms > 0 && <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                <Icon d={ICONS.bath} size={12} /> {p.bathrooms} Bath
+                                            </span>}
+                                            {p.size && <span>{p.size}</span>}
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--accent)' }}>
+                                                <Icon d={ICONS.shield} size={12} color="var(--accent)" /> Escrow
+                                            </span>
                                         </div>
-                                        <div style={{ paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
-                                            <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--dark-slate)' }}>RWF {p.rent_amount}</span>
-                                            <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}> / month</span>
+                                        <div style={{ paddingTop: '14px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <div>
+                                                <span style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--dark-slate)' }}>RWF {Number(p.rent_amount).toLocaleString()}</span>
+                                                <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}> / mo</span>
+                                            </div>
+                                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700 }}>
+                                                ID: {p.id.substring(0, 8).toUpperCase()}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
