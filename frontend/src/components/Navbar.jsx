@@ -1,4 +1,4 @@
-﻿import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './Navbar.css';
 
@@ -15,9 +15,9 @@ export default function Navbar() {
                     </Link>
 
                     <div className="navbar-menu" style={{ display: 'flex', gap: '32px' }}>
-                        <Link to="/" className="nav-item" style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-secondary)' }}>Capabilities</Link>
-                        <Link to="/" className="nav-item" style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-secondary)' }}>Network Security</Link>
-                        <Link to="/" className="nav-item" style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-secondary)' }}>Solutions</Link>
+                        <Link to="/#explore" className="nav-item" style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-secondary)' }}>Capabilities</Link>
+                        <Link to="/#security" className="nav-item" style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-secondary)' }}>Network Security</Link>
+                        <Link to="/#solutions" className="nav-item" style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-secondary)' }}>Solutions</Link>
                     </div>
                 </div>
 
